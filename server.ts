@@ -1305,7 +1305,7 @@ app.get('/api/admin/logs', requireAdmin, async (req, res) => {
   app.post('/api/gemini/fmcg-insights', requireAuth, async (req, res) => {
     const { brandName, utilizationRate, activeBoosts, tier } = req.body;
     try {
-      const apiKey = process.env.NVIDIA_NIM_API_KEY;
+      const apiKey = process.env.GEMINI_API_KEY;
       const util = parseFloat(utilizationRate) || 45;
       const t = tier || 'BASIC';
       const boosts = parseInt(activeBoosts) || 2;
@@ -1338,7 +1338,7 @@ Address the safety rails (the current throttling of ${multiplier}x and merchant 
 Keep the tone inspiring, professional, and dense with genuine retail economic advice. Do not use generic filler words. Format nicely in Markdown.`;
 
       if (!apiKey) {
-        console.warn("NVIDIA_NIM_API_KEY is missing. Executing local simulated advisor fallback.");
+        console.warn("GEMINI_API_KEY is missing. Executing local simulated advisor fallback.");
         // Simulated response containing Kenyan context and rules specifically
         const simResponse = `### NX EXECUTIVE ADVISORY: STRATEGIC MEMO FOR ${brandName?.toUpperCase() || 'BROOKSIDE'}
 
@@ -1350,24 +1350,28 @@ By bypassing traditional wholesale bottlenecks and channeling direct liquidity i
         return res.json({ success: true, insights: simResponse, simulated: true });
       }
 
-      const { OpenAI } = await import("openai");
-      const openai = new OpenAI({
+      const { GoogleGenAI } = await import("@google/genai");
+      const ai = new GoogleGenAI({
         apiKey,
-        baseURL: 'https://integrate.api.nvidia.com/v1',
+        httpOptions: {
+          headers: {
+            'User-Agent': 'aistudio-build'
+          }
+        }
       });
 
-      const response = await openai.chat.completions.create({
-        model: "z-ai/glm-5.2",
-        messages: [{ role: "user", content: advicePrompt }],
+      const response = await ai.models.generateContent({
+        model: "gemini-3.5-flash",
+        contents: advicePrompt
       });
 
-      const text = response.choices[0]?.message?.content;
-      if (!text) throw new Error("Empty insights response from NIM");
+      const text = response.text;
+      if (!text) throw new Error("Empty insights response from Gemini");
 
       res.json({ success: true, insights: text });
 
     } catch (err: any) {
-      console.error("NIM insights generation error:", err);
+      console.error("Gemini insights generation error:", err);
       // Fallback
       const brandName = req.body?.brandName;
       const utilizationRate = req.body?.utilizationRate;
@@ -1497,17 +1501,21 @@ Action steps:
     };
 
     try {
-      const apiKey = process.env.NVIDIA_NIM_API_KEY;
+      const apiKey = process.env.GEMINI_API_KEY;
       if (!apiKey) {
-        console.warn("[System] NVIDIA_NIM_API_KEY is missing. Using local fallback parser for batch compiler.");
+        console.warn("[System] GEMINI_API_KEY is missing. Using local fallback parser for batch compiler.");
         const fallbackResults = fallbackParseMasterFile(fileContent);
         return res.json({ success: true, compiled: fallbackResults, simulated: true });
       }
 
-      const { OpenAI } = await import("openai");
-      const openai = new OpenAI({
+      const { GoogleGenAI } = await import("@google/genai");
+      const ai = new GoogleGenAI({
         apiKey,
-        baseURL: 'https://integrate.api.nvidia.com/v1',
+        httpOptions: {
+          headers: {
+            'User-Agent': 'aistudio-build'
+          }
+        }
       });
 
       const advicePrompt = `Analyze the following raw NX Batch Master Shipment file:
@@ -1515,46 +1523,61 @@ ${fileContent}
 
 Compile the orders into localized route plan groupings based on geographical proximity within Nairobi regions (e.g., grouping by Githurai, Roysambu, Kasarani, Clay City, Kahawa West, Mwiki, etc.). Use the Location from the raw log as reference.
 
-Please output a JSON object with EXACTLY the following structure:
-{
-  "batchId": "string",
-  "skuCode": "string",
-  "localities": [
-    {
-      "name": "string",
-      "orders": [
-        {
-          "merchantCode": "string",
-          "phone": "string",
-          "merchantName": "string",
-          "specificOrder": "string",
-          "exactQuantity": 0
-        }
-      ]
-    }
-  ]
-}
-
-Ensure that you:
+Please output a JSON object obeying the requested schema. Ensure that you:
 1. Extract the Batch ID and SKU Code from the master file header.
-2. Group all orders by their regional locality.
-3. For each merchant order, extract the MERCHANT_CODE, PHONE, and ORDER_SPEC. Also generate a realistic Kenyan duka merchant business name.
-4. Set specificOrder as the ORDER_SPEC and exactQuantity as the integer parsed from the ORDER_QTY field.`;
+2. Group all orders by their regional locality (e.g., Githurai, Kasarani, Roysambu, etc.).
+3. For each merchant order, extract the MERCHANT_CODE, PHONE, and ORDER_SPEC. Also generate a realistic Kenyan duka merchant business name (e.g. "Mama Mwangi Duka", "Amani Retail", "Kasarani Wholesale", "Githurai Fresh Market") for the merchantName field based on their unique merchant code. Yes, generate a realistic merchant name since it is not provided in raw text.
+4. Set specificOrder as the ORDER_SPEC (e.g. "Pembe 2kg*15") and exactQuantity as the integer parsed from the ORDER_QTY field (e.g. 15).
+`;
 
-      const response = await openai.chat.completions.create({
-        model: "z-ai/glm-5.2",
-        messages: [{ role: "user", content: advicePrompt }],
-        response_format: { type: "json_object" }
+      const response = await ai.models.generateContent({
+        model: "gemini-3.5-flash",
+        contents: advicePrompt,
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: "OBJECT" as any,
+            properties: {
+              batchId: { type: "STRING" },
+              skuCode: { type: "STRING" },
+              localities: {
+                type: "ARRAY",
+                items: {
+                  type: "OBJECT",
+                  properties: {
+                    name: { type: "STRING", description: "The localized area or neighborhood zone in Nairobi" },
+                    orders: {
+                      type: "ARRAY",
+                      items: {
+                        type: "OBJECT",
+                        properties: {
+                          merchantCode: { type: "STRING" },
+                          phone: { type: "STRING" },
+                          merchantName: { type: "STRING" },
+                          specificOrder: { type: "STRING" },
+                          exactQuantity: { type: "INTEGER" }
+                        },
+                        required: ["merchantCode", "phone", "merchantName", "specificOrder", "exactQuantity"]
+                      }
+                    }
+                  },
+                  required: ["name", "orders"]
+                }
+              }
+            },
+            required: ["batchId", "skuCode", "localities"]
+          }
+        }
       });
 
-      const text = response.choices[0]?.message?.content;
-      if (!text) throw new Error("Empty compile response from NIM");
+      const text = response.text;
+      if (!text) throw new Error("Empty compile response from Gemini");
 
       const parsed = JSON.parse(text);
       res.json({ success: true, compiled: parsed });
 
     } catch (err: any) {
-      console.error("NIM batch compile error:", err);
+      console.error("Gemini batch compile error:", err);
       try {
         const fall = fallbackParseMasterFile(fileContent);
         return res.json({ success: true, compiled: fall, simulated: true, errorMsg: err.message });

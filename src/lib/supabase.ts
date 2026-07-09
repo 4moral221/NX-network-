@@ -117,8 +117,16 @@ class SupabaseMockBuilder {
 
         const filterVal = filter.value;
         switch (filter.op) {
-          case 'eq':
-            return String(val).toLowerCase() === String(filterVal).toLowerCase();
+          case 'eq': {
+            let sVal = String(val).toLowerCase();
+            let sFilterVal = String(filterVal).toLowerCase();
+            const cols = ['phone', 'customer_phone', 'merchant_phone', 'account_phone'];
+            if (cols.includes(filter.column)) {
+              sVal = sVal.replace(/^\+/, '');
+              sFilterVal = sFilterVal.replace(/^\+/, '');
+            }
+            return sVal === sFilterVal;
+          }
           case 'neq':
             return String(val).toLowerCase() !== String(filterVal).toLowerCase();
           case 'gt':
@@ -272,3 +280,4 @@ const createSupabaseClient = (key: string | undefined, isServiceRole: boolean = 
 
 export const supabase = createSupabaseClient(supabaseServiceKey || supabaseKey, false);
 export const supabaseAdmin = createSupabaseClient(supabaseServiceKey, true);
+export const mockSupabase = createMockSupabase("Explicit USSD simulator demo context");

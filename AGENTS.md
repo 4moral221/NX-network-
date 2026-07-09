@@ -7,6 +7,7 @@ NX is a "Live Demand" aggregation network for informal retail in Kenya. It bypas
 - **Frontend**: React 18, Vite, Tailwind CSS, Lucide icons, Motion (framer-motion) for animations.
 - **Backend/Database**: Supabase (PostgreSQL + Auth + Edge Functions).
 - **USSD Interface**: The primary UI for merchants and customers is `*384*6180#`.
+- **Backend Models / AI**: Always use **GLM 5.2** via **Nvidia NIM API Key** (`NVIDIA_NIM_API_KEY`) for backend tasks.
 
 ## Business Logic Rules (Context Training)
 

@@ -1,16 +1,19 @@
-import { createClient } from "@supabase/supabase-js";
+import { supabase as libSupabase, mockSupabase } from "../../lib/supabase";
+import { AsyncLocalStorage } from 'async_hooks';
 
-const getEnvValue = (key: string) => {
-  if (typeof process !== 'undefined' && process.env && process.env[key]) {
-    return process.env[key];
+export const ussdContext = new AsyncLocalStorage<{ isDemo: boolean }>();
+
+export const supabase = new Proxy({}, {
+  get(target, prop, receiver) {
+    const context = ussdContext.getStore();
+    const client = (context && context.isDemo) ? mockSupabase : libSupabase;
+    const value = Reflect.get(client, prop);
+    if (typeof value === 'function') {
+      return value.bind(client);
+    }
+    return value;
   }
-  return '';
-};
-
-const supabaseUrl = getEnvValue('SUPABASE_URL') || getEnvValue('VITE_SUPABASE_URL') || '';
-const supabaseKey = getEnvValue('SUPABASE_SERVICE_ROLE_KEY') || getEnvValue('VITE_SUPABASE_SERVICE_ROLE_KEY') || getEnvValue('VITE_SUPABASE_ANON_KEY') || '';
-
-export const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : new Proxy({}, { get: () => () => ({ select: () => ({ eq: () => Promise.reject("Supabase not set") }), insert: () => Promise.reject("Supabase not set") }) }) as any;
+}) as any;
 
 import { startOfCycle, roundDown, tierConfig } from "./utils";
 
