@@ -2,6 +2,7 @@ import { useState, useEffect, Component, ReactNode, Suspense, lazy } from 'react
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 // Lazy loading to ensure the main chunk is small and app doesn't hang on 'INITIALIZING' screen for slow connections
 import ThemeSwitcher from './components/ThemeSwitcher';
@@ -233,6 +234,7 @@ export default function App() {
       <Router>
         <ThemeSwitcher />
         <Analytics />
+        <SpeedInsights />
         <Suspense fallback={<PageLoader />}>
           <Routes>
             {getRoutes()}

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, FormEvent } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Hexagon, ArrowRight, AlertCircle, Eye, EyeOff, X } from 'lucide-react';
+import { ArrowRight, AlertCircle, Eye, EyeOff, X } from 'lucide-react';
 import NXLogo from '../../components/NXLogo';
 import { toast } from 'react-hot-toast';
 
@@ -348,7 +348,9 @@ export default function Login({ onLogin }: { onLogin: (user: any) => void }) {
             </button>
 
             <div className="text-center pt-2">
-              <Hexagon className="w-8 h-8 text-nx-amber mx-auto mb-2 animate-pulse" />
+              <div className="flex justify-center mb-4 scale-90 sm:scale-100">
+                <NXLogo />
+              </div>
               <h3 className="font-display text-lg tracking-wider text-nx-paper uppercase">NX Secure PIN Recovery</h3>
               <p className="text-[9px] text-nx-muted uppercase tracking-widest mt-1">
                 {forgotStep === 'request' ? 'Request Security Token via SMS' : 'Enter OTP Verification Code'}
