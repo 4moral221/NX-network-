@@ -1,0 +1,72 @@
+{
+  "whitelist": [
+    {
+      "id": "wl-unilever-neorealm",
+      "email": "neorealm618@gmail.com",
+      "brand_name": "Unilever",
+      "active": true,
+      "created_at": "2026-07-06T04:41:00.000Z"
+    },
+    {
+      "id": "wl-4",
+      "email": "@brookside.co.ke",
+      "brand_name": "Brookside Dairy Ltd",
+      "active": true,
+      "created_at": "2026-05-20T15:10:46.181Z"
+    }
+  ],
+  "approvals": [
+    {
+      "id": "57e872f4-95f9-4366-b86f-025624023578",
+      "partner_id": "b2e94701-d307-4850-88c5-63274c0c16fd",
+      "email": "alex@pembe.co.ke",
+      "companyName": "Pembe ",
+      "status": "pending",
+      "created_at": "2026-05-20T15:10:46.757Z"
+    }
+  ],
+  "audit_logs": [
+    {
+      "id": "deb7343f-3cb8-48bf-8a00-525b75b631c9",
+      "action": "FMCG Registration Auto-Approved (Whitelisted): NX Global HQ (formidablefoe254@gmail.com)",
+      "actor_id": "ebb52660-547a-48dd-8879-2c3ed93699ab",
+      "ip_address": "154.159.254.24, 169.254.169.126",
+      "created_at": "2026-05-24T22:18:24.175Z"
+    },
+    {
+      "id": "c73282c9-d93f-45d4-8a4d-3831432199d6",
+      "action": "FMCG Registration Auto-Approved (Whitelisted): NX Global HQ (formidablefoe254@gmail.com)",
+      "actor_id": "41b76fc1-876d-42ec-a36b-38eb459c0da1",
+      "ip_address": "154.159.254.24, 169.254.169.126",
+      "created_at": "2026-05-24T22:18:05.868Z"
+    },
+    {
+      "id": "d03ae7a2-9a41-4e60-b9e7-dfa5ad40e858",
+      "action": "FMCG Registration Auto-Approved (Whitelisted): NX Global HQ (formidablefoe254@gmail.com)",
+      "actor_id": "19e67927-0288-4a09-a4bc-0b59b3689a7b",
+      "ip_address": "154.159.254.24, 169.254.169.126",
+      "created_at": "2026-05-24T22:17:08.731Z"
+    },
+    {
+      "id": "39015c40-f026-47f1-9251-5bc1e1a746d2",
+      "action": "FMCG Registration Auto-Approved (Whitelisted): NX Global HQ (formidablefoe254@gmail.com)",
+      "actor_id": "b1d5685e-fefc-4dc7-aa77-7a27053ab5ee",
+      "ip_address": "154.159.254.24, 169.254.169.126",
+      "created_at": "2026-05-24T21:56:27.730Z"
+    },
+    {
+      "id": "83da8960-36bc-4b1b-a0cf-c4256ad7ddff",
+      "action": "FMCG Registration Auto-Approved (Whitelisted): NX Global HQ (formidablefoe254@gmail.com)",
+      "actor_id": "ea827ec2-79f2-4b9c-be89-3f61a9e2f8e8",
+      "ip_address": "127.0.0.1",
+      "created_at": "2026-05-24T21:42:06.520Z"
+    },
+    {
+      "id": "25ad0689-cbd7-44b1-834a-7a26e9742dbd",
+      "action": "FMCG Registration Pending Approval: Pembe  (alex@pembe.co.ke)",
+      "actor_id": "fd3544ce-d621-41b2-a829-4b0f9e6203fb",
+      "ip_address": "2c0f:fe38:22a5:9db5:1:0:9c3b:836e, 169.254.169.126",
+      "created_at": "2026-05-20T15:10:46.757Z"
+    }
+  ]
+}

@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NX Network | Loyalty for Every Duka</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        nx: {
+                            ink: '#0c0b09', paper: '#f5f0e8', amber: '#e8a020',
+                            ember: '#c45c1a', green: '#2db87a', muted: '#6b6355',
+                            border: '#2a2720', card: '#141210', card2: '#1a1714'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"DM Sans"', '"IBM Plex Sans"', 'sans-serif'],
+                        display: ['"Bebas Neue"', 'sans-serif'],
+                        serif: ['"DM Serif Display"', 'serif'],
+                        mono: ['"IBM Plex Mono"', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .nx-btn-primary {
+                @apply px-6 py-3 bg-nx-amber text-nx-ink font-bold uppercase tracking-wider transition-all hover:bg-nx-paper hover:-translate-y-0.5 inline-flex items-center gap-2;
+                clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+            }
+            .nx-btn-outline {
+                @apply px-6 py-3 border border-nx-border text-nx-paper font-medium uppercase tracking-wider transition-all hover:border-nx-amber hover:text-nx-amber inline-flex items-center justify-center;
+            }
+        }
+        
+        body { background-color: #0c0b09; color: #f5f0e8; }
+        ::selection { background-color: #e8a020; color: #0c0b09; }
+
+        /* Logo Animations */
+        @keyframes slabB {
+            0%, 100% { clip-path: polygon(0% 38%, 100% 18%, 100% 62%, 0% 82%); }
+            50% { clip-path: polygon(0% 35%, 100% 20%, 100% 65%, 0% 80%); }
+        }
+        @keyframes strS {
+            0%, 100% { opacity: 1; transform: translateX(0); }
+            50% { opacity: 0.85; transform: translateX(2px); }
+        }
+        @keyframes nP {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-2px); }
+        }
+        @keyframes xP {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(2px); }
+        }
+        @keyframes dP {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 94, 0, 0.6); }
+            50% { box-shadow: 0 0 0 6px rgba(255, 94, 0, 0); }
+        }
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        .animate-marquee {
+            animation: marquee 30s linear infinite;
+        }
+        
+        .logo-bg-1 { animation: slabB 6s ease-in-out infinite; }
+        .logo-bg-2 { animation: strS 6s ease-in-out infinite; }
+        .logo-n { animation: nP 6s ease-in-out infinite; }
+        .logo-x { animation: xP 6s ease-in-out infinite reverse; }
+        .logo-dot { animation: dP 3s ease-in-out infinite; }
+    </style>
+</head>
+<body class="font-sans antialiased">
+
+    <!-- Noise Overlay -->
+    <div class="fixed inset-0 pointer-events-none z-[9999] opacity-[0.04]" 
+         style="background-image: url(&quot;data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' /%3E%3C/svg%3E&quot;)"></div>
+
+    <!-- Activity Ticker -->
+    <div class="bg-nx-amber/10 border-b border-nx-amber/20 py-2 overflow-hidden whitespace-nowrap relative z-[201]">
+        <div class="flex animate-marquee gap-12 items-center">
+            <div class="flex gap-12 items-center">
+                <span class="text-[10px] uppercase tracking-widest text-nx-amber flex items-center gap-2">
+                    <i data-lucide="activity" class="w-3 h-3"></i> Live Network Activity:
+                </span>
+                <span class="text-[10px] text-nx-paper/60">Customer 254...772 earned 14 NX at M10293</span>
+                <span class="text-[10px] text-nx-paper/60">Merchant M99283 restocked 20x Bread</span>
+                <span class="text-[10px] text-nx-paper/60">New Merchant M10294 whitelisted (HUB network)</span>
+                <span class="text-[10px] text-nx-paper/60">Customer 254...119 redeemed 45 NX at M10288</span>
+                <span class="text-[10px] text-nx-paper/60">FMCG Partner "Pembe" injected 5000 NX into pool</span>
+            </div>
+            <!-- Duplicate for seamless loop -->
+            <div class="flex gap-12 items-center">
+                <span class="text-[10px] uppercase tracking-widest text-nx-amber flex items-center gap-2">
+                    <i data-lucide="activity" class="w-3 h-3"></i> Live Network Activity:
+                </span>
+                <span class="text-[10px] text-nx-paper/60">Customer 254...772 earned 14 NX at M10293</span>
+                <span class="text-[10px] text-nx-paper/60">Merchant M99283 restocked 20x Bread</span>
+                <span class="text-[10px] text-nx-paper/60">New Merchant M10294 whitelisted (HUB network)</span>
+                <span class="text-[10px] text-nx-paper/60">Customer 254...119 redeemed 45 NX at M10288</span>
+                <span class="text-[10px] text-nx-paper/60">FMCG Partner "Pembe" injected 5000 NX into pool</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav id="navbar" class="fixed top-0 left-0 right-0 z-[200] flex items-center justify-between px-6 md:px-10 h-16 transition-all duration-300 bg-transparent">
+        <a href="#" class="flex items-center gap-3 group">
+            <div class="relative w-10 h-10 rounded-full overflow-hidden shadow-[0_0_0_1.5px_#FF5E00]">
+                <div class="absolute inset-0 bg-[#0a0a0a] [clip-path:polygon(0%_38%,100%_18%,100%_62%,0%_82%)] logo-bg-1"></div>
+                <div class="absolute inset-0 bg-[#FF5E00] [clip-path:polygon(0%_80%,100%_60%,100%_65%,0%_85%)] logo-bg-2"></div>
+                <div class="absolute inset-0 flex items-center justify-center font-display text-xl font-bold">
+                    <span class="text-[#0a0a0a] relative z-10 logo-n">N</span>
+                    <span class="text-nx-paper relative z-10 logo-x">X</span>
+                </div>
+                <div class="absolute w-1 h-1 rounded-full bg-[#FF5E00] bottom-1.5 left-1/2 -translate-x-1/2 z-20 logo-dot"></div>
+            </div>
+            <span class="font-display text-xl tracking-[0.2em] text-nx-amber">NX</span>
+        </a>
+
+        <div class="hidden md:flex items-center gap-8">
+            <a href="#how-it-works" class="text-[11px] uppercase tracking-[0.15em] text-nx-muted hover:text-nx-paper transition-colors">How It Works</a>
+            <a href="#merchant-tiers" class="text-[11px] uppercase tracking-[0.15em] text-nx-muted hover:text-nx-paper transition-colors">Tiers</a>
+            <a href="#loyalty-mechanics" class="text-[11px] uppercase tracking-[0.15em] text-nx-muted hover:text-nx-paper transition-colors">Mechanics</a>
+            <a href="#business-model" class="text-[11px] uppercase tracking-[0.15em] text-nx-muted hover:text-nx-paper transition-colors">Business Model</a>
+            <a href="#partners" class="text-[11px] uppercase tracking-[0.15em] text-nx-muted hover:text-nx-paper transition-colors">Partners</a>
+        </div>
+
+        <button id="menu-btn" class="md:hidden p-2 border border-nx-border hover:border-nx-amber transition-colors">
+            <i data-lucide="menu" class="w-5 h-5"></i>
+        </button>
+    </nav>
+
+    <!-- Mobile Menu -->
+    <div id="mobile-menu" class="hidden fixed inset-0 z-[300]">
+        <div class="absolute inset-0 bg-nx-ink/80 backdrop-blur-sm" id="close-menu-bg"></div>
+        <div class="absolute top-0 right-0 bottom-0 w-[min(340px,88vw)] bg-nx-card border-l border-nx-border z-[400] flex flex-col transition-transform duration-300 translate-x-0">
+            <div class="flex items-center justify-between px-6 h-16 border-b border-nx-border">
+                <span class="font-display text-lg tracking-[0.2em] text-nx-amber">NX NETWORK</span>
+                <button id="close-menu-btn" class="p-2 text-nx-muted hover:text-nx-paper transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="flex-1 py-4 overflow-y-auto">
+                <div class="px-6 py-4 text-[9px] uppercase tracking-[0.3em] text-nx-muted">Platform</div>
+                <a href="#how-it-works" class="mobile-link flex items-center justify-between px-6 py-3 text-sm text-nx-paper/70 hover:text-nx-paper hover:bg-nx-amber/5 border-l-2 border-transparent hover:border-nx-amber transition-all">How It Works <i data-lucide="arrow-up-right" class="w-3 h-3 text-nx-muted"></i></a>
+                <a href="#registration" class="mobile-link flex items-center justify-between px-6 py-3 text-sm text-nx-paper/70 hover:text-nx-paper hover:bg-nx-amber/5 border-l-2 border-transparent hover:border-nx-amber transition-all">Registration <i data-lucide="arrow-up-right" class="w-3 h-3 text-nx-muted"></i></a>
+                <a href="#merchant-tiers" class="mobile-link flex items-center justify-between px-6 py-3 text-sm text-nx-paper/70 hover:text-nx-paper hover:bg-nx-amber/5 border-l-2 border-transparent hover:border-nx-amber transition-all">Merchant Tiers <i data-lucide="arrow-up-right" class="w-3 h-3 text-nx-muted"></i></a>
+                <a href="#5-core-skus" class="mobile-link flex items-center justify-between px-6 py-3 text-sm text-nx-paper/70 hover:text-nx-paper hover:bg-nx-amber/5 border-l-2 border-transparent hover:border-nx-amber transition-all">5 Core SKUs <i data-lucide="arrow-up-right" class="w-3 h-3 text-nx-muted"></i></a>
+                <a href="#loyalty-mechanics" class="mobile-link flex items-center justify-between px-6 py-3 text-sm text-nx-paper/70 hover:text-nx-paper hover:bg-nx-amber/5 border-l-2 border-transparent hover:border-nx-amber transition-all">Loyalty Mechanics <i data-lucide="arrow-up-right" class="w-3 h-3 text-nx-muted"></i></a>
+                <a href="#pool-mechanics" class="mobile-link flex items-center justify-between px-6 py-3 text-sm text-nx-paper/70 hover:text-nx-paper hover:bg-nx-amber/5 border-l-2 border-transparent hover:border-nx-amber transition-all">Pool Mechanics <i data-lucide="arrow-up-right" class="w-3 h-3 text-nx-muted"></i></a>
+            </div>
+            <div class="p-6 border-t border-nx-border">
+                <div class="p-4 bg-nx-green/5 border border-nx-green/20">
+                    <div class="text-[9px] uppercase tracking-[0.3em] text-nx-green mb-1">Join NX Now</div>
+                    <div class="font-display text-2xl tracking-[0.1em] text-nx-green">*384*6180#</div>
+                    <div class="text-[11px] text-nx-muted mt-1">Any phone · Any network · Zero data</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hero Section -->
+    <section id="hero" class="relative min-h-screen flex flex-col justify-center px-6 md:px-10 pt-32 pb-20 overflow-hidden">
+        <div class="absolute top-[-20%] right-[-10%] w-[55%] h-[130%] bg-gradient-to-br from-nx-amber/5 to-nx-ember/5 -skew-x-12 pointer-events-none"></div>
+        <div class="absolute inset-0 bg-[linear-gradient(rgba(232,160,32,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(232,160,32,0.035)_1px,transparent_1px)] bg-[size:64px_64px] pointer-events-none"></div>
+        
+        <div class="text-[10px] font-medium tracking-[0.5em] uppercase text-nx-amber mb-8">Kenya's Informal Retail Infrastructure</div>
+        
+        <h1 class="font-display text-[clamp(50px,8vw,120px)] leading-[0.91] tracking-tight text-nx-paper mb-9">
+            LOYALTY<br>FOR EVERY<br><span class="text-nx-amber italic">DUKA.</span>
+        </h1>
+        
+        <p class="font-serif text-[clamp(16px,2vw,22px)] text-nx-paper/50 max-w-lg leading-relaxed mb-5">
+            NX Network powers digital rewards across Kenya's kiosks — no smartphone, no data, no barriers. Your phone number is your wallet.
+        </p>
+        
+        <div class="font-display text-[clamp(18px,2.5vw,30px)] tracking-[0.2em] text-nx-amber mb-9">SPEND. EARN. SAVE.</div>
+        
+        <div class="flex flex-wrap items-center gap-4">
+            <button id="ussd-btn" class="nx-btn-primary group">
+                <i data-lucide="arrow-up-right" class="w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"></i>
+                JOIN NOW — DIAL
+            </button>
+            <a href="#how-it-works" class="nx-btn-outline">How it works</a>
+        </div>
+
+        <div id="ussd-display" class="hidden mt-6 p-4 bg-nx-green/10 border border-nx-green/30 w-fit flex items-center gap-4">
+            <div>
+                <div class="text-[10px] text-nx-green uppercase tracking-widest mb-1">Dial this code</div>
+                <div class="font-display text-3xl tracking-widest text-nx-green">*384*6180#</div>
+            </div>
+            <div class="text-[11px] text-nx-muted leading-relaxed">
+                Works on Safaricom,<br>Airtel & Telkom · Zero data
+            </div>
+        </div>
+
+        <div class="mt-4 text-[10px] text-nx-muted tracking-widest">
+            <a href="#terms" class="hover:text-nx-amber transition-colors border-b border-nx-muted/30">Terms & conditions apply.</a> · Customer NX expires 2 months after issuance.
+        </div>
+    </section>
+
+    <!-- Stats Bar -->
+    <div class="grid grid-cols-2 md:grid-cols-4 border-y border-nx-border">
+        <div class="p-8 md:p-10 border-r border-nx-border relative group overflow-hidden">
+            <div class="absolute bottom-0 left-0 w-0 h-[1px] bg-nx-amber transition-all duration-500 group-hover:w-full"></div>
+            <div class="font-display text-4xl md:text-5xl text-nx-amber mb-2">5</div>
+            <div class="text-[10px] uppercase tracking-[0.2em] text-nx-muted">Core SKUs</div>
+        </div>
+        <div class="p-8 md:p-10 border-r border-nx-border relative group overflow-hidden">
+            <div class="absolute bottom-0 left-0 w-0 h-[1px] bg-nx-amber transition-all duration-500 group-hover:w-full"></div>
+            <div class="font-display text-4xl md:text-5xl text-nx-amber mb-2">10%</div>
+            <div class="text-[10px] uppercase tracking-[0.2em] text-nx-muted">First Purchase Earn</div>
+        </div>
+        <div class="p-8 md:p-10 border-r border-nx-border relative group overflow-hidden">
+            <div class="absolute bottom-0 left-0 w-0 h-[1px] bg-nx-amber transition-all duration-500 group-hover:w-full"></div>
+            <div class="font-display text-4xl md:text-5xl text-nx-amber mb-2">3</div>
+            <div class="text-[10px] uppercase tracking-[0.2em] text-nx-muted">Franchise Tiers</div>
+        </div>
+        <div class="p-8 md:p-10 relative group overflow-hidden">
+            <div class="absolute bottom-0 left-0 w-0 h-[1px] bg-nx-amber transition-all duration-500 group-hover:w-full"></div>
+            <div class="font-display text-4xl md:text-5xl text-nx-amber mb-2">1,204</div>
+            <div class="text-[10px] uppercase tracking-[0.2em] text-nx-muted">Site Visitors</div>
+        </div>
+    </div>
+
+    <!-- How It Works -->
+    <section id="how-it-works" class="py-24 px-6 md:px-10 max-w-6xl mx-auto">
+        <div class="flex items-center gap-4 text-[9px] uppercase tracking-[0.4em] text-nx-amber mb-6">
+            <div class="w-8 h-[1px] bg-nx-amber"></div> How It Works
+        </div>
+        <h2 class="font-display text-[clamp(40px,6vw,80px)] leading-none tracking-tight text-nx-paper mb-16">
+            THREE STEPS.<br>ZERO DATA.
+        </h2>
+        
+        <div class="grid md:grid-cols-3 gap-0.5 bg-nx-border">
+            <div class="bg-nx-ink p-10 hover:bg-nx-card transition-colors group">
+                <div class="text-nx-amber mb-6 group-hover:scale-110 transition-transform origin-left"><i data-lucide="smartphone" class="w-8 h-8"></i></div>
+                <div class="font-display text-7xl text-nx-amber/10 leading-none mb-6 group-hover:text-nx-amber/20 transition-colors">01</div>
+                <h3 class="font-serif text-2xl text-nx-paper mb-4">Register</h3>
+                <p class="text-sm text-nx-muted leading-relaxed">Dial <strong class="text-nx-amber">*384*6180#</strong> from any phone on any network. No internet, no app. Register as customer or merchant in under 2 minutes. Your phone number is captured automatically — no typing required.</p>
+            </div>
+            <div class="bg-nx-ink p-10 hover:bg-nx-card transition-colors group">
+                <div class="text-nx-amber mb-6 group-hover:scale-110 transition-transform origin-left"><i data-lucide="shopping-cart" class="w-8 h-8"></i></div>
+                <div class="font-display text-7xl text-nx-amber/10 leading-none mb-6 group-hover:text-nx-amber/20 transition-colors">02</div>
+                <h3 class="font-serif text-2xl text-nx-paper mb-4">Transact</h3>
+                <p class="text-sm text-nx-muted leading-relaxed">Buy from a certified NX duka. Earn NX tokens — 10% on your first purchase, 5% on all purchases after. Redeem instantly at any enrolled kiosk for real discounts. A flat 2 NX service fee applies per confirmed transaction.</p>
+            </div>
+            <div class="bg-nx-ink p-10 hover:bg-nx-card transition-colors group">
+                <div class="text-nx-amber mb-6 group-hover:scale-110 transition-transform origin-left"><i data-lucide="wallet" class="w-8 h-8"></i></div>
+                <div class="font-display text-7xl text-nx-amber/10 leading-none mb-6 group-hover:text-nx-amber/20 transition-colors">03</div>
+                <h3 class="font-serif text-2xl text-nx-paper mb-4">Benefit</h3>
+                <p class="text-sm text-nx-muted leading-relaxed">Use NX to cut future purchase costs. Merchants offset restock invoices using accumulated NX — reducing cash outflow every cycle. The more customers transact, the more the merchant's pool grows. Everyone benefits.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Savings Calculator Section -->
+    <section id="calculator" class="py-24 px-6 md:px-10 max-w-6xl mx-auto border-t border-nx-border">
+        <div class="flex items-center gap-4 text-[9px] uppercase tracking-[0.4em] text-nx-amber mb-6">
+            <div class="w-8 h-[1px] bg-nx-amber"></div> Profitability Tool
+        </div>
+        <h2 class="font-display text-[clamp(40px,6vw,80px)] leading-none tracking-tight text-nx-paper mb-16">
+            CALCULATE YOUR<br>SAVINGS.
+        </h2>
+        
+        <div class="grid md:grid-cols-2 gap-0.5 bg-nx-border">
+            <div class="bg-nx-card p-10">
+                <div class="space-y-8">
+                    <div>
+                        <label class="block text-[10px] uppercase tracking-widest text-nx-muted mb-4">Select Your Tier</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button onclick="setTier('BASIC')" id="tier-BASIC" class="tier-btn py-3 text-[10px] uppercase tracking-widest border transition-all bg-nx-amber text-nx-ink border-nx-amber">BASIC</button>
+                            <button onclick="setTier('CERTIFIED')" id="tier-CERTIFIED" class="tier-btn py-3 text-[10px] uppercase tracking-widest border transition-all bg-nx-ink text-nx-muted border-nx-border hover:border-nx-amber/50">CERTIFIED</button>
+                            <button onclick="setTier('HUB')" id="tier-HUB" class="tier-btn py-3 text-[10px] uppercase tracking-widest border transition-all bg-nx-ink text-nx-muted border-nx-border hover:border-nx-amber/50">HUB</button>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-[10px] uppercase tracking-widest text-nx-muted mb-4">Monthly Restock Volume (KSH)</label>
+                        <input type="range" min="10000" max="500000" step="5000" value="50000" id="volume-range" class="w-full accent-nx-amber bg-nx-border h-1 rounded-full appearance-none cursor-pointer">
+                        <div class="flex justify-between mt-4 font-display text-2xl text-nx-paper">
+                            <span id="volume-display">KSH 50,000</span>
+                            <span class="text-nx-muted text-xs font-sans self-end uppercase tracking-widest">Per Month</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-nx-card p-10 flex flex-col justify-between">
+                <div class="space-y-6">
+                    <div class="p-6 bg-nx-ink border border-nx-border">
+                        <div class="text-[9px] uppercase tracking-widest text-nx-muted mb-2">Estimated Loyalty Pool</div>
+                        <div id="pool-display" class="font-display text-4xl text-nx-green tracking-wider">1,500 NX</div>
+                        <div class="text-[10px] text-nx-muted mt-1">Funded by NX trading margin</div>
+                    </div>
+                    
+                    <div class="p-6 bg-nx-ink border border-nx-border">
+                        <div class="text-[9px] uppercase tracking-widest text-nx-muted mb-2">Max Monthly NX Acceptance</div>
+                        <div id="redemption-display" class="font-display text-4xl text-nx-amber tracking-wider">KSH 15,000</div>
+                        <div class="text-[10px] text-nx-muted mt-1">Potential cash savings on restock</div>
+                    </div>
+                </div>
+                
+                <div class="mt-8 p-4 bg-nx-amber/5 border-l-2 border-nx-amber text-[11px] text-nx-muted leading-relaxed">
+                    💡 <strong id="tier-impact-label">Tier Impact:</strong> At your current volume, switching to <strong>HUB</strong> would increase your pool by <strong id="tier-impact-value">250 NX</strong> per month.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-nx-ink border-t border-nx-border py-12 px-6 md:px-10">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
+            <div class="text-center md:text-left">
+                <div class="font-display text-2xl tracking-[0.3em] text-nx-amber mb-2">NX NETWORK</div>
+                <div class="font-display text-xs tracking-[0.4em] text-nx-amber/60">SPEND. EARN. SAVE.</div>
+                <div class="text-[10px] text-nx-muted tracking-widest mt-4">nxnetwork618@gmail.com</div>
+            </div>
+            <div class="text-[11px] text-nx-muted tracking-widest">
+                &copy; 2026 NX Network Kenya. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // Navbar Scroll Effect
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 20) {
+                navbar.classList.add('bg-nx-ink/92', 'backdrop-blur-xl', 'border-b', 'border-nx-amber/12');
+                navbar.classList.remove('bg-transparent');
+            } else {
+                navbar.classList.remove('bg-nx-ink/92', 'backdrop-blur-xl', 'border-b', 'border-nx-amber/12');
+                navbar.classList.add('bg-transparent');
+            }
+        });
+
+        // Mobile Menu Toggle
+        const menuBtn = document.getElementById('menu-btn');
+        const closeMenuBtn = document.getElementById('close-menu-btn');
+        const closeMenuBg = document.getElementById('close-menu-bg');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        function toggleMenu() {
+            mobileMenu.classList.toggle('hidden');
+        }
+
+        menuBtn.addEventListener('click', toggleMenu);
+        closeMenuBtn.addEventListener('click', toggleMenu);
+        closeMenuBg.addEventListener('click', toggleMenu);
+
+        // USSD Display Toggle
+        const ussdBtn = document.getElementById('ussd-btn');
+        const ussdDisplay = document.getElementById('ussd-display');
+        ussdBtn.addEventListener('click', () => {
+            ussdDisplay.classList.toggle('hidden');
+        });
+
+        // Savings Calculator Logic
+        const tiers = {
+            BASIC: { rate: 0.60, ceiling: 0.30 },
+            CERTIFIED: { rate: 0.65, ceiling: 0.35 },
+            HUB: { rate: 0.70, ceiling: 0.40 }
+        };
+        let selectedTier = 'BASIC';
+        let restockVolume = 50000;
+
+        function updateCalculator() {
+            const markup = restockVolume * 0.05;
+            const pool = markup * tiers[selectedTier].rate;
+            const maxRedemption = restockVolume * tiers[selectedTier].ceiling;
+            
+            document.getElementById('volume-display').innerText = `KSH ${restockVolume.toLocaleString()}`;
+            document.getElementById('pool-display').innerText = `${pool.toFixed(0).toLocaleString()} NX`;
+            document.getElementById('redemption-display').innerText = `KSH ${maxRedemption.toLocaleString()}`;
+            
+            const hubPool = markup * 0.70;
+            const currentPool = markup * tiers[selectedTier].rate;
+            const diff = hubPool - currentPool;
+            
+            if (selectedTier === 'HUB') {
+                document.getElementById('tier-impact-label').innerText = 'Maximum Efficiency:';
+                document.getElementById('tier-impact-value').innerText = 'You are at the highest tier.';
+            } else {
+                document.getElementById('tier-impact-label').innerText = 'Tier Impact:';
+                document.getElementById('tier-impact-value').innerText = `${diff.toFixed(0).toLocaleString()} NX`;
+            }
+        }
+
+        window.setTier = function(tier) {
+            selectedTier = tier;
+            document.querySelectorAll('.tier-btn').forEach(btn => {
+                btn.classList.remove('bg-nx-amber', 'text-nx-ink', 'border-nx-amber');
+                btn.classList.add('bg-nx-ink', 'text-nx-muted', 'border-nx-border');
+            });
+            document.getElementById(`tier-${tier}`).classList.add('bg-nx-amber', 'text-nx-ink', 'border-nx-amber');
+            document.getElementById(`tier-${tier}`).classList.remove('bg-nx-ink', 'text-nx-muted', 'border-nx-border');
+            updateCalculator();
+        };
+
+        document.getElementById('volume-range').addEventListener('input', (e) => {
+            restockVolume = Number(e.target.value);
+            updateCalculator();
+        });
+
+        updateCalculator();
+
+        // USSD Demo Tabs
+        const tabs = document.querySelectorAll('.demo-tab');
+        const screens = document.querySelectorAll('.demo-screen');
+        const descs = document.querySelectorAll('.demo-desc');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const target = tab.getAttribute('data-target');
+                
+                tabs.forEach(t => {
+                    t.classList.remove('bg-nx-ink', 'text-nx-amber', 'border-b', 'border-nx-amber');
+                    t.classList.add('bg-nx-card', 'text-nx-muted');
+                });
+                tab.classList.add('bg-nx-ink', 'text-nx-amber', 'border-b', 'border-nx-amber');
+                tab.classList.remove('bg-nx-card', 'text-nx-muted');
+
+                screens.forEach(s => s.classList.add('hidden'));
+                document.getElementById(`screen-${target}`).classList.remove('hidden');
+
+                descs.forEach(d => d.classList.add('hidden'));
+                document.getElementById(`desc-${target}`).classList.remove('hidden');
+            });
+        });
+    </script>
+</body>
+</html>

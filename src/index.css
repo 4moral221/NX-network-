@@ -1,0 +1,275 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600&family=JetBrains+Mono:wght@400&family=Bebas+Neue&family=DM+Serif+Display&family=DM+Sans:wght@400;500&display=swap');
+@import "tailwindcss";
+
+:root {
+  --nx-ink: #111110;        /* Anthropic dark obsidian/charcoal */
+  --nx-paper: #eceae2;      /* Off-white paper/bone */
+  --nx-amber: #ffb547;      /* Golden warmth */
+  --nx-ember: #ff5c6c;      /* Soft warm coral sunset */
+  --nx-green: #10b981;      /* Crisp mint green */
+  --nx-muted: #b5b3aa;      /* Gentle slate gray - contrast boosted */
+  --nx-border: #2b2b28;     /* Warm dark border */
+  --nx-card: #181817;       /* Soft dark card body */
+  --nx-card2: #20201f;      /* Slightly highlighted panel */
+  --nx-bg-grid: rgba(255, 181, 71, 0.012);
+}
+
+html.light {
+  --nx-ink: #FAF8F5;        /* Claude warm white/cream clay */
+  --nx-paper: #1c1c1a;      /* Deep obsidian charcoal text */
+  --nx-amber: #d97706;      /* Contrast safe deep gold accent */
+  --nx-ember: #dc2626;      /* Contrast safe warning red */
+  --nx-green: #059669;      /* Forest/emerald green */
+  --nx-muted: #6e6d67;      /* Warm stone secondary text */
+  --nx-border: #e6e4dc;     /* Warm clay crisp border */
+  --nx-card: #ffffff;       /* Pure white card surface */
+  --nx-card2: #faf9f6;      /* Soft parchment secondary surface */
+  --nx-bg-grid: rgba(217, 119, 6, 0.015);
+}
+
+@theme {
+  --font-sans: "Space Grotesk", "DM Sans", "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Bebas Neue", sans-serif;
+  --font-serif: "DM Serif Display", serif;
+  --font-mono: "JetBrains Mono", "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --color-nx-ink: var(--nx-ink);
+  --color-nx-paper: var(--nx-paper);
+  --color-nx-amber: var(--nx-amber);
+  --color-nx-ember: var(--nx-ember);
+  --color-nx-green: var(--nx-green);
+  --color-nx-muted: var(--nx-muted);
+  --color-nx-border: var(--nx-border);
+  --color-nx-card: var(--nx-card);
+  --color-nx-card2: var(--nx-card2);
+
+  --animate-slabB: slabB 6s ease-in-out infinite;
+  --animate-strS: strS 4s ease-in-out infinite;
+  --animate-nP: nP 5s ease-in-out infinite;
+  --animate-xP: xP 5.5s ease-in-out infinite;
+  --animate-dP: dP 3s ease-in-out infinite;
+}
+
+@layer base {
+  html, body, #root {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 100vh !important;
+    overflow-x: hidden;
+  }
+  body {
+    @apply bg-nx-ink text-nx-paper;
+    background-image: 
+      linear-gradient(var(--nx-bg-grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--nx-bg-grid) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+}
+
+/* Wholistic Theme Switch is instantaneous */
+
+/* Hardcoded elements overrides when html.light is of active */
+html:not(.light) .bg-white,
+html:not(.light) .bg-\[\#f9fafb\],
+html:not(.light) .bg-\[\#f4f5f7\],
+html:not(.light) .bg-gray-50 {
+  background-color: #181817 !important;
+}
+
+html:not(.light) .text-black,
+html:not(.light) .text-\[\#1a1d23\],
+html:not(.light) .text-\[\#1c2230\],
+html:not(.light) .text-gray-900 {
+  color: #eceae2 !important;
+}
+
+html:not(.light) .text-\[\#6b7280\],
+html:not(.light) .text-\[\#4b5563\],
+html:not(.light) .text-\[\#9ca3af\],
+html:not(.light) .text-\[\#5a6e8a\],
+html:not(.light) .text-gray-500,
+html:not(.light) .text-gray-600 {
+  color: #b5b3aa !important;
+}
+
+html:not(.light) .border-\[\#e4e6ea\],
+html:not(.light) .border-\[\#f4f5f7\],
+html:not(.light) .border-gray-200 {
+  border-color: #2b2b28 !important;
+}
+
+html:not(.light) .bg-\[\#fef2f2\] { background-color: rgba(220, 38, 38, 0.1) !important; }
+html:not(.light) .bg-\[\#dbeafe\] { background-color: rgba(59, 130, 246, 0.1) !important; }
+html:not(.light) .bg-\[\#d1fae5\] { background-color: rgba(16, 185, 129, 0.1) !important; }
+html:not(.light) .bg-\[\#fef3c7\], html:not(.light) .bg-\[\#fef9c3\] { background-color: rgba(245, 158, 11, 0.1) !important; }
+
+html.light body {
+  background-color: #FAF8F5 !important;
+  color: #1c1c1a !important;
+  background-image: none;
+}
+
+html.light .bg-\[\#0a0a0a\],
+html.light .bg-\[\#0a0d1a\],
+html.light .bg-\[\#0a0a15\],
+html.light .bg-\[\#0c0c1e\],
+html.light .bg-\[\#060810\],
+html.light .bg-\[\#1a1d23\],
+html.light .bg-\[\#2a2d35\],
+html.light .bg-\[\#11112a\],
+html.light .bg-gray-900,
+html.light .bg-black {
+  background-color: #FAF8F5 !important;
+}
+
+html.light .bg-\[\#111111\],
+html.light .bg-\[\#111\],
+html.light .bg-\[\#0c0d12\],
+html.light .bg-\[\#0c0d14\],
+html.light .bg-\[\#1a1020\],
+html.light .bg-\[\#13131c\],
+html.light .bg-\[\#10151a\],
+html.light .bg-\[\#12110e\],
+html.light .bg-\[\#1b1916\],
+html.light .bg-\[\#1a1916\],
+html.light .bg-\[\#080a0e\],
+html.light .bg-\[\#0d1117\],
+html.light .bg-\[\#0b0f16\],
+html.light .bg-black\/60,
+html.light .bg-black\/40 {
+  background-color: #ffffff !important;
+}
+
+html.light .text-nx-paper,
+html.light .text-white,
+html.light .text-\[\#e8e8e8\],
+html.light .text-\[\#e2e8f8\],
+html.light .text-gray-100,
+html.light .text-gray-300 {
+  color: #1c1c1a !important;
+}
+
+html.light .text-\[\#00ff88\],
+html.light .text-\[\#4ade80\],
+html.light .text-\[\#39ff6e\] { color: #059669 !important; }
+
+html.light .text-\[\#00d4ff\],
+html.light .text-\[\#4d9fff\],
+html.light .text-\[\#60a5fa\] { color: #2563eb !important; }
+
+html.light .text-\[\#ffb547\],
+html.light .text-\[\#ff6b35\],
+html.light .text-\[\#ff9a6b\],
+html.light .text-\[\#ff8c42\] { color: #d97706 !important; }
+
+html.light .text-\[\#ff4757\],
+html.light .text-\[\#ff3d57\] { color: #dc2626 !important; }
+
+html.light .text-nx-muted,
+html.light .text-white\/40,
+html.light .text-white\/60,
+html.light .text-\[\#b4c3e6\],
+html.light .text-gray-400 {
+  color: #6e6d67 !important;
+}
+
+html.light .border-nx-border,
+html.light .border-white\/5,
+html.light .border-white\/10,
+html.light .border-\[\#1e1e1e\],
+html.light .border-stone-800 {
+  border-color: #e6e4dc !important;
+}
+
+html.light .bg-nx-card,
+html.light .bg-nx-card2,
+html.light .bg-white\/\[0\.02\],
+html.light .bg-white\/5,
+html.light .bg-white\/10 {
+  background-color: #ffffff !important;
+  border-color: #e6e4dc !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+html.light .border-b,
+html.light .border-r,
+html.light .border-t,
+html.light .border-l {
+  border-color: #e6e4dc !important;
+}
+
+@layer utilities {
+  @keyframes slabB {
+    0%, 100% { clip-path: polygon(0% 38%, 100% 18%, 100% 62%, 0% 82%); }
+    50% { clip-path: polygon(0% 35%, 100% 20%, 100% 65%, 0% 80%); }
+  }
+  @keyframes strS {
+    0%, 100% { opacity: 1; transform: translateX(0); }
+    50% { opacity: 0.85; transform: translateX(2px); }
+  }
+  @keyframes nP {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-2px); }
+  }
+  @keyframes xP {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(2px); }
+  }
+  @keyframes dP {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255, 94, 0, 0.6); }
+    50% { box-shadow: 0 0 0 6px rgba(255, 94, 0, 0); }
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+}
+
+.nx-gradient-text {
+  @apply bg-clip-text text-transparent bg-linear-to-r from-nx-amber to-nx-ember;
+}
+
+.nx-card {
+  @apply bg-nx-card border border-nx-border rounded-xl;
+}
+
+.nx-btn-primary {
+  @apply px-6 py-3 bg-nx-amber text-nx-ink font-bold uppercase tracking-wider transition-all hover:bg-nx-paper hover:-translate-y-0.5;
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+}
+
+.nx-btn-outline {
+  @apply px-6 py-3 border border-nx-border text-nx-paper font-medium uppercase tracking-wider transition-all hover:border-nx-amber hover:text-nx-amber;
+}
+
+/* Browser Compatibility & Mobile Resets */
+body {
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+  -webkit-overflow-scrolling: touch;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}

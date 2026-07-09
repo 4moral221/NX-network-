@@ -1,0 +1,182 @@
+[
+  {
+    "timestamp": "2026-07-07T19:07:28.156Z",
+    "status": "success",
+    "output": "--- Starting Comprehensive Transactional Tests ---\n[Test] Creating Merchant with phone 254747922746 and code M794600\n\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\nTypeError: supabaseAdmin.from(...).insert(...).select is not a function\n    at runTests (/app/applet/test-e2e.ts:26:98)\n",
+    "durationMs": 1364
+  },
+  {
+    "timestamp": "2026-07-07T19:17:23.157Z",
+    "status": "success",
+    "output": "--- Starting Comprehensive Transactional Tests ---\n[Test] Creating Merchant with phone 254306267820 and code M661320\n\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\nTypeError: supabaseAdmin.from(...).insert(...).select is not a function\n    at runTests (/app/applet/test-e2e.ts:26:98)\n",
+    "durationMs": 1503
+  },
+  {
+    "timestamp": "2026-07-07T19:27:23.157Z",
+    "status": "success",
+    "output": "--- Starting Comprehensive Transactional Tests ---\n[Test] Creating Merchant with phone 254983915236 and code M455099\n\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\nTypeError: supabaseAdmin.from(...).insert(...).select is not a function\n    at runTests (/app/applet/test-e2e.ts:26:98)\n",
+    "durationMs": 1335
+  },
+  {
+    "timestamp": "2026-07-07T19:37:23.158Z",
+    "status": "success",
+    "output": "--- Starting Comprehensive Transactional Tests ---\n[Test] Creating Merchant with phone 254947207916 and code M514794\n\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\nTypeError: supabaseAdmin.from(...).insert(...).select is not a function\n    at runTests (/app/applet/test-e2e.ts:26:98)\n",
+    "durationMs": 1354
+  },
+  {
+    "timestamp": "2026-07-07T19:40:47.234Z",
+    "status": "success",
+    "output": "--- Starting Comprehensive Transactional Tests ---\n[Test] Creating Merchant with phone 254246006269 and code M410657\n\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\nTypeError: supabaseAdmin.from(...).insert(...).select is not a function\n    at runTests (/app/applet/test-e2e.ts:26:98)\n",
+    "durationMs": 1858
+  },
+  {
+    "timestamp": "2026-07-07T19:40:56.162Z",
+    "status": "success",
+    "output": "--- Starting Comprehensive Transactional Tests ---\n[Test] Creating Merchant with phone 254300687245 and code M351590\n\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\nTypeError: supabaseAdmin.from(...).insert(...).select is not a function\n    at runTests (/app/applet/test-e2e.ts:26:98)\n",
+    "durationMs": 1252
+  },
+  {
+    "timestamp": "2026-07-07T19:45:07.060Z",
+    "status": "success",
+    "output": "--- Starting Comprehensive Transactional Tests ---\n[Test] Creating Merchant with phone 254292516237 and code M738713\n\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\nTypeError: supabaseAdmin.from(...).insert(...).select is not a function\n    at runTests (/app/applet/test-e2e.ts:26:98)\n",
+    "durationMs": 1266
+  },
+  {
+    "timestamp": "2026-07-07T19:51:24.207Z",
+    "status": "success",
+    "output": "--- Starting Comprehensive Transactional Tests ---\n[Test] Creating Merchant with phone 254720611712 and code M363575\n\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\nTypeError: supabaseAdmin.from(...).insert(...).select is not a function\n    at runTests (/app/applet/test-e2e.ts:26:98)\n",
+    "durationMs": 1707
+  },
+  {
+    "timestamp": "2026-07-07T19:51:32.917Z",
+    "status": "success",
+    "output": "--- Starting Comprehensive Transactional Tests ---\n[Test] Creating Merchant with phone 254965750920 and code M194815\n\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\nTypeError: supabaseAdmin.from(...).insert(...).select is not a function\n    at runTests (/app/applet/test-e2e.ts:26:98)\n",
+    "durationMs": 1228
+  },
+  {
+    "timestamp": "2026-07-07T19:57:33.588Z",
+    "status": "success",
+    "output": "--- Starting Comprehensive Transactional Tests ---\n[Test] Creating Merchant with phone 254855044304 and code M974243\n\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\nTypeError: supabaseAdmin.from(...).insert(...).select is not a function\n    at runTests (/app/applet/test-e2e.ts:26:98)\n",
+    "durationMs": 1261
+  },
+  {
+    "timestamp": "2026-07-07T19:57:45.088Z",
+    "status": "success",
+    "output": "--- Starting Comprehensive Transactional Tests ---\n[Test] Creating Merchant with phone 254511465941 and code M882647\n\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\nTypeError: supabaseAdmin.from(...).insert(...).select is not a function\n    at runTests (/app/applet/test-e2e.ts:26:98)\n",
+    "durationMs": 1245
+  },
+  {
+    "timestamp": "2026-07-07T20:07:40.087Z",
+    "status": "success",
+    "output": "--- Starting Comprehensive Transactional Tests ---\n[Test] Creating Merchant with phone 254914028567 and code M402259\n\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\nTypeError: supabaseAdmin.from(...).insert(...).select is not a function\n    at runTests (/app/applet/test-e2e.ts:26:98)\n",
+    "durationMs": 1359
+  },
+  {
+    "timestamp": "2026-07-07T20:17:40.088Z",
+    "status": "success",
+    "output": "--- Starting Comprehensive Transactional Tests ---\n[Test] Creating Merchant with phone 254431415535 and code M413513\n\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\nTypeError: supabaseAdmin.from(...).insert(...).select is not a function\n    at runTests (/app/applet/test-e2e.ts:26:98)\n",
+    "durationMs": 1410
+  },
+  {
+    "timestamp": "2026-07-07T20:21:08.076Z",
+    "status": "success",
+    "output": "--- Starting Comprehensive Transactional Tests ---\n[Test] Creating Merchant with phone 254400600342 and code M242130\n\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\nTypeError: supabaseAdmin.from(...).insert(...).select is not a function\n    at runTests (/app/applet/test-e2e.ts:26:98)\n",
+    "durationMs": 1350
+  },
+  {
+    "timestamp": "2026-07-07T20:21:19.794Z",
+    "status": "success",
+    "output": "--- Starting Comprehensive Transactional Tests ---\n[Test] Creating Merchant with phone 254871343726 and code M163447\n\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\nTypeError: supabaseAdmin.from(...).insert(...).select is not a function\n    at runTests (/app/applet/test-e2e.ts:26:98)\n",
+    "durationMs": 1241
+  },
+  {
+    "timestamp": "2026-07-07T20:31:14.794Z",
+    "status": "success",
+    "output": "--- Starting Comprehensive Transactional Tests ---\n[Test] Creating Merchant with phone 254332550746 and code M107452\n\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\nTypeError: supabaseAdmin.from(...).insert(...).select is not a function\n    at runTests (/app/applet/test-e2e.ts:26:98)\n",
+    "durationMs": 1578
+  },
+  {
+    "timestamp": "2026-07-07T20:41:14.795Z",
+    "status": "success",
+    "output": "--- Starting Comprehensive Transactional Tests ---\n[Test] Creating Merchant with phone 254788281105 and code M895028\n\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\nTypeError: supabaseAdmin.from(...).insert(...).select is not a function\n    at runTests (/app/applet/test-e2e.ts:26:98)\n",
+    "durationMs": 1344
+  },
+  {
+    "timestamp": "2026-07-07T20:51:14.794Z",
+    "status": "success",
+    "output": "--- Starting Comprehensive Transactional Tests ---\n[Test] Creating Merchant with phone 254102390326 and code M663972\n\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\nTypeError: supabaseAdmin.from(...).insert(...).select is not a function\n    at runTests (/app/applet/test-e2e.ts:26:98)\n",
+    "durationMs": 1340
+  },
+  {
+    "timestamp": "2026-07-07T21:01:14.794Z",
+    "status": "success",
+    "output": "--- Starting Comprehensive Transactional Tests ---\n[Test] Creating Merchant with phone 254493133251 and code M125059\n\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\nTypeError: supabaseAdmin.from(...).insert(...).select is not a function\n    at runTests (/app/applet/test-e2e.ts:26:98)\n",
+    "durationMs": 1411
+  },
+  {
+    "timestamp": "2026-07-07T21:11:14.796Z",
+    "status": "success",
+    "output": "--- Starting Comprehensive Transactional Tests ---\n[Test] Creating Merchant with phone 254145071698 and code M333696\n\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\nTypeError: supabaseAdmin.from(...).insert(...).select is not a function\n    at runTests (/app/applet/test-e2e.ts:26:98)\n",
+    "durationMs": 1456
+  },
+  {
+    "timestamp": "2026-07-07T21:21:14.795Z",
+    "status": "success",
+    "output": "--- Starting Comprehensive Transactional Tests ---\n[Test] Creating Merchant with phone 254314276236 and code M417329\n\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\nTypeError: supabaseAdmin.from(...).insert(...).select is not a function\n    at runTests (/app/applet/test-e2e.ts:26:98)\n",
+    "durationMs": 1341
+  },
+  {
+    "timestamp": "2026-07-07T21:31:14.796Z",
+    "status": "success",
+    "output": "--- Starting Comprehensive Transactional Tests ---\n[Test] Creating Merchant with phone 254499034616 and code M989641\n\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\nTypeError: supabaseAdmin.from(...).insert(...).select is not a function\n    at runTests (/app/applet/test-e2e.ts:26:98)\n",
+    "durationMs": 1370
+  },
+  {
+    "timestamp": "2026-07-07T21:41:14.796Z",
+    "status": "success",
+    "output": "--- Starting Comprehensive Transactional Tests ---\n[Test] Creating Merchant with phone 254880639633 and code M118283\n\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\nTypeError: supabaseAdmin.from(...).insert(...).select is not a function\n    at runTests (/app/applet/test-e2e.ts:26:98)\n",
+    "durationMs": 1397
+  },
+  {
+    "timestamp": "2026-07-09T08:14:00.809Z",
+    "status": "success",
+    "output": "Supabase falling back to local client mock: Known inactive/paused Supabase URL detected\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\n--- Starting Comprehensive Transactional Tests ---\n[Test] Creating Merchant with phone 254123099797 and code M546165\n✅ Duplicated merchant to users_uuid\n✅ Merchant Created: undefined\n[Test] Creating Customer with phone 254237738875\n✅ Duplicated customer to users_uuid\n✅ Customer Created: undefined\n[Test] Creating a transaction scenario\n✅ Transaction Created: undefined awaiting_merchant\n[Test] Finalizing transaction via merchantFinalise\nmerchantFinalise Error: {\n  code: '22P02',\n  details: null,\n  hint: null,\n  message: 'invalid input syntax for type bigint: \"undefined\"'\n}\n❌ Failed to finalize transaction\n[Test] Verifying Ledger and Balances\nTransaction Status now: undefined\nCustomer NX Balance now: undefined (Expected: 50 - 50 + 10 = 10)\nMerchant NX Balance now: undefined (Expected: 50)\n[Test] Initiating FCMG Restock Batch creation\n✅ Batch ID retrieved/created: null\nDone\n",
+    "durationMs": 2089
+  },
+  {
+    "timestamp": "2026-07-09T08:23:55.809Z",
+    "status": "success",
+    "output": "Supabase falling back to local client mock: Known inactive/paused Supabase URL detected\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\n--- Starting Comprehensive Transactional Tests ---\n[Test] Creating Merchant with phone 254817473438 and code M801741\n✅ Duplicated merchant to users_uuid\n✅ Merchant Created: undefined\n[Test] Creating Customer with phone 254685842801\n✅ Duplicated customer to users_uuid\n✅ Customer Created: undefined\n[Test] Creating a transaction scenario\n✅ Transaction Created: undefined awaiting_merchant\n[Test] Finalizing transaction via merchantFinalise\nmerchantFinalise Error: {\n  code: '22P02',\n  details: null,\n  hint: null,\n  message: 'invalid input syntax for type bigint: \"undefined\"'\n}\n❌ Failed to finalize transaction\n[Test] Verifying Ledger and Balances\nTransaction Status now: undefined\nCustomer NX Balance now: undefined (Expected: 50 - 50 + 10 = 10)\nMerchant NX Balance now: undefined (Expected: 50)\n[Test] Initiating FCMG Restock Batch creation\n✅ Batch ID retrieved/created: null\nDone\n",
+    "durationMs": 2035
+  },
+  {
+    "timestamp": "2026-07-09T08:33:55.810Z",
+    "status": "success",
+    "output": "Supabase falling back to local client mock: Known inactive/paused Supabase URL detected\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\n--- Starting Comprehensive Transactional Tests ---\n[Test] Creating Merchant with phone 254473380239 and code M315577\n✅ Duplicated merchant to users_uuid\n✅ Merchant Created: undefined\n[Test] Creating Customer with phone 254953922400\n✅ Duplicated customer to users_uuid\n✅ Customer Created: undefined\n[Test] Creating a transaction scenario\n✅ Transaction Created: undefined awaiting_merchant\n[Test] Finalizing transaction via merchantFinalise\nmerchantFinalise Error: {\n  code: '22P02',\n  details: null,\n  hint: null,\n  message: 'invalid input syntax for type bigint: \"undefined\"'\n}\n❌ Failed to finalize transaction\n[Test] Verifying Ledger and Balances\nTransaction Status now: undefined\nCustomer NX Balance now: undefined (Expected: 50 - 50 + 10 = 10)\nMerchant NX Balance now: undefined (Expected: 50)\n[Test] Initiating FCMG Restock Batch creation\n✅ Batch ID retrieved/created: null\nDone\n",
+    "durationMs": 2075
+  },
+  {
+    "timestamp": "2026-07-09T08:43:55.812Z",
+    "status": "success",
+    "output": "Supabase falling back to local client mock: Known inactive/paused Supabase URL detected\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\n--- Starting Comprehensive Transactional Tests ---\n[Test] Creating Merchant with phone 254561988334 and code M431420\n✅ Duplicated merchant to users_uuid\n✅ Merchant Created: undefined\n[Test] Creating Customer with phone 254703904022\n✅ Duplicated customer to users_uuid\n✅ Customer Created: undefined\n[Test] Creating a transaction scenario\n✅ Transaction Created: undefined awaiting_merchant\n[Test] Finalizing transaction via merchantFinalise\nmerchantFinalise Error: {\n  code: '22P02',\n  details: null,\n  hint: null,\n  message: 'invalid input syntax for type bigint: \"undefined\"'\n}\n❌ Failed to finalize transaction\n[Test] Verifying Ledger and Balances\nTransaction Status now: undefined\nCustomer NX Balance now: undefined (Expected: 50 - 50 + 10 = 10)\nMerchant NX Balance now: undefined (Expected: 50)\n[Test] Initiating FCMG Restock Batch creation\n✅ Batch ID retrieved/created: null\nDone\n",
+    "durationMs": 1815
+  },
+  {
+    "timestamp": "2026-07-09T08:53:55.813Z",
+    "status": "success",
+    "output": "Supabase falling back to local client mock: Known inactive/paused Supabase URL detected\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\n--- Starting Comprehensive Transactional Tests ---\n[Test] Creating Merchant with phone 254981397424 and code M953138\n✅ Duplicated merchant to users_uuid\n✅ Merchant Created: undefined\n[Test] Creating Customer with phone 254798641506\n✅ Duplicated customer to users_uuid\n✅ Customer Created: undefined\n[Test] Creating a transaction scenario\n✅ Transaction Created: undefined awaiting_merchant\n[Test] Finalizing transaction via merchantFinalise\nmerchantFinalise Error: {\n  code: '22P02',\n  details: null,\n  hint: null,\n  message: 'invalid input syntax for type bigint: \"undefined\"'\n}\n❌ Failed to finalize transaction\n[Test] Verifying Ledger and Balances\nTransaction Status now: undefined\nCustomer NX Balance now: undefined (Expected: 50 - 50 + 10 = 10)\nMerchant NX Balance now: undefined (Expected: 50)\n[Test] Initiating FCMG Restock Batch creation\n✅ Batch ID retrieved/created: null\nDone\n",
+    "durationMs": 1985
+  },
+  {
+    "timestamp": "2026-07-09T09:01:53.876Z",
+    "status": "success",
+    "output": "Supabase falling back to local client mock: Known inactive/paused Supabase URL detected\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\n--- Starting Comprehensive Transactional Tests ---\n[Test] Creating Merchant with phone 254238992970 and code M277019\n✅ Duplicated merchant to users_uuid\n✅ Merchant Created: undefined\n[Test] Creating Customer with phone 254137316085\n✅ Duplicated customer to users_uuid\n✅ Customer Created: undefined\n[Test] Creating a transaction scenario\n✅ Transaction Created: undefined awaiting_merchant\n[Test] Finalizing transaction via merchantFinalise\nmerchantFinalise Error: {\n  code: '22P02',\n  details: null,\n  hint: null,\n  message: 'invalid input syntax for type bigint: \"undefined\"'\n}\n❌ Failed to finalize transaction\n[Test] Verifying Ledger and Balances\nTransaction Status now: undefined\nCustomer NX Balance now: undefined (Expected: 50 - 50 + 10 = 10)\nMerchant NX Balance now: undefined (Expected: 50)\n[Test] Initiating FCMG Restock Batch creation\n✅ Batch ID retrieved/created: null\nDone\n",
+    "durationMs": 1747
+  },
+  {
+    "timestamp": "2026-07-09T09:11:48.875Z",
+    "status": "success",
+    "output": "Supabase falling back to local client mock: Known inactive/paused Supabase URL detected\nSupabase falling back to local client mock: Known inactive/paused Supabase URL detected\n--- Starting Comprehensive Transactional Tests ---\n[Test] Creating Merchant with phone 254915743848 and code M602106\n✅ Duplicated merchant to users_uuid\n✅ Merchant Created: undefined\n[Test] Creating Customer with phone 254817794072\n✅ Duplicated customer to users_uuid\n✅ Customer Created: undefined\n[Test] Creating a transaction scenario\n✅ Transaction Created: undefined awaiting_merchant\n[Test] Finalizing transaction via merchantFinalise\nmerchantFinalise Error: {\n  code: '22P02',\n  details: null,\n  hint: null,\n  message: 'invalid input syntax for type bigint: \"undefined\"'\n}\n❌ Failed to finalize transaction\n[Test] Verifying Ledger and Balances\nTransaction Status now: undefined\nCustomer NX Balance now: undefined (Expected: 50 - 50 + 10 = 10)\nMerchant NX Balance now: undefined (Expected: 50)\n[Test] Initiating FCMG Restock Batch creation\n✅ Batch ID retrieved/created: null\nDone\n",
+    "durationMs": 2233
+  }
+]
