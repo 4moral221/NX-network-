@@ -820,10 +820,10 @@ export default function FmcgsPortal() {
 
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-4 font-sans text-white">
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="bg-nx-ink border border-nx-border shadow-2xl p-10 w-full max-w-md rounded-2xl">
+      <div className="min-h-[100dvh] bg-[#0a0a0a] flex flex-col justify-center p-6 font-sans text-white relative overflow-y-auto">
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="relative z-10 w-full max-w-sm mx-auto">
           <div className="flex items-center justify-between gap-3 mb-8">
-            <NXLogo />
+            <NXLogo title="FMCG Portal" />
             <div className="text-right border-l border-white/10 pl-4">
               <div className="font-display text-xl text-nx-paper">Dedicated Portal</div>
               <div className="text-[10px] text-nx-muted uppercase tracking-[0.2em]">FMCG Intelligence</div>
@@ -1092,11 +1092,11 @@ export default function FmcgsPortal() {
   
   if (isLoggedIn && brand && !brand.active) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-4 font-sans text-white">
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="bg-nx-ink border border-nx-border shadow-2xl p-10 w-full max-w-md rounded-2xl relative overflow-hidden">
+      <div className="min-h-[100dvh] bg-[#0a0a0a] flex flex-col justify-center p-6 font-sans text-white relative overflow-y-auto">
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="relative z-10 w-full max-w-sm mx-auto">
           <div className="absolute top-0 right-0 w-64 h-64 bg-nx-amber/5 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none" />
           <div className="flex items-center justify-between gap-3 mb-8 relative z-10">
-            <NXLogo />
+            <NXLogo title="FMCG Portal" />
             <div className="text-right border-l border-white/10 pl-4">
               <div className="font-display text-xl text-nx-paper">Dedicated Portal</div>
               <div className="text-[10px] text-nx-muted uppercase tracking-[0.2em]">FMCG Intelligence</div>
@@ -1209,7 +1209,7 @@ export default function FmcgsPortal() {
           </div>
         </aside>
         
-        <main className="flex-1 p-8 space-y-8 max-w-7xl">
+        <main className="flex-1 p-4 md:p-8 space-y-8 w-full">
           {activeTab === 'overview' && (
             <>
               <motion.div 

@@ -41,7 +41,7 @@ class ErrorBoundary extends Component<{children: ReactNode}, {hasError: boolean,
         errorStr.includes('preload');
 
       return (
-        <div className="min-h-screen bg-[#060810] flex flex-col items-center justify-center p-6 text-center">
+        <div className="min-h-[100dvh] bg-[#060810] flex flex-col items-center justify-center p-6 text-center">
           <div className="w-full max-w-md bg-[#0a0d1a] border border-red-500/20 p-8 rounded-2xl shadow-2xl relative overflow-hidden">
             <div className="absolute inset-0 bg-[linear-gradient(rgba(239,68,68,0.01)_1px,transparent_1px),linear-gradient(90deg,rgba(239,68,68,0.01)_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none"></div>
             
@@ -88,7 +88,7 @@ class ErrorBoundary extends Component<{children: ReactNode}, {hasError: boolean,
 
 function PageLoader() {
   return (
-    <div className="min-h-screen bg-nx-ink flex flex-col items-center justify-center gap-4">
+    <div className="min-h-[100dvh] bg-nx-ink flex flex-col items-center justify-center gap-4">
       <Loader2 className="w-10 h-10 text-nx-amber animate-spin" />
       <div className="font-display text-sm tracking-[0.2em] text-nx-amber/50 animate-pulse">
         NX NETWORK LOADING...

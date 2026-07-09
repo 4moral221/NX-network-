@@ -21,6 +21,7 @@ import {
   Play
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import NXLogo from '../../components/NXLogo';
 import { cn } from '@/src/lib/utils';
 import { supabase } from '@/src/lib/supabase';
 import { getPortalLink } from '@/src/lib/constants';
@@ -432,12 +433,12 @@ export default function MerchantPortal() {
 
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen bg-[#0e0e14] flex items-center justify-center p-6 font-sans">
+      <div className="min-h-[100dvh] flex flex-col bg-[#0e0e14] justify-center p-6 font-sans relative overflow-y-auto">
         <motion.div 
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-          className="bg-[#13131c] border border-[#1f1f2e] rounded-2xl p-10 w-full max-w-md shadow-2xl"
+          className="relative z-10 w-full max-w-sm mx-auto"
         >
-          <div className="font-display text-4xl font-extrabold text-[#ff6b35] mb-1">NX</div>
+          <div className="mb-4"><NXLogo title="Hub Portal" /></div>
           <div className="text-[#5a5a7a] text-sm mb-8">Merchant Portal</div>
           
           {!showSetup ? (
@@ -562,7 +563,7 @@ export default function MerchantPortal() {
           <div className="text-[10px] uppercase tracking-widest text-[#5a5a7a]">
             NX_NETWORK // MERCHANT_NODE
           </div>
-          <div className="font-display text-2xl font-extrabold text-[#ff6b35]">NX Hub</div>
+          <NXLogo title="Hub Portal" size="sm" />
           <div className="hidden md:flex items-center gap-2">
             <span className="bg-[#1a1020] text-[#ff6b35] px-3 py-1 rounded-full text-[11px] font-medium tracking-wider">{user?.merchant_code}</span>
             <span className="border border-[#ff6b35] text-[#ff6b35] px-3 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest">HUB TIER</span>
@@ -578,7 +579,7 @@ export default function MerchantPortal() {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto p-8">
+      <main className="w-full mx-auto p-4 md:p-8">
         {/* Tabs */}
         <div className="flex border-b border-[#1f1f2e] mb-8 overflow-x-auto">
           {[
@@ -1049,7 +1050,7 @@ export default function MerchantPortal() {
           )}
         </div>
       </main>
-      <footer className="max-w-6xl mx-auto px-8 py-12 border-t border-[#1f1f2e] text-center">
+      <footer className="w-full mx-auto px-4 md:px-8 py-12 border-t border-[#1f1f2e] text-center">
         <div className="text-[10px] uppercase tracking-[0.3em] text-[#5a5a7a] mb-4">Support</div>
         <div className="flex flex-col items-center gap-2">
           <a href="tel:0781550151" className="text-lg text-[#ff6b35] font-display font-bold">0781550151</a>

@@ -79,7 +79,7 @@ export default function PwaApp() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-nx-ink flex items-center justify-center">
+      <div className="min-h-[100dvh] bg-nx-ink flex flex-col items-center justify-center">
         <div className="w-10 h-10 border-4 border-nx-amber border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
@@ -90,7 +90,7 @@ export default function PwaApp() {
       <div className="w-full flex-1 bg-nx-ink relative flex flex-col">
         <SafeFallback>
           <Suspense fallback={
-            <div className="min-h-screen bg-nx-ink flex flex-col items-center justify-center gap-4">
+            <div className="min-h-[100dvh] bg-nx-ink flex flex-col items-center justify-center gap-4">
               <div className="w-10 h-10 border-4 border-nx-amber border-t-transparent rounded-full animate-spin"></div>
               <div className="font-display text-sm tracking-[0.2em] text-nx-amber/50 animate-pulse uppercase">
                 Loading secure view...

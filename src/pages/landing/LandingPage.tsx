@@ -6,6 +6,7 @@ import { cn } from '@/src/lib/utils';
 import { supabase } from '@/src/lib/supabase';
 import { getPortalLink, PORTAL_URLS } from '@/src/lib/constants';
 import { QRCodeSVG } from 'qrcode.react';
+import NXLogo from '../../components/NXLogo';
 
 import dukaMerchantImg from '@/src/assets/images/duka_merchant_1783441965415.jpg';
 import nxCustomerImg from '@/src/assets/images/nx_customer_1783441980207.jpg';
@@ -146,16 +147,7 @@ export default function LandingPage() {
         scrolled ? "bg-nx-ink/92 backdrop-blur-xl border-b border-nx-amber/12" : "bg-transparent"
       )}>
           <Link to="/" className="flex items-center gap-3 group">
-          <div className="relative w-10 h-10 rounded-full overflow-hidden shadow-[0_0_0_1.5px_#FF5E00]">
-             <div className="absolute inset-0 bg-[#0a0a0a] [clip-path:polygon(0%_38%,100%_18%,100%_62%,0%_82%)] animate-[slabB_6s_ease-in-out_infinite]" />
-             <div className="absolute inset-0 bg-[#FF5E00] [clip-path:polygon(0%_80%,100%_60%,100%_65%,0%_85%)] animate-[strS_6s_ease-in-out_infinite]" />
-             <div className="absolute inset-0 flex items-center justify-center font-display text-xl font-bold">
-               <span className="text-[#0a0a0a] relative z-10 animate-[nP_6s_ease-in-out_infinite] after:content-['N'] after:absolute after:inset-0 after:text-nx-paper after:[clip-path:polygon(0%_44%,110%_20%,110%_68%,0%_92%)] after:animate-[slabB_6s_ease-in-out_infinite]">N</span>
-               <span className="text-nx-paper relative z-10 animate-[xP_6s_ease-in-out_infinite_reverse] after:content-['X'] after:absolute after:inset-0 after:text-[#FF5E00] after:[clip-path:polygon(0%_80%,120%_58%,120%_68%,0%_90%)] after:animate-[strS_6s_ease-in-out_infinite] after:brightness-125 before:content-['X'] before:absolute before:inset-0 before:text-[#0a0a0a] before:[clip-path:polygon(0%_0%,120%_0%,120%_18%,0%_38%)] before:animate-[slabB_6s_ease-in-out_infinite]">X</span>
-             </div>
-             <div className="absolute w-1 h-1 rounded-full bg-[#FF5E00] bottom-1.5 left-1/2 -translate-x-1/2 z-20 animate-[dP_3s_ease-in-out_infinite]" />
-          </div>
-          <span className="font-display text-xl tracking-[0.2em] text-nx-amber">NX</span>
+          <NXLogo size="sm" />
         </Link>
 
         <div className="hidden lg:flex items-center gap-6">
@@ -204,7 +196,7 @@ export default function LandingPage() {
               className="fixed top-0 right-0 bottom-0 w-[min(340px,88vw)] bg-nx-card border-l border-nx-border z-[400] flex flex-col"
             >
               <div className="flex items-center justify-between px-6 h-16 border-b border-nx-border">
-                <span className="font-display text-lg tracking-[0.2em] text-nx-amber">NX NETWORK</span>
+                <NXLogo title="Network" size="sm" />
                 <button onClick={() => setIsMenuOpen(false)} className="p-2 text-nx-muted hover:text-nx-paper transition-colors">
                   <X className="w-5 h-5" />
                 </button>
@@ -1422,11 +1414,7 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
           <div className="col-span-1 md:col-span-2">
             <Link to="/" className="flex items-center gap-3 mb-6">
-              <div className="relative w-8 h-8 rounded-full overflow-hidden shadow-[0_0_0_1px_#FF5E00]">
-                 <div className="absolute inset-0 bg-[#FF5E00] [clip-path:polygon(0%_80%,100%_60%,100%_65%,0%_85%)]" />
-                 <div className="absolute inset-0 flex items-center justify-center font-display text-sm font-bold text-nx-paper">NX</div>
-              </div>
-              <span className="font-display text-lg tracking-[0.2em] text-nx-amber">NX NETWORK</span>
+              <NXLogo title="Network" size="sm" />
             </Link>
             <p className="text-sm text-nx-muted max-w-sm leading-relaxed mb-8">
               Kenya's first USSD-native loyalty infrastructure for the informal retail economy. Empowering dukas and customers through digital rewards.

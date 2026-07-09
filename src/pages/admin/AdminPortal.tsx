@@ -2078,13 +2078,13 @@ export default function AdminPortal() {
 
   if (!isLoggedIn) {
     return (
-      <div className="min-h-[100dvh] bg-[#060810] flex items-center justify-center p-4 sm:p-6 w-full">
-        <div className="w-full max-w-[400px] bg-[#0a0d1a] border border-white/10 p-6 sm:p-10 rounded-2xl shadow-2xl relative overflow-hidden mx-auto">
+      <div className="min-h-[100dvh] bg-[#060810] flex flex-col justify-center p-6 w-full relative overflow-y-auto">
+        <div className="relative z-10 w-full max-w-sm mx-auto">
           <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,136,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,136,0.02)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none"></div>
           
           <div className="relative z-10">
             <div className="flex justify-center mb-8">
-              <NXLogo />
+              <NXLogo title="Admin Portal" />
             </div>
             <h1 className="font-mono text-xl font-bold text-center text-white mb-2 uppercase tracking-[0.3em]">Admin Console</h1>
             <p className="text-[10px] text-white/40 text-center uppercase tracking-widest mb-8">NX Network // Secure Access</p>

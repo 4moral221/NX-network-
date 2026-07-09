@@ -1377,8 +1377,8 @@ MERCHANT_CODE: M-104 | PHONE: +254766666666 | ORDER_SPEC: Pembe 2kg*22 | ORDER_Q
   // ── LOGIN ─────────────────────────────────────────────────
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen bg-[#f4f5f7] flex items-center justify-center p-4 font-sans">
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl border border-[#e4e6ea] shadow-xl p-10 w-full max-w-md">
+      <div className="min-h-[100dvh] flex flex-col bg-[#f4f5f7] justify-center p-6 font-sans relative overflow-y-auto">
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="relative z-10 w-full max-w-sm mx-auto">
           <div className="flex items-center justify-between gap-3 mb-8">
             <div className="scale-[0.8] origin-left">
               <NXLogo title="Partner" />
@@ -1818,7 +1818,7 @@ MERCHANT_CODE: M-104 | PHONE: +254766666666 | ORDER_SPEC: Pembe 2kg*22 | ORDER_Q
         ))}
       </div>
 
-      <main className="max-w-6xl mx-auto p-8">
+      <main className="w-full mx-auto p-4 md:p-8">
 
         {/* OVERVIEW */}
         {activeTab === 'overview' && (
@@ -2586,7 +2586,7 @@ MERCHANT_CODE: M-104 | PHONE: +254766666666 | ORDER_SPEC: Pembe 2kg*22 | ORDER_Q
 
       </main>
 
-      <footer className="max-w-6xl mx-auto px-8 py-12 border-t border-[#e4e6ea] text-center">
+      <footer className="w-full mx-auto px-4 md:px-8 py-12 border-t border-[#e4e6ea] text-center">
         <div className="text-[10px] uppercase tracking-[0.3em] text-[#6b7280] mb-4">Support</div>
         <a href="tel:0781550151" className="text-lg text-[#1a1d23] font-bold block">0781550151</a>
         <p className="text-[11px] text-[#6b7280] mt-1">Contact NX Support for any portal issues or account queries.</p>

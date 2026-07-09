@@ -195,7 +195,7 @@ export default function FmcgOnboarding() {
       <div className="min-h-screen bg-[#0a0a0a] font-sans text-white flex flex-col md:flex-row">
         {/* Left branding */}
         <div className="hidden md:flex flex-col justify-center p-12 lg:p-24 w-full md:w-1/2 border-r border-[#00d4ff]/20 bg-[radial-gradient(circle_at_top_left,rgba(0,212,255,0.05)_0%,transparent_100%)]">
-           <NXLogo />
+           <NXLogo title="Onboarding" />
            <h1 className="text-4xl font-display uppercase tracking-widest mt-12 mb-6 text-[#00d4ff]">FMCG Partner Gateway</h1>
            <p className="text-nx-muted text-sm leading-relaxed max-w-md">Connect directly to the informal retail network. Generate live API keys securely and integrate with NX Core infrastructure.</p>
            
@@ -221,7 +221,7 @@ export default function FmcgOnboarding() {
         <div className="flex-1 flex flex-col justify-center p-6 sm:p-12">
           <div className="w-full max-w-md mx-auto relative">
              <div className="absolute top-0 right-0 w-64 h-64 bg-[#00d4ff]/10 rounded-full blur-[100px] -mr-32 -mt-32 pointer-events-none" />
-             <div className="md:hidden flex justify-center mb-8"><NXLogo /></div>
+             <div className="md:hidden flex justify-center mb-8"><NXLogo title="Onboarding" /></div>
              
              <div className="bg-[#111111] border border-white/10 rounded-3xl p-8 relative z-10 shadow-2xl">
                <h2 className="text-2xl font-display uppercase tracking-widest mb-2">{authMode === 'login' ? 'Portal Access' : 'Initialize Partner'}</h2>
@@ -283,7 +283,7 @@ export default function FmcgOnboarding() {
     <div className="min-h-screen bg-[#0a0a0a] text-white font-sans selection:bg-[#00d4ff]/30">
       <nav className="h-16 border-b border-white/10 flex items-center justify-between px-6 sticky top-0 bg-[#0a0a0a]/80 backdrop-blur-md z-50">
          <div className="flex items-center gap-4">
-            <NXLogo />
+            <NXLogo title="Onboarding" />
             <div className="h-4 w-[1px] bg-white/20 mx-2" />
             <span className="font-display uppercase tracking-widest text-sm text-[#00d4ff]">Developer Portal</span>
          </div>
