@@ -56,12 +56,6 @@ async function requireAuth(req: any, res: any, next: any) {
       return res.status(401).json({ success: false, error: 'Unauthorized: Missing or invalid token' });
     }
     const token = authHeader.split(' ')[1];
-    
-    // Support local bypass or mock tokens
-    if (token === 'admin_token' || token === 'mock_fmcg_token') {
-      next();
-      return;
-    }
 
     const { data: { user }, error } = await supabase.auth.getUser(token);
     if (error || !user) {
@@ -82,11 +76,6 @@ async function requireAdmin(req: any, res: any, next: any) {
     }
     const token = authHeader.split(' ')[1];
 
-    if (token === 'admin_token') {
-      next();
-      return;
-    }
-
     const { data: { user }, error } = await supabase.auth.getUser(token);
     if (error || !user) {
       return res.status(401).json({ success: false, error: 'Unauthorized: Session expired or invalid' });
@@ -100,17 +89,14 @@ async function requireAdmin(req: any, res: any, next: any) {
       .or(`email.eq.${email.trim().toLowerCase()},phone.eq.${phone.trim()}`)
       .maybeSingle();
 
-    const isAdmin = dbUser?.is_admin ||
-      email.toLowerCase() === 'formidablefoe254@gmail.com' ||
-      email.toLowerCase() === 'admin@nx.network' ||
-      phone === '+254712345678';
+    const isAdmin = dbUser?.is_admin === true;
 
     if (!isAdmin) {
       return res.status(403).json({ success: false, error: 'Forbidden: Admin access required' });
     }
 
     req.user = user;
-    req.adminRole = dbUser?.admin_role || 'super_admin';
+    req.adminRole = dbUser?.admin_role || 'standard';
     next();
   } catch (err: any) {
     res.status(500).json({ success: false, error: 'Admin validation failed: ' + err.message });
