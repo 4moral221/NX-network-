@@ -1028,7 +1028,7 @@ export default function LandingPage() {
               </div>
               
               <div>
-                <label className="block text-[10px] uppercase tracking-widest text-nx-muted mb-4">Annual Restock Volume (KSH)</label>
+                <label className="block text-[10px] uppercase tracking-widest text-nx-muted mb-4">Monthly Restock Volume (KSH)</label>
                 <input 
                   type="range" min="10000" max="500000" step="5000"
                   value={restockVolume}
@@ -1037,7 +1037,7 @@ export default function LandingPage() {
                 />
                 <div className="flex justify-between mt-4 font-display text-2xl text-nx-paper">
                   <span>KSH {restockVolume.toLocaleString()}</span>
-                  <span className="text-nx-muted text-xs font-sans self-end uppercase tracking-widest">Per Year</span>
+                  <span className="text-nx-muted text-xs font-sans self-end uppercase tracking-widest">Per Month</span>
                 </div>
               </div>
             </div>
@@ -1053,7 +1053,7 @@ export default function LandingPage() {
             </div>
             
             <div className="mt-8 p-4 bg-nx-amber/5 border-l-2 border-nx-amber text-[11px] text-nx-muted leading-relaxed">
-              💡 <strong>Tier Impact:</strong> At your current volume, switching to <strong>HUB</strong> would increase your pool by <strong>{((restockVolume * 0.05 * 0.7) - (restockVolume * 0.05 * 0.6)).toFixed(0)} NX</strong> per year.
+              💡 <strong>Tier Impact:</strong> At your current volume, switching to <strong>HUB</strong> would increase your pool by <strong>{((restockVolume * 0.05 * 0.7) - (restockVolume * 0.05 * 0.6)).toFixed(0)} NX</strong> per month.
             </div>
           </div>
         </div>

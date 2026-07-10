@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, FormEvent } from 'react';
 import { supabase } from '../../lib/supabase';
+import { sha256 } from 'js-sha256';
 import { ArrowRight, AlertCircle, Eye, EyeOff, X } from 'lucide-react';
 import NXLogo from '../../components/NXLogo';
 import { toast } from 'react-hot-toast';
@@ -189,21 +190,13 @@ export default function Login({ onLogin }: { onLogin: (user: any) => void }) {
         setError('Phone number not registered. Register using *384*6180#.');
         toast.error('Authentication Rejected', { id: 'pwa-login' });
       } else {
-        // Verify PIN hashing
-        const encoder = new TextEncoder();
-        const dataToHash = encoder.encode(trimmedPin + user.phone);
-        const hashBuffer = await crypto.subtle.digest('SHA-256', dataToHash);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        const computedHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-
+        // Verify PIN hashing via pure js-sha256 library
+        const computedHash = sha256(trimmedPin + user.phone);
         let matched = (computedHash === user.recovery_pin);
         
-        // Also support straight js-sha256 if created via our ops tools
+        // Also support straight plain PIN hashing if created via our ops tools
         if (!matched) {
-            const dataToHashPlain = encoder.encode(trimmedPin);
-            const plainHashBuffer = await crypto.subtle.digest('SHA-256', dataToHashPlain);
-            const plainHashArray = Array.from(new Uint8Array(plainHashBuffer));
-            const computedPlainHash = plainHashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            const computedPlainHash = sha256(trimmedPin);
             if (computedPlainHash === user.recovery_pin) {
                 matched = true;
             }
