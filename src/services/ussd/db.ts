@@ -121,6 +121,14 @@ export async function merchantFinalise(txn: any): Promise<boolean> {
         await supabase.from("transactions").update({ status: "confirmed" }).eq("id", id);
         
         // Manual Ledger Entries (mirrors handle_transaction_completion trigger)
+        let targetDebitPhone = customer_phone;
+        if (txn.family_code) {
+          const { data: family } = await supabase.from("family_accounts").select("parent_phone").eq("family_code", txn.family_code).maybeSingle();
+          if (family?.parent_phone) {
+            targetDebitPhone = family.parent_phone;
+          }
+        }
+
         const entries = [];
         if (nx_earned > 0) {
           entries.push({ 
@@ -133,7 +141,7 @@ export async function merchantFinalise(txn: any): Promise<boolean> {
         }
         if (nx_redeemed > 0) {
           entries.push({ 
-            account_phone: customer_phone, 
+            account_phone: targetDebitPhone, 
             entry_type: 'debit', 
             amount: -nx_redeemed, 
             reference: transaction_code, 
@@ -164,22 +172,38 @@ export async function merchantFinalise(txn: any): Promise<boolean> {
 
         // Update balances manually since DB trigger didn't run
         if (customer_phone) {
-          const { data: customerUser } = await supabase
+          const { data: debitUser } = await supabase
             .from('users')
             .select('nx_balance')
-            .eq('phone', customer_phone)
+            .eq('phone', targetDebitPhone)
             .maybeSingle();
 
-          const currentBal = Number(customerUser?.nx_balance || 0);
-          const newBal = currentBal + (Number(nx_earned) - Number(nx_redeemed));
-
+          const currentBal = Number(debitUser?.nx_balance || 0);
+          const parentNewBal = currentBal - Number(nx_redeemed);
           await supabase.from("users")
-            .update({ 
-              nx_balance: newBal,
-              is_first_purchase_used: true,
-              cancellation_count: 0
-            })
-            .eq("phone", customer_phone);
+            .update({ nx_balance: parentNewBal })
+            .eq("phone", targetDebitPhone);
+
+          if (targetDebitPhone !== customer_phone) {
+            const { data: childUser } = await supabase.from('users').select('nx_balance').eq('phone', customer_phone).maybeSingle();
+            const childNewBal = Number(childUser?.nx_balance || 0) + Number(nx_earned);
+            await supabase.from("users")
+              .update({ 
+                nx_balance: childNewBal,
+                is_first_purchase_used: true,
+                cancellation_count: 0
+              })
+              .eq("phone", customer_phone);
+          } else {
+            const childNewBal = currentBal + (Number(nx_earned) - Number(nx_redeemed));
+            await supabase.from("users")
+              .update({ 
+                nx_balance: childNewBal,
+                is_first_purchase_used: true,
+                cancellation_count: 0
+              })
+              .eq("phone", customer_phone);
+          }
         }
 
         if (merchant_phone && nx_redeemed > 0) {

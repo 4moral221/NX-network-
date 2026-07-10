@@ -21,7 +21,10 @@ import {
   ArrowRight,
   Clock,
   AlertCircle,
-  Zap
+  Zap,
+  Menu,
+  Users,
+  Lock
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { TIER_CONFIG } from '../../services/ussd/config';
@@ -40,7 +43,14 @@ export default function CustomerDashboard({ user, onLogout }: { user: any, onLog
   const [weeklySavings, setWeeklySavings] = useState(0);
   const [nearbyMerchants, setNearbyMerchants] = useState<any[]>([]);
   const [loyaltyStats, setLoyaltyStats] = useState({ level: 'NX Pioneer', progress: 65, nextLevel: 'NX Elite' });
-  const [activeTab, setActiveTab] = useState<'home' | 'merchants' | 'history'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'merchants' | 'history' | 'family'>('home');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [familyAccount, setFamilyAccount] = useState<any>(null);
+  const [familyTxns, setFamilyTxns] = useState<any[]>([]);
+  const [familyCodeInput, setFamilyCodeInput] = useState('');
+  const [isCreatingFamily, setIsCreatingFamily] = useState(false);
+  const [isFamilyPaymentMode, setIsFamilyPaymentMode] = useState(false); // individual vs family payment tab
+  const [familyCodePaymentInput, setFamilyCodePaymentInput] = useState('');
   
   // Payment Modal State
   const [isPayModalOpen, setIsPayModalOpen] = useState(false);
@@ -121,11 +131,34 @@ export default function CustomerDashboard({ user, onLogout }: { user: any, onLog
       setIsLoading(false);
     };
     fetchMerchants();
+  };
 
+  const fetchFamilyAccount = async () => {
+    const { data: fam } = await supabase
+      .from('family_accounts')
+      .select('*')
+      .eq('parent_phone', user.phone)
+      .maybeSingle();
+
+    if (fam) {
+      setFamilyAccount(fam);
+      const { data: fTxns } = await supabase
+        .from('transactions')
+        .select('*')
+        .eq('family_code', fam.family_code)
+        .order('created_at', { ascending: false });
+      if (fTxns) {
+        setFamilyTxns(fTxns);
+      }
+    } else {
+      setFamilyAccount(null);
+      setFamilyTxns([]);
+    }
   };
 
   useEffect(() => {
     fetchBalanceAndTxns();
+    fetchFamilyAccount();
   }, [user.phone]);
 
   const handlePay = async (e: FormEvent) => {
@@ -147,12 +180,59 @@ export default function CustomerDashboard({ user, onLogout }: { user: any, onLog
            type: 'PAYMENT',
            payload: { merchantCode: merchantCode.toUpperCase(), amount: numAmount, phone: user.phone },
            timestamp: Date.now()
-        });
+         });
         toast.error("Offline: Payment saved locally. Will sync when online.");
         setPayStatus('idle');
         setIsPayModalOpen(false);
         return;
       }
+
+      let targetBalance = balance;
+      let parentPhone = '';
+
+      if (isFamilyPaymentMode) {
+        if (!familyCodePaymentInput) {
+          setPayError('Family Code is required.');
+          setPayStatus('error');
+          return;
+        }
+
+        const { data: family, error: famErr } = await supabase
+          .from('family_accounts')
+          .select('*')
+          .eq('family_code', familyCodePaymentInput.toUpperCase().trim())
+          .maybeSingle();
+
+        if (famErr || !family) {
+          setPayError('Family account not found. Check the code.');
+          setPayStatus('error');
+          return;
+        }
+
+        if (!family.allow_spending || family.status !== 'active') {
+          setPayError('Family spending is deactivated by the parent.');
+          setPayStatus('error');
+          return;
+        }
+
+        parentPhone = family.parent_phone;
+
+        // Fetch parent's balance
+        const { data: parentUser, error: parentErr } = await supabase
+          .from('users')
+          .select('nx_balance')
+          .eq('phone', parentPhone)
+          .maybeSingle();
+
+        if (parentErr || !parentUser) {
+          setPayError('Could not retrieve parent balance.');
+          setPayStatus('error');
+          return;
+        }
+
+        targetBalance = Number(parentUser.nx_balance || 0);
+      }
+
       // 1. Find merchant
       const { data: merchant, error: merchantErr } = await supabase
         .from('users')
@@ -220,16 +300,16 @@ export default function CustomerDashboard({ user, onLogout }: { user: any, onLog
       else if (utilization >= 0.40) earnMultiplier = 0.50;
 
       const maxNxAllowed = Math.floor(numAmount * dynamicCeiling);
-      const nxRedeemed = floorToFive(Math.min(balance, maxNxAllowed, remainingPool));
+      const nxRedeemed = floorToFive(Math.min(targetBalance, maxNxAllowed, remainingPool));
       const cashPaid = numAmount - nxRedeemed;
-      const nxEarned = Math.floor(cashPaid * earnRate * earnMultiplier);
-      const nxFee = balance > 0 ? 2 : 0; 
+      const nxEarned = isFamilyPaymentMode ? 0 : Math.floor(cashPaid * earnRate * earnMultiplier); // child earns 0 if parent pays to avoid double-dipping, or they can earn. Let's make child earn 0 passively on family pay.
+      const nxFee = targetBalance > 0 ? 2 : 0; 
       
       const transactionCode = 'NX' + Math.random().toString(36).substring(2, 8).toUpperCase();
 
       // 3. Record Transaction (Awaiting Approval)
       try {
-        const { error: txnErr } = await supabase.from('transactions').insert([{
+        const txnPayload: any = {
           transaction_code: transactionCode,
           customer_phone: user.phone,
           merchant_code: merchant.merchant_code,
@@ -240,7 +320,13 @@ export default function CustomerDashboard({ user, onLogout }: { user: any, onLog
           cash_paid: cashPaid,
           nx_fee: nxFee,
           status: 'awaiting_merchant'
-        }]);
+        };
+
+        if (isFamilyPaymentMode) {
+          txnPayload.family_code = familyCodePaymentInput.toUpperCase().trim();
+        }
+
+        const { error: txnErr } = await supabase.from('transactions').insert([txnPayload]);
 
         if (txnErr) {
           if (txnErr.code === '23503') {
@@ -317,12 +403,138 @@ export default function CustomerDashboard({ user, onLogout }: { user: any, onLog
   return (
     <div className="flex-1 flex flex-col bg-nx-ink relative">
       {/* Header */}
-      <header className="px-6 py-5 border-b border-nx-border flex items-center justify-between bg-nx-card">
-        <NXLogo title={user.name} />
+      <header className="px-6 py-5 border-b border-nx-border flex items-center justify-between bg-nx-card relative">
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setIsSidebarOpen(true)}
+            className="p-2 -ml-2 text-nx-muted hover:text-nx-paper transition-colors rounded-lg hover:bg-nx-border/20"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+          <NXLogo title={user.name} />
+        </div>
         <button onClick={onLogout} className="p-2 text-nx-muted hover:text-nx-ember transition-colors">
           <LogOut className="w-5 h-5" />
         </button>
       </header>
+
+      {/* Sidebar Overlay */}
+      <AnimatePresence>
+        {isSidebarOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.5 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsSidebarOpen(false)}
+              className="fixed inset-0 bg-black z-40 cursor-pointer"
+            />
+
+            {/* Sidebar Box */}
+            <motion.div
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed inset-y-0 left-0 w-72 bg-nx-card border-r border-nx-border shadow-2xl z-50 flex flex-col p-6"
+            >
+              <div className="flex items-center justify-between mb-8 pb-4 border-b border-nx-border">
+                <NXLogo title="NX Network" />
+                <button
+                  onClick={() => setIsSidebarOpen(false)}
+                  className="p-1.5 rounded-lg text-nx-muted hover:text-nx-paper hover:bg-nx-border/20 transition-all"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* User Profile Info */}
+              <div className="mb-8 p-4 bg-nx-ink/50 border border-nx-border rounded-xl flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-nx-amber/10 border border-nx-amber/20 flex items-center justify-center font-display text-nx-amber font-bold">
+                  {user.name ? user.name[0].toUpperCase() : 'U'}
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-nx-paper">{user.name}</div>
+                  <div className="text-[10px] text-nx-muted font-mono">{user.phone}</div>
+                </div>
+              </div>
+
+              {/* Navigation Items */}
+              <div className="flex-1 space-y-2">
+                <button
+                  onClick={() => {
+                    setActiveTab('home');
+                    setIsSidebarOpen(false);
+                  }}
+                  className={cn(
+                    "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all",
+                    activeTab === 'home'
+                      ? "bg-nx-amber/10 text-nx-amber border border-nx-amber/20"
+                      : "text-nx-muted hover:text-nx-paper hover:bg-nx-border/10"
+                  )}
+                >
+                  <Wallet className="w-4 h-4" />
+                  <span>Wallet</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setActiveTab('merchants');
+                    setIsSidebarOpen(false);
+                  }}
+                  className={cn(
+                    "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all",
+                    activeTab === 'merchants'
+                      ? "bg-nx-amber/10 text-nx-amber border border-nx-amber/20"
+                      : "text-nx-muted hover:text-nx-paper hover:bg-nx-border/10"
+                  )}
+                >
+                  <Store className="w-4 h-4" />
+                  <span>Dukas &amp; Shops</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setActiveTab('family');
+                    setIsSidebarOpen(false);
+                  }}
+                  className={cn(
+                    "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all",
+                    activeTab === 'family'
+                      ? "bg-nx-amber/10 text-nx-amber border border-nx-amber/20"
+                      : "text-nx-muted hover:text-nx-paper hover:bg-nx-border/10"
+                  )}
+                >
+                  <Users className="w-4 h-4" />
+                  <span>Family Account</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setActiveTab('history');
+                    setIsSidebarOpen(false);
+                  }}
+                  className={cn(
+                    "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all",
+                    activeTab === 'history'
+                      ? "bg-nx-amber/10 text-nx-amber border border-nx-amber/20"
+                      : "text-nx-muted hover:text-nx-paper hover:bg-nx-border/10"
+                  )}
+                >
+                  <History className="w-4 h-4" />
+                  <span>History</span>
+                </button>
+              </div>
+
+              {/* Bottom Version */}
+              <div className="pt-4 border-t border-nx-border text-center">
+                <span className="text-[10px] font-mono text-nx-muted uppercase tracking-widest">NX Loyalty v1.2</span>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       <div className="flex-1 overflow-y-auto p-6 space-y-6 pb-24">
         {activeTab === 'home' && (
@@ -557,6 +769,165 @@ export default function CustomerDashboard({ user, onLogout }: { user: any, onLog
           </div>
         )}
 
+        {activeTab === 'family' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs uppercase tracking-widest text-nx-paper font-bold">Family Account Management</h3>
+              <span className="text-[10px] bg-nx-amber/10 border border-nx-amber/20 text-nx-amber px-2 py-0.5 rounded font-bold uppercase tracking-wider">
+                Parent Center
+              </span>
+            </div>
+
+            {familyAccount ? (
+              <div className="space-y-6">
+                {/* Active Family Card */}
+                <div className="bg-gradient-to-br from-nx-card to-nx-card2 border border-nx-border rounded-2xl p-6 relative overflow-hidden shadow-xl shadow-black/20">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-nx-amber/5 rounded-full blur-2xl -mr-10 -mt-10"></div>
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-[10px] uppercase tracking-widest text-nx-amber font-bold flex items-center gap-1.5">
+                      <Users className="w-4 h-4" /> Family Sharing Active
+                    </span>
+                    <span className="px-2 py-1 bg-nx-amber/10 rounded text-[9px] text-nx-amber font-bold border border-nx-amber/20 uppercase">
+                      Code Valid
+                    </span>
+                  </div>
+
+                  <div className="font-mono text-4xl text-nx-paper tracking-widest text-center my-6 select-all font-bold">
+                    {familyAccount.family_code}
+                  </div>
+
+                  <p className="text-[11px] text-nx-muted text-center mb-6">
+                    Give this code to your children or family members. They can enter this code at any certified Duka to pay directly using your NX balance.
+                  </p>
+
+                  <div className="pt-4 border-t border-nx-border/50 flex justify-between items-center text-xs">
+                    <span className="text-nx-muted">Shared Wallet Balance</span>
+                    <span className="text-nx-amber font-bold font-mono text-sm">{balance.toFixed(2)} NX</span>
+                  </div>
+                </div>
+
+                {/* Risk Toggle Section */}
+                <div className="bg-nx-card border border-nx-border rounded-xl p-5 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-xs font-bold text-nx-paper uppercase tracking-wider">Spending Access</h4>
+                      <p className="text-[10px] text-nx-muted">Toggle between passive earning and shared redemptions</p>
+                    </div>
+                    <button
+                      onClick={async () => {
+                        const newAllow = !familyAccount.allow_spending;
+                        const { error } = await supabase
+                          .from('family_accounts')
+                          .update({ allow_spending: newAllow })
+                          .eq('id', familyAccount.id);
+                        if (!error) {
+                          setFamilyAccount({ ...familyAccount, allow_spending: newAllow });
+                          toast.success(newAllow ? "Shared spending enabled!" : "Deactivated shared spending.");
+                        } else {
+                          toast.error("Failed to update family spending state.");
+                        }
+                      }}
+                      className={cn(
+                        "px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider border transition-all duration-300",
+                        familyAccount.allow_spending
+                          ? "bg-nx-ember/10 text-nx-ember border-nx-ember/20"
+                          : "bg-nx-green/10 text-nx-green border-nx-green/20"
+                      )}
+                    >
+                      {familyAccount.allow_spending ? "Earn & Spend" : "Earn Only"}
+                    </button>
+                  </div>
+
+                  {familyAccount.allow_spending ? (
+                    <div className="p-3 bg-nx-ember/10 border border-nx-ember/20 rounded-xl flex items-start gap-2.5">
+                      <AlertCircle className="w-4 h-4 text-nx-ember shrink-0 mt-0.5" />
+                      <p className="text-[10px] text-nx-ember uppercase tracking-tight leading-normal">
+                        <strong>Warning (Earn &amp; Spend Active)</strong>: Family members with your code can now redeem tokens directly from your personal wallet. You accept the financial risks.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="p-3 bg-nx-green/10 border border-nx-green/20 rounded-xl flex items-start gap-2.5">
+                      <CheckCircle2 className="w-4 h-4 text-nx-green shrink-0 mt-0.5" />
+                      <p className="text-[10px] text-nx-green uppercase tracking-tight leading-normal">
+                        <strong>Earn Only Mode (De-risked)</strong>: Family members can only passively earn NX units for the family pool. They cannot spend or deplete your tokens.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Family Transactions Ledger */}
+                <div className="bg-nx-card border border-nx-border rounded-xl p-5 space-y-4">
+                  <div className="flex items-center justify-between pb-2 border-b border-nx-border">
+                    <span className="text-[10px] uppercase tracking-widest text-nx-paper font-bold">Family Activity Logs</span>
+                    <span className="text-[9px] text-nx-muted font-mono">{familyTxns.length} events logged</span>
+                  </div>
+
+                  {familyTxns.length === 0 ? (
+                    <div className="text-center py-6 text-xs text-nx-muted">
+                      No family transactions recorded yet.
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {familyTxns.map((txn) => (
+                        <div key={txn.id} className="bg-nx-ink/40 border border-nx-border/50 rounded-xl p-4 flex items-center justify-between">
+                          <div>
+                            <div className="text-xs text-nx-paper font-bold">Spender: {txn.customer_phone}</div>
+                            <div className="text-[10px] text-nx-muted mb-1">Kiosk: {txn.merchant_code}</div>
+                            <div className="text-[9px] text-nx-muted font-mono uppercase">{txn.transaction_code}</div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-sm font-mono text-nx-paper font-bold font-mono">KSH {txn.amount}</div>
+                            <div className="text-[10px] text-nx-ember font-mono">- {txn.nx_redeemed.toFixed(2)} NX</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="bg-nx-card border border-nx-border rounded-xl p-6 text-center space-y-6">
+                <div className="w-16 h-16 bg-nx-amber/10 rounded-full flex items-center justify-center mx-auto">
+                  <Users className="w-8 h-8 text-nx-amber" />
+                </div>
+                <div>
+                  <h4 className="font-display text-xl text-nx-paper mb-1">Create Family Account</h4>
+                  <p className="text-xs text-nx-muted max-w-xs mx-auto">
+                    Generate a revocable, regeneratable family code to allow children to passively earn NX units or share spending privileges with your oversight.
+                  </p>
+                </div>
+
+                <button
+                  onClick={async () => {
+                    setIsCreatingFamily(true);
+                    const code = "FAM" + Math.floor(10000 + Math.random() * 90000);
+                    const { error } = await supabase
+                      .from('family_accounts')
+                      .insert({
+                        parent_phone: user.phone,
+                        family_code: code,
+                        status: 'active',
+                        allow_spending: false // defaults to earn only! De-risked!
+                      });
+                    
+                    if (!error) {
+                      toast.success("Family account created successfully!");
+                      await fetchFamilyAccount();
+                    } else {
+                      toast.error("Failed to register family account.");
+                    }
+                    setIsCreatingFamily(false);
+                  }}
+                  disabled={isCreatingFamily}
+                  className="w-full py-3 bg-nx-amber text-nx-ink font-bold uppercase tracking-wider rounded-xl hover:bg-nx-paper transition-colors disabled:opacity-50"
+                >
+                  {isCreatingFamily ? "Creating..." : "Generate Family Code"}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
         {activeTab === 'history' && (
           <div className="space-y-6">
             <h3 className="text-xs uppercase tracking-widest text-nx-paper font-bold">Transaction History</h3>
@@ -584,6 +955,7 @@ export default function CustomerDashboard({ user, onLogout }: { user: any, onLog
         {[
           { id: 'home', icon: <Wallet className="w-5 h-5" />, label: 'Wallet' },
           { id: 'merchants', icon: <MapPin className="w-5 h-5" />, label: 'Shops' },
+          { id: 'family', icon: <Users className="w-5 h-5" />, label: 'Family' },
           { id: 'history', icon: <History className="w-5 h-5" />, label: 'History' },
         ].map((item) => (
           <button
@@ -714,6 +1086,51 @@ export default function CustomerDashboard({ user, onLogout }: { user: any, onLog
                 </div>
               ) : (
                 <form onSubmit={handlePay} className="space-y-5">
+                  {/* Payment Type Tabs */}
+                  <div className="grid grid-cols-2 p-1 bg-nx-ink border border-nx-border rounded-xl">
+                    <button
+                      type="button"
+                      onClick={() => setIsFamilyPaymentMode(false)}
+                      className={cn(
+                        "py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all",
+                        !isFamilyPaymentMode
+                          ? "bg-nx-amber text-nx-ink"
+                          : "text-nx-muted hover:text-nx-paper"
+                      )}
+                    >
+                      Individual
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsFamilyPaymentMode(true)}
+                      className={cn(
+                        "py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all",
+                        isFamilyPaymentMode
+                          ? "bg-nx-amber text-nx-ink"
+                          : "text-nx-muted hover:text-nx-paper"
+                      )}
+                    >
+                      Family Account
+                    </button>
+                  </div>
+
+                  {isFamilyPaymentMode && (
+                    <div>
+                      <label className="block text-[10px] uppercase tracking-widest text-nx-muted mb-2">Family Code</label>
+                      <input 
+                        type="text" 
+                        value={familyCodePaymentInput}
+                        onChange={(e) => setFamilyCodePaymentInput(e.target.value.toUpperCase())}
+                        placeholder="e.g. FAM12345"
+                        className="w-full bg-nx-ink border border-nx-border rounded-xl px-4 py-3 text-nx-paper focus:outline-none focus:border-nx-amber transition-colors font-mono uppercase"
+                        required
+                      />
+                      <p className="text-[10px] text-nx-muted mt-2">
+                        Enter your family's unique Family Code. The redemption will draw from the parent's wallet.
+                      </p>
+                    </div>
+                  )}
+
                   <div>
                     <label className="block text-[10px] uppercase tracking-widest text-nx-muted mb-2">Merchant Code</label>
                     <input 
@@ -747,9 +1164,11 @@ export default function CustomerDashboard({ user, onLogout }: { user: any, onLog
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-[10px] uppercase tracking-widest text-nx-amber">NX Discount</span>
-                        <span className="text-xs font-mono text-nx-amber">-{liveNxRedeem.toFixed(2)} NX</span>
+                        <span className="text-xs font-mono text-nx-amber">
+                          {isFamilyPaymentMode ? "Calculated on submit" : `-${liveNxRedeem.toFixed(2)} NX`}
+                        </span>
                       </div>
-                      {liveNxFee > 0 && (
+                      {!isFamilyPaymentMode && liveNxFee > 0 && (
                         <div className="flex justify-between items-center text-nx-amber/80">
                           <span className="text-[10px] uppercase tracking-widest flex items-center gap-1">Network Fee <Info size={10} /></span>
                           <span className="text-[10px] font-mono">-{liveNxFee.toFixed(2)} NX</span>
@@ -758,7 +1177,9 @@ export default function CustomerDashboard({ user, onLogout }: { user: any, onLog
                       <div className="h-px bg-nx-border/50 my-1"></div>
                       <div className="flex justify-between items-center">
                         <span className="text-[10px] uppercase tracking-widest text-nx-green font-bold">Cash to Pay</span>
-                        <span className="text-sm font-mono text-nx-green font-bold">KSH {liveCash.toFixed(2)}</span>
+                        <span className="text-sm font-mono text-nx-green font-bold">
+                          {isFamilyPaymentMode ? "Calculated on submit" : `KSH ${liveCash.toFixed(2)}`}
+                        </span>
                       </div>
                       
                       {isInvalidAmount && (

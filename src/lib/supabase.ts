@@ -33,21 +33,94 @@ if (supabaseUrl && !supabaseUrl.startsWith('http')) {
 
 const clientCache = new Map<string, any>();
 
+// Helper to manage persistent mock tables in local storage
+const getStoredMockTable = (table: string): any[] => {
+  if (typeof window === 'undefined') return [];
+  const stored = localStorage.getItem(`nx_mock_table_${table}`);
+  if (stored) {
+    try {
+      return JSON.parse(stored);
+    } catch (e) {
+      console.warn(`Failed to parse mock table ${table}`, e);
+    }
+  }
+
+  // Fallback defaults
+  let defaults: any[] = [];
+  if (table === 'users') {
+    defaults = [
+      { id: '1', phone: '254700000001', merchant_code: 'M10001', role: 'merchant', franchise_tier: 'BASIC', name: 'Duka One', status: 'active', nx_balance: 1500, recovery_pin: '$2a$10$abcdefghijklmnopqrstuvwxyz1234' },
+      { id: '2', phone: '254700000002', merchant_code: 'M10002', role: 'merchant', franchise_tier: 'CERTIFIED', name: 'Duka Two', status: 'active', nx_balance: 2800, recovery_pin: '$2a$10$abcdefghijklmnopqrstuvwxyz1234' },
+      { id: '3', phone: '254700000003', merchant_code: 'M10003', role: 'merchant', franchise_tier: 'HUB', name: 'Duka Hub', status: 'active', nx_balance: 5000, recovery_pin: '$2a$10$abcdefghijklmnopqrstuvwxyz1234' },
+      { id: '4', phone: '254700000004', role: 'customer', name: 'John Customer', status: 'active', nx_balance: 350, recovery_pin: '$2a$10$abcdefghijklmnopqrstuvwxyz1234' },
+      { id: 'p-1', email: 'neorealm618@gmail.com', phone: '254700000005', role: 'partner', company_name: 'Unilever', name: 'Unilever', status: 'active', nx_balance: 0 }
+    ];
+  } else if (table === 'transactions') {
+    defaults = [
+      { id: 'tx-1', merchant_code: 'M10001', customer_phone: '254700000004', nx_earned: 15, nx_redeemed: 0, amount: 150, status: 'completed', created_at: new Date().toISOString() },
+      { id: 'tx-2', merchant_code: 'M10002', customer_phone: '254700000004', nx_earned: 25, nx_redeemed: 10, amount: 250, status: 'completed', created_at: new Date().toISOString() }
+    ];
+  } else if (table === 'family_accounts') {
+    defaults = [];
+  } else if (table === 'merchant_margins') {
+    defaults = [
+      { id: 'm-1', merchant_code: 'M10001', gross_margin: 5000, created_at: new Date().toISOString() },
+      { id: 'm-2', merchant_code: 'M10002', gross_margin: 12000, created_at: new Date().toISOString() }
+    ];
+  } else if (table === 'fmcg_margin_contributions') {
+    defaults = [
+      { id: 'f-1', merchant_code: 'M10002', contribution_amount: 1500, status: 'active', effective_from: '2026-01-01', effective_to: null }
+    ];
+  } else if (table === 'fmcg_partners' || table === 'partners') {
+    defaults = [
+      { id: 'p-1', name: 'Unilever', company_name: 'Unilever', status: 'active', active: true, contact: 'neorealm618@gmail.com', dashboard_password: '', api_key_hash: '', created_at: new Date().toISOString() },
+      { id: 'p-2', name: 'Kapa Oil', company_name: 'Kapa Oil', status: 'active', active: true, contact: 'kapa@example.com', dashboard_password: '', api_key_hash: '', created_at: new Date().toISOString() }
+    ];
+  } else if (table === 'visitors') {
+    defaults = [
+      { id: 'v-1', visit_time: new Date().toISOString(), ip_address: '127.0.0.1' }
+    ];
+  }
+
+  localStorage.setItem(`nx_mock_table_${table}`, JSON.stringify(defaults));
+  return defaults;
+};
+
+const setStoredMockTable = (table: string, data: any[]) => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(`nx_mock_table_${table}`, JSON.stringify(data));
+  }
+};
+
 class SupabaseMockBuilder {
   private table: string;
   private filters: { column: string; value: any; op: 'eq' | 'neq' | 'gt' | 'lt' | 'gte' | 'lte' | 'like' | 'ilike' | 'in' }[] = [];
   private orderCol: string | null = null;
   private orderAsc: boolean = true;
   private limitCount: number | null = null;
-  private insertedData: any = null;
+  private isUpdateCall: boolean = false;
+  private isInsertCall: boolean = false;
+  private valuesToSave: any = null;
 
   constructor(table: string) {
     this.table = table;
   }
   select(columns?: string, options?: any) { return this; }
-  insert(values: any, options?: any) { this.insertedData = values; return this; }
-  update(values: any, options?: any) { return this; }
-  upsert(values: any, options?: any) { this.insertedData = values; return this; }
+  insert(values: any, options?: any) { 
+    this.isInsertCall = true;
+    this.valuesToSave = values;
+    return this; 
+  }
+  update(values: any, options?: any) { 
+    this.isUpdateCall = true;
+    this.valuesToSave = values;
+    return this; 
+  }
+  upsert(values: any, options?: any) { 
+    this.isInsertCall = true;
+    this.valuesToSave = values;
+    return this; 
+  }
   delete(options?: any) { return this; }
   eq(column: string, value: any) { this.filters.push({ column, value, op: 'eq' }); return this; }
   neq(column: string, value: any) { this.filters.push({ column, value, op: 'neq' }); return this; }
@@ -67,45 +140,10 @@ class SupabaseMockBuilder {
   }
   limit(count: number) { this.limitCount = count; return this; }
 
-  private getMockData(): any[] {
-    let data: any[] = [];
-    if (this.table === 'users') {
-      data = [
-        { id: '1', phone: '254700000001', merchant_code: 'M10001', role: 'merchant', franchise_tier: 'BASIC', name: 'Duka One', status: 'active', nx_balance: 1500 },
-        { id: '2', phone: '254700000002', merchant_code: 'M10002', role: 'merchant', franchise_tier: 'CERTIFIED', name: 'Duka Two', status: 'active', nx_balance: 2800 },
-        { id: '3', phone: '254700000003', merchant_code: 'M10003', role: 'merchant', franchise_tier: 'HUB', name: 'Duka Hub', status: 'active', nx_balance: 5000 },
-        { id: '4', phone: '254700000004', role: 'customer', name: 'John Customer', status: 'active', nx_balance: 350 },
-        { id: 'p-1', email: 'neorealm618@gmail.com', phone: '254700000005', role: 'partner', company_name: 'Unilever', name: 'Unilever', status: 'active', nx_balance: 0 }
-      ];
-    } else if (this.table === 'transactions') {
-      data = [
-        { id: 'tx-1', merchant_code: 'M10001', nx_earned: 15, nx_redeemed: 0, amount: 150, status: 'completed', created_at: new Date().toISOString() },
-        { id: 'tx-2', merchant_code: 'M10002', nx_earned: 25, nx_redeemed: 10, amount: 250, status: 'completed', created_at: new Date().toISOString() }
-      ];
-    } else if (this.table === 'merchant_margins') {
-      data = [
-        { id: 'm-1', merchant_code: 'M10001', gross_margin: 5000, created_at: new Date().toISOString() },
-        { id: 'm-2', merchant_code: 'M10002', gross_margin: 12000, created_at: new Date().toISOString() }
-      ];
-    } else if (this.table === 'fmcg_margin_contributions') {
-      data = [
-        { id: 'f-1', merchant_code: 'M10002', contribution_amount: 1500, status: 'active', effective_from: '2026-01-01', effective_to: null }
-      ];
-    } else if (this.table === 'fmcg_partners' || this.table === 'partners') {
-      data = [
-        { id: 'p-1', name: 'Unilever', company_name: 'Unilever', status: 'active', active: true, contact: 'neorealm618@gmail.com', dashboard_password: '', api_key_hash: '', created_at: new Date().toISOString() },
-        { id: 'p-2', name: 'Kapa Oil', company_name: 'Kapa Oil', status: 'active', active: true, contact: 'kapa@example.com', dashboard_password: '', api_key_hash: '', created_at: new Date().toISOString() }
-      ];
-    } else if (this.table === 'visitors') {
-      data = [
-        { id: 'v-1', visit_time: new Date().toISOString(), ip_address: '127.0.0.1' }
-      ];
-    }
-
-    // Apply filters
+  private getFilteredData(dataList: any[]): any[] {
+    let data = [...dataList];
     for (const filter of this.filters) {
       data = data.filter(item => {
-        // Try exact match or company_name/name aliases for partner tables
         let val = item[filter.column];
         if (val === undefined && filter.column === 'name' && item['company_name'] !== undefined) {
           val = item['company_name'];
@@ -120,7 +158,7 @@ class SupabaseMockBuilder {
           case 'eq': {
             let sVal = String(val).toLowerCase();
             let sFilterVal = String(filterVal).toLowerCase();
-            const cols = ['phone', 'customer_phone', 'merchant_phone', 'account_phone'];
+            const cols = ['phone', 'customer_phone', 'merchant_phone', 'account_phone', 'parent_phone', 'family_code'];
             if (cols.includes(filter.column)) {
               sVal = sVal.replace(/^\+/, '');
               sFilterVal = sFilterVal.replace(/^\+/, '');
@@ -165,32 +203,65 @@ class SupabaseMockBuilder {
     return data;
   }
 
-  single() {
-    if (this.insertedData) {
-      const res = Array.isArray(this.insertedData) ? this.insertedData[0] : this.insertedData;
-      return Promise.resolve({ data: res || null, error: null });
+  private executeWrite() {
+    let list = getStoredMockTable(this.table);
+
+    if (this.isInsertCall && this.valuesToSave) {
+      const isArray = Array.isArray(this.valuesToSave);
+      const items = isArray ? this.valuesToSave : [this.valuesToSave];
+      const itemsWithId = items.map((x: any) => ({
+        id: x.id || `mock-${Math.random().toString(36).substring(7)}`,
+        created_at: x.created_at || new Date().toISOString(),
+        ...x
+      }));
+      list = [...list, ...itemsWithId];
+      setStoredMockTable(this.table, list);
+      return isArray ? itemsWithId : itemsWithId[0];
     }
-    const data = this.getMockData();
-    return Promise.resolve({ data: data[0] || null, error: data[0] ? null : { message: 'Not found' } });
+
+    if (this.isUpdateCall && this.valuesToSave) {
+      const filtered = this.getFilteredData(list);
+      const idsToUpdate = filtered.map(x => x.id);
+      list = list.map(item => {
+        if (idsToUpdate.includes(item.id)) {
+          return { ...item, ...this.valuesToSave };
+        }
+        return item;
+      });
+      setStoredMockTable(this.table, list);
+      return filtered.map(x => ({ ...x, ...this.valuesToSave }))[0] || this.valuesToSave;
+    }
+
+    return null;
   }
 
-  maybeSingle() {
-    if (this.insertedData) {
-      const res = Array.isArray(this.insertedData) ? this.insertedData[0] : this.insertedData;
-      return Promise.resolve({ data: res || null, error: null });
+  async single() {
+    if (this.isInsertCall || this.isUpdateCall) {
+      const res = this.executeWrite();
+      return { data: res, error: null };
     }
-    const data = this.getMockData();
-    return Promise.resolve({ data: data[0] || null, error: null });
+    const data = this.getFilteredData(getStoredMockTable(this.table));
+    return { data: data[0] || null, error: data[0] ? null : { message: 'Not found' } };
   }
 
-  then(onfulfilled?: (value: any) => any, onrejected?: (reason: any) => any) {
-    if (this.insertedData) {
-      const res = Array.isArray(this.insertedData) ? this.insertedData : [this.insertedData];
-      const result = { data: this.insertedData, error: null, count: res.length };
+  async maybeSingle() {
+    if (this.isInsertCall || this.isUpdateCall) {
+      const res = this.executeWrite();
+      return { data: res, error: null };
+    }
+    const data = this.getFilteredData(getStoredMockTable(this.table));
+    return { data: data[0] || null, error: null };
+  }
+
+  async then(onfulfilled?: (value: any) => any, onrejected?: (reason: any) => any) {
+    if (this.isInsertCall || this.isUpdateCall) {
+      const res = this.executeWrite();
+      const result = { data: res, error: null };
       return Promise.resolve(result).then(onfulfilled, onrejected);
     }
-    const data = this.getMockData();
-    return Promise.resolve({ data, error: null, count: data.length }).then(onfulfilled, onrejected);
+    const data = this.getFilteredData(getStoredMockTable(this.table));
+    const result = { data, error: null, count: data.length };
+    return Promise.resolve(result).then(onfulfilled, onrejected);
   }
 }
 

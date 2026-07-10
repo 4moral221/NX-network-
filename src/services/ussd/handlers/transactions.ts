@@ -15,11 +15,142 @@ export async function handleCustomerMenu(phoneNumber: string, lang: string, part
     case "2": // Balance
       const bal = await getBalance(phoneNumber);
       return `END ${t(lang, "nx_balance", { bal })}`;
-    case "3": // Help
+    case "3": // Family Account
+      return await handleFamilyAccountMenu(phoneNumber, lang, parts, user);
+    case "4": // Help
       return `END ${t(lang, "help")}`;
     default:
       return `CON ${t(lang, "customer_menu")}`;
   }
+}
+
+async function handleFamilyAccountMenu(phoneNumber: string, lang: string, parts: string[], user: any) {
+  // parts: ["3", "3", ...]
+  // parts[2] is the family option choice: "1" (Pay), "2" (Create), "3" (View Info)
+  const option = parts[2];
+
+  if (!option) {
+    return `CON ${t(lang, "family_menu")}`;
+  }
+
+  if (option === "1") {
+    // Family Payment
+    // parts[3]: familyCode
+    // parts[4]: merchantCode
+    // parts[5]: amount
+    // parts[6]: confirm choice ("1" or "2")
+    if (parts.length === 3) {
+      return `CON ${t(lang, "enter_family_code")}`;
+    }
+
+    const familyCode = parts[3].trim().toUpperCase();
+    
+    // Find family account
+    const { data: family } = await supabase.from("family_accounts").select("*").eq("family_code", familyCode).maybeSingle();
+    if (!family) {
+      return `END ${t(lang, "family_not_found")}`;
+    }
+    if (!family.allow_spending || family.status !== "active") {
+      return `END ${t(lang, "family_spending_disabled")}`;
+    }
+
+    if (parts.length === 4) {
+      return `CON ${t(lang, "enter_merchant_code")}`;
+    }
+
+    const mCode = parts[4].trim().toUpperCase();
+    const { data: merchant } = await supabase.from("users").select("name, merchant_code, phone, franchise_tier").eq("merchant_code", mCode).maybeSingle();
+    if (!merchant || !merchant.merchant_code) return `END ${t(lang, "invalid_merchant_code")}`;
+
+    if (parts.length === 5) {
+      return `CON ${t(lang, "enter_amount")}`;
+    }
+
+    const amount = Number(parts[5]);
+    if (!isValidAmount(amount)) return `CON ${t(lang, "enter_amount")}\n${t(lang, "invalid_amount")}`;
+
+    // Get parent's balance
+    const parentBalance = await getBalance(family.parent_phone);
+    const remainingPool = await getRemainingPool(mCode);
+
+    const cfg = tierConfig(merchant);
+    let effectiveAcceptancePct = cfg.acceptCeiling;
+    let nxRedeem = Math.min(parentBalance, amount * effectiveAcceptancePct, remainingPool);
+    nxRedeem = floorToFive(nxRedeem);
+
+    const cashPaid = amount - nxRedeem;
+    const txnCode = "FAM" + Math.random().toString(36).substring(7).toUpperCase();
+
+    if (parts.length === 6) {
+      return `CON ${t(lang, "confirm_family_pay", {
+        amount: String(amount),
+        shop: merchant.name,
+        code: familyCode,
+        bal: String(parentBalance),
+        red: String(nxRedeem),
+        cash: String(cashPaid)
+      })}`;
+    }
+
+    if (parts.length === 7) {
+      const confirmChoice = parts[6];
+      if (confirmChoice !== "1") return `END ${t(lang, "cancelled")}`;
+
+      const { error } = await supabase.from("transactions").insert({
+        merchant_code: mCode,
+        merchant_phone: merchant.phone,
+        customer_phone: phoneNumber, // the user who pays
+        family_code: familyCode, // tags with family code
+        amount,
+        nx_redeemed: nxRedeem,
+        nx_earned: 0,
+        nx_fee: parentBalance > 0 ? 2 : 0,
+        cash_paid: cashPaid,
+        status: "awaiting_merchant",
+        transaction_code: txnCode
+      });
+
+      if (error) return `END ${t(lang, "tx_failed")}`;
+      return `END ${t(lang, "customer_req_sent", { txn: txnCode })}`;
+    }
+  }
+
+  if (option === "2") {
+    // Create Family Account
+    const { data: existing } = await supabase.from("family_accounts").select("family_code").eq("parent_phone", phoneNumber).maybeSingle();
+    if (existing) {
+      return `END ${t(lang, "family_created", { code: existing.family_code })}`;
+    }
+
+    const code = "FAM" + Math.floor(10000 + Math.random() * 90000);
+    const { error } = await supabase.from("family_accounts").insert({
+      parent_phone: phoneNumber,
+      family_code: code,
+      status: "active",
+      allow_spending: true
+    });
+
+    if (error) return `END ${t(lang, "tx_failed")}`;
+    return `END ${t(lang, "family_created", { code })}`;
+  }
+
+  if (option === "3") {
+    // View Family Info
+    const { data: family } = await supabase.from("family_accounts").select("*").eq("parent_phone", phoneNumber).maybeSingle();
+    if (!family) {
+      return `END ${t(lang, "family_no_info")}`;
+    }
+
+    const bal = await getBalance(phoneNumber);
+    return `END ${t(lang, "family_info", {
+      code: family.family_code,
+      parent: phoneNumber,
+      spending: family.allow_spending ? "ENABLED" : "DISABLED",
+      bal: String(bal)
+    })}`;
+  }
+
+  return `END ${t(lang, "invalid_option")}`;
 }
 
 async function handlePayWithNX(phoneNumber: string, lang: string, parts: string[], user: any) {
