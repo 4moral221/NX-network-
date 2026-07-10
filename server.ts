@@ -103,6 +103,38 @@ async function requireAdmin(req: any, res: any, next: any) {
   }
 }
 
+async function requirePartner(req: any, res: any, next: any) {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ success: false, error: 'Unauthorized: Missing or invalid token' });
+    }
+    const token = authHeader.split(' ')[1];
+
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    if (error || !user) {
+      return res.status(401).json({ success: false, error: 'Unauthorized: Session expired or invalid' });
+    }
+
+    const { data: dbUser } = await supabase.from('users')
+      .select('role, is_admin')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    const isPartner = dbUser?.role === 'partner' || dbUser?.role === 'fmcg';
+    const isAdmin = dbUser?.is_admin === true;
+
+    if (!isPartner && !isAdmin) {
+      return res.status(403).json({ success: false, error: 'Forbidden: Partner access required' });
+    }
+
+    req.user = user;
+    next();
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: 'Partner validation failed: ' + err.message });
+  }
+}
+
 const keyGenLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour window
   max: 10, // limit each IP to 10 key generations per hour
@@ -114,9 +146,7 @@ const keyGenLimiter = rateLimit({
 
 app.get("/api/health", (req, res) => {
   res.json({ 
-    status: "ok", 
-    env: process.env.NODE_ENV,
-    supabaseConfigured: !!(process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL) && !!(process.env.VITE_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY)
+    status: "ok"
   });
 });
 
@@ -413,8 +443,7 @@ const createBackendMockSupabase = (reason: string) => {
         if (email === 'neorealm618@gmail.com' && password === 'Unilever123!') {
           return Promise.resolve({ data: { user: { id: 'p-1', email } }, error: null });
         }
-        // Accept other login checks but default to p-1 for mock
-        return Promise.resolve({ data: { user: { id: 'p-1', email } }, error: null });
+        return Promise.resolve({ data: { user: null }, error: new Error('Invalid login credentials') });
       },
       signUp: () => Promise.resolve({ data: { user: { id: 'new-user-id' } }, error: null }),
       signOut: () => Promise.resolve({ error: null }),
@@ -526,7 +555,7 @@ async function getRemainingPool(merchantCode: string): Promise<number> {
 }
 
 // FMCG API Endpoints to bypass RLS
-app.post('/api/fmcg/submit-bid', requireAuth, async (req, res) => {
+app.post('/api/fmcg/submit-bid', requirePartner, async (req, res) => {
   try {
     const { batch_id, brand_id, offered_price, delivery_days, notes } = req.body;
     if (!batch_id || !brand_id || !offered_price) return res.status(400).json({ success: false, error: 'Missing required fields' });
@@ -547,7 +576,7 @@ app.post('/api/fmcg/submit-bid', requireAuth, async (req, res) => {
 });
 
 // Proxy to bypass RLS for FMCG margin injections
-app.post('/api/fmcg/contribute', requireAuth, async (req, res) => {
+app.post('/api/fmcg/contribute', requirePartner, async (req, res) => {
   try {
     const { merchant_code, fmcg_name, contribution_amount, effective_from, effective_to, status } = req.body;
     if (!merchant_code || !contribution_amount) {
@@ -572,7 +601,7 @@ app.post('/api/fmcg/contribute', requireAuth, async (req, res) => {
 });
 
 // Revoke API key endpoint
-app.post('/api/fmcg/revoke-key', requireAuth, async (req, res) => {
+app.post('/api/fmcg/revoke-key', requirePartner, async (req, res) => {
   try {
     const { key_id } = req.body;
     if (!key_id) {
@@ -605,7 +634,7 @@ app.post('/api/fmcg/revoke-key', requireAuth, async (req, res) => {
   }
 });
 
-app.get('/api/fmcg/api-keys', requireAuth, async (req, res) => {
+app.get('/api/fmcg/api-keys', requirePartner, async (req, res) => {
   try {
     const { brand_name } = req.query;
     if (!brand_name) return res.status(400).json({ success: false, error: 'Brand name required' });
@@ -670,7 +699,7 @@ app.get('/api/fmcg/api-keys', requireAuth, async (req, res) => {
   }
 });
 
-app.post('/api/fmcg/generate-key', requireAuth, keyGenLimiter, async (req, res) => {
+app.post('/api/fmcg/generate-key', requirePartner, keyGenLimiter, async (req, res) => {
   try {
     const { brand_name, brand_id, company_name } = req.body;
     let finalBrandName = brand_name || company_name;
@@ -1158,7 +1187,8 @@ app.get('/api/admin/logs', requireAdmin, async (req, res) => {
 
   app.post("/api/staff/location", requireAuth, async (req, res) => {
     try {
-      const { phone, lat, lng } = req.body;
+      const { lat, lng } = req.body;
+      const phone = req.user.phone; // Restrict to authenticated user
       if (!phone || lat === undefined || lng === undefined) {
         return res.status(400).json({ error: "Missing phone, lat, or lng" });
       }
@@ -2739,7 +2769,7 @@ Please output a JSON object obeying the requested schema. Ensure that you:
   });
 
   // Agents API Endpoints
-  app.get('/api/agents', requireAuth, (req, res) => {
+  app.get('/api/agents', requirePartner, (req, res) => {
     try {
       const { partner_id } = req.query;
       if (!partner_id) {
@@ -2753,7 +2783,7 @@ Please output a JSON object obeying the requested schema. Ensure that you:
     }
   });
 
-  app.post('/api/agents/onboard', requireAuth, (req, res) => {
+  app.post('/api/agents/onboard', requirePartner, (req, res) => {
     try {
       const { partner_id, name } = req.body;
       if (!partner_id || !name) {
@@ -2781,7 +2811,7 @@ Please output a JSON object obeying the requested schema. Ensure that you:
     }
   });
 
-  app.post('/api/agents/suspend', requireAuth, (req, res) => {
+  app.post('/api/agents/suspend', requirePartner, (req, res) => {
     try {
       const { agent_id, agent_code, confirmed_code } = req.body;
       if (!agent_id) {
