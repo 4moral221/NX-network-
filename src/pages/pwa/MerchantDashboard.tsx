@@ -123,17 +123,8 @@ export default function MerchantDashboard({ user, onLogout }: { user: any, onLog
     setLoading(true);
 
     // Tier Reversion Logic (Automatic Downgrade)
-    if (user.franchise_tier && user.franchise_tier !== 'BASIC' && user.franchise_fee_until) {
-      const expiry = new Date(user.franchise_fee_until);
-      const isExpired = expiry.getTime() < Date.now();
-      if (isExpired) {
-        console.log('Downgrading merchant due to expired fee (PWA)');
-        await supabase.from('users').update({ 
-          franchise_tier: 'BASIC',
-          tier: 'BASIC'
-        }).eq('phone', user.phone);
-      }
-    }
+    // The client shouldn't downgrade tiers directly, leave it to backend sync/cron jobs
+    // to avoid RLS infinite recursion errors and security risks.
 
     // 1. Calculate Earnings (Total NX Redeemed by customers at this shop) and Pool Liability
     const { data: rdRes } = await supabase.from('transactions')

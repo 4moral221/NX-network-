@@ -94,15 +94,8 @@ export default function CustomerDashboard({ user, onLogout }: { user: any, onLog
         .reduce((sum, t) => sum + (t.nx_redeemed || 0), 0);
       setWeeklySavings(weekly);
 
-      // Refresh the entire user object to catch is_first_purchase_used updates
-      const { data: freshUser } = await supabase.from('users').select('*').eq('phone', user.phone).single();
-      if (freshUser) {
-        // We notify the parent if we had a way, but since we can't easily, 
-        // we'll just handle it by the fact that the real-time listener in PwaApp 
-        // should have also caught this. 
-        // However, we'll log it for debugging
-        console.log('Profile refresh:', freshUser.is_first_purchase_used);
-      }
+      // We rely on the real-time listener in PwaApp to catch is_first_purchase_used updates
+      // The manual query here has been removed to avoid RLS infinite recursion issues.
 
       // Creative: Loyalty Level based on total earned
       const totalEarned = recent.reduce((sum, t) => sum + (t.nx_earned || 0), 0);

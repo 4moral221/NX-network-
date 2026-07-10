@@ -2425,6 +2425,57 @@ Please output a JSON object obeying the requested schema. Ensure that you:
     }
   });
 
+  app.post('/api/auth/pwa-login', authLimiter, async (req, res) => {
+    try {
+      const { phone, pin } = req.body;
+      if (!phone || !pin) {
+        return res.status(400).json({ success: false, error: 'Phone and PIN are required' });
+      }
+
+      let normalizedPhone = phone.replace(/\D/g, '');
+      if (normalizedPhone.startsWith('254')) normalizedPhone = normalizedPhone;
+      else if (normalizedPhone.startsWith('0')) normalizedPhone = '254' + normalizedPhone.substring(1);
+      else if (normalizedPhone.length === 9) normalizedPhone = '254' + normalizedPhone;
+
+      const { data: users, error: dbError } = await supabase
+        .from('users')
+        .select('id, phone, name, role, status, recovery_pin')
+        .or(`phone.eq.${normalizedPhone},phone.eq.+${normalizedPhone}`)
+        .limit(1);
+
+      if (dbError) {
+        return res.status(500).json({ success: false, error: `Database error: ${dbError.message}` });
+      }
+
+      const user = users?.[0];
+      if (!user) {
+        return res.status(404).json({ success: false, error: 'Phone number not registered' });
+      }
+
+      const trimmedPin = String(pin).trim();
+      const computedHash = crypto.createHash('sha256').update(trimmedPin + user.phone).digest('hex');
+      let matched = (computedHash === user.recovery_pin);
+
+      if (!matched) {
+        const computedPlainHash = crypto.createHash('sha256').update(trimmedPin).digest('hex');
+        if (computedPlainHash === user.recovery_pin) {
+          matched = true;
+        }
+      }
+
+      if (!matched) {
+        return res.status(401).json({ success: false, error: 'Invalid PIN' });
+      }
+
+      const safeUser = { ...user };
+      delete safeUser.recovery_pin;
+
+      res.json({ success: true, user: safeUser });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
   app.post('/api/auth/reset-pwa-pin', async (req, res) => {
     try {
       const { phone, otp, newPin } = req.body;

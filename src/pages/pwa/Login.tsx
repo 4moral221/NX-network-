@@ -174,56 +174,32 @@ export default function Login({ onLogin }: { onLogin: (user: any) => void }) {
     try {
       toast.loading('Authenticating security token...', { id: 'pwa-login' });
       
-      const { data: users, error: dbError } = await supabase
-        .from('users')
-        .select('id, phone, name, role, status, recovery_pin')
-        .or(`phone.eq.${normalizedPhone},phone.eq.+${normalizedPhone}`)
-        .limit(1);
+      const res = await fetch('/api/auth/pwa-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: normalizedPhone, pin: trimmedPin })
+      });
+      const data = await res.json();
 
-      if (dbError) {
-        throw new Error(`[Network/Database Error]: ${dbError.message}`);
+      if (!res.ok || !data.success) {
+        throw new Error(`[Network/Database Error]: ${data.error || 'Failed to authenticate'}`);
       }
       
-      const user = users?.[0];
+      const safeUser = data.user;
 
-      if (!user) {
-        setError('Phone number not registered. Register using *384*6180#.');
-        toast.error('Authentication Rejected', { id: 'pwa-login' });
+      if (rememberMe) {
+        localStorage.setItem('nx_pwa_phone', safeUser.phone);
+        // Set timestamp for 14 Days extended validity
+        localStorage.setItem('nx_pwa_session_expiry', String(Date.now() + 14 * 24 * 60 * 60 * 1000));
       } else {
-        // Verify PIN hashing via pure js-sha256 library
-        const computedHash = sha256(trimmedPin + user.phone);
-        let matched = (computedHash === user.recovery_pin);
-        
-        // Also support straight plain PIN hashing if created via our ops tools
-        if (!matched) {
-            const computedPlainHash = sha256(trimmedPin);
-            if (computedPlainHash === user.recovery_pin) {
-                matched = true;
-            }
-        }
-
-        if (!matched) {
-          setError('Incorrect critical credentials. Invalid PIN entered.');
-          toast.error('Invalid PIN', { id: 'pwa-login' });
-          return;
-        }
-        
-        // Exclude recovery_pin from user object passed to state
-        const safeUser = { ...user };
-        delete safeUser.recovery_pin;
-        
-        if (rememberMe) {
-          localStorage.setItem('nx_pwa_phone', safeUser.phone);
-          // Set timestamp for 14 Days extended validity
-          localStorage.setItem('nx_pwa_session_expiry', String(Date.now() + 14 * 24 * 60 * 60 * 1000));
-        } else {
-          localStorage.setItem('nx_pwa_phone', safeUser.phone);
-          localStorage.setItem('nx_pwa_session_expiry', String(Date.now() + 1 * 24 * 60 * 60 * 1000)); // 1 day
-        }
-        
-        toast.success(`Welcome back, ${safeUser.name || 'Merchant'}!`, { id: 'pwa-login' });
-        onLogin(safeUser);
+        localStorage.setItem('nx_pwa_phone', safeUser.phone);
+        localStorage.setItem('nx_pwa_session_expiry', String(Date.now() + 1 * 24 * 60 * 60 * 1000)); // 1 day
       }
+      
+      const roleName = safeUser.role === 'customer' ? 'Customer' : 'Merchant';
+      toast.success(`Welcome back, ${safeUser.name || roleName}!`, { id: 'pwa-login' });
+      onLogin(safeUser);
+      
     } catch (err: any) {
       setError(`[Network connection error or timed out]: ${err.message || 'Failed to authenticate'}`);
       toast.error('Network Connection Error', { id: 'pwa-login' });
