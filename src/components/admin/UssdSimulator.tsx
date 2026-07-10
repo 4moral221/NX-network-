@@ -213,7 +213,7 @@ export default function UssdSimulator() {
               <div className="flex-1 relative overflow-hidden flex flex-col">
                 <div 
                   ref={screenRef}
-                  className="flex-1 font-mono text-sm text-[#c8d8c8] leading-relaxed whitespace-pre-wrap break-words overflow-y-auto pr-1 scroll-smooth touch-pan-y [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+                  className="flex-1 font-mono text-sm text-[#c8d8c8] leading-relaxed whitespace-pre-wrap break-words overflow-y-auto pr-1 scroll-smooth touch-pan-y custom-scrollbar"
                 >
                   {screen}
                 </div>
@@ -233,9 +233,9 @@ export default function UssdSimulator() {
                   <button
                     onClick={sendReply}
                     disabled={loading || !reply}
-                    className="w-full bg-[#00ff88] text-black font-mono text-xs font-bold py-2 rounded hover:bg-[#00cc6a] transition-colors disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="w-full bg-[#00ff88] text-black font-mono text-xs font-bold py-2 rounded hover:bg-[#00cc6a] transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-98"
                   >
-                    <Send className="w-3 h-3" /> Send
+                    Enter
                   </button>
                 </div>
               )}

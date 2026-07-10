@@ -90,7 +90,8 @@ export const handleUssdRequest = async (req: Request) => {
         const simulatedParts = ["3", "1", ...parts];
         responseText = await handleCustomerMenu(phoneNumber, currentLang, simulatedParts, user);
       } else {
-        const effectiveParts = (user?.language === null && parts.length > 0) ? parts.slice(1) : parts;
+        const hasNoLanguage = !user || user.language === null || user.language === undefined;
+        const effectiveParts = (hasNoLanguage && parts.length > 0) ? parts.slice(1) : parts;
 
         if (effectiveParts.length === 0) {
           if (user && user.role === "merchant") {

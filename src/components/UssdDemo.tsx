@@ -1,56 +1,69 @@
-import { useState, useEffect } from 'react';
-import { Send, Smartphone, Wifi, Signal } from 'lucide-react';
+import { useState } from 'react';
+import { Smartphone, Wifi, Signal } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
 
 export default function UssdDemo() {
   const [phoneNumber, setPhoneNumber] = useState('254712345678');
-  const [sessionId] = useState(() => 'DEMO-' + Math.random().toString(36).slice(2, 8).toUpperCase());
   const [textParts, setTextParts] = useState<string[]>([]);
   const [screen, setScreen] = useState('Dial *384*6180# to test the network.');
   const [input, setInput] = useState('');
   const [isEnd, setIsEnd] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [sessionId, setSessionId] = useState('');
 
-  const callUssd = async (text: string) => {
+  const callUssd = async (parts: string[], activeSessionId = sessionId) => {
     setLoading(true);
     try {
+      const text = parts.join('*');
       const response = await fetch('/api/ussd', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify({
-          sessionId,
-          phoneNumber: phoneNumber.startsWith('+') ? phoneNumber : `+${phoneNumber}`,
-          text
+          sessionId: activeSessionId,
+          phoneNumber: phoneNumber,
+          text: text,
+          ussdMode: 'local'
         })
       });
-      
-      const simulatedResponse = await response.text();
-      handleResponse(simulatedResponse);
-    } catch (err) {
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const raw = await response.text();
+      handleResponse(raw.trim());
+    } catch (err: any) {
       console.error('USSD call error:', err);
-      handleResponse('END Connection Lost.');
+      handleResponse('END Connection lost or error occurred:\n' + err.message);
     } finally {
       setLoading(false);
     }
   };
 
   const handleResponse = (raw: string) => {
-    if (raw.startsWith('CON ')) {
-      setScreen(raw.slice(4));
+    const cleanRaw = raw.trim();
+    if (cleanRaw.toUpperCase().startsWith('CON')) {
+      const msg = cleanRaw.slice(3).replace(/^\s+/, '');
+      setScreen(msg);
       setIsEnd(false);
-    } else if (raw.startsWith('END ')) {
-      setScreen(raw.slice(4));
+    } else if (cleanRaw.toUpperCase().startsWith('END')) {
+      const msg = cleanRaw.slice(3).replace(/^\s+/, '');
+      setScreen(msg);
       setIsEnd(true);
     } else {
-      setScreen(raw);
+      setScreen(cleanRaw);
       setIsEnd(true);
     }
   };
 
   const handleDial = () => {
+    const newSessionId = 'DEMO-' + Math.random().toString(36).slice(2, 10).toUpperCase();
+    setSessionId(newSessionId);
     setTextParts([]);
     setScreen('Contacting NX Network...');
-    callUssd('');
+    callUssd([], newSessionId);
   };
 
   const handleSend = () => {
@@ -58,7 +71,7 @@ export default function UssdDemo() {
     const newParts = [...textParts, input];
     setTextParts(newParts);
     setInput('');
-    callUssd(newParts.join('*'));
+    callUssd(newParts);
   };
 
   return (
@@ -156,10 +169,10 @@ export default function UssdDemo() {
         </div>
 
         {/* Screen Content */}
-        <div className="flex-1 p-8 flex flex-col">
+        <div className="flex-1 min-h-0 p-8 flex flex-col overflow-hidden">
           <div className="text-[10px] text-nx-amber/30 text-center uppercase tracking-[0.4em] mb-10 font-mono">NX Ecosystem</div>
           
-          <div className="flex-1 font-mono text-sm leading-relaxed text-[#c8e6c8] whitespace-pre-wrap">
+          <div className="flex-1 font-mono text-sm leading-relaxed text-[#c8e6c8] whitespace-pre-wrap overflow-y-auto pr-1 custom-scrollbar">
             {screen}
           </div>
 
@@ -176,9 +189,9 @@ export default function UssdDemo() {
               <button 
                 onClick={handleSend}
                 disabled={loading}
-                className="bg-nx-amber text-nx-ink p-2.5 rounded-lg hover:bg-white transition-colors"
+                className="bg-nx-amber text-nx-ink px-4 py-2.5 text-xs font-bold rounded-lg hover:bg-white transition-all font-mono shrink-0 active:scale-95 flex items-center justify-center"
               >
-                <Send className="w-4 h-4" />
+                Enter
               </button>
             </div>
           ) : (

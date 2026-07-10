@@ -12,7 +12,6 @@ interface LogEntry {
 }
 
 export default function UssdSimulator() {
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   const defaultFnUrl = '/api/ussd';
   
   const [fnUrl, setFnUrl] = useState(defaultFnUrl);
@@ -188,19 +187,20 @@ export default function UssdSimulator() {
       return;
     }
 
-    if (raw.startsWith('CON ') || raw === 'CON') {
-      const msg = raw.slice(4).trimStart();
+    const cleanRaw = raw.trim();
+    if (cleanRaw.toUpperCase().startsWith('CON')) {
+      const msg = cleanRaw.slice(3).replace(/^\s+/, '');
       addLog('CON', msg);
       setScreen(msg);
-    } else if (raw.startsWith('END ') || raw === 'END') {
-      const msg = raw.slice(4).trimStart();
+    } else if (cleanRaw.toUpperCase().startsWith('END')) {
+      const msg = cleanRaw.slice(3).replace(/^\s+/, '');
       addLog('END', msg);
       setScreen(msg);
       setIsEnd(true);
       setStatus('ended');
     } else {
-      addLog('END', raw);
-      setScreen(raw);
+      addLog('END', cleanRaw);
+      setScreen(cleanRaw);
       setIsEnd(true);
       setStatus('ended');
     }
@@ -399,7 +399,7 @@ export default function UssdSimulator() {
                   <div className="text-[10px] shrink-0 text-[#333] text-center uppercase tracking-[0.3em] mb-6 font-mono">NX NETWORK</div>
                   <div 
                     aria-live="polite"
-                    className="flex-1 overflow-y-auto text-[13px] text-[#e0e0e0] leading-relaxed whitespace-pre-wrap font-mono touch-pan-y pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+                    className="flex-1 overflow-y-auto text-[13px] text-[#e0e0e0] leading-relaxed whitespace-pre-wrap font-mono touch-pan-y pb-2 pr-1 custom-scrollbar"
                   >
                     {loading ? (
                       <div className="h-full flex items-center justify-center">
@@ -428,9 +428,9 @@ export default function UssdSimulator() {
                         onClick={handleSend}
                         disabled={loading}
                         aria-label="Send USSD code"
-                        className="bg-[#00e676] text-black p-2.5 rounded-lg hover:bg-[#00c853] transition-colors disabled:opacity-50"
+                        className="bg-[#00e676] text-black px-4 py-2.5 text-xs font-bold rounded-lg hover:bg-[#00c853] transition-all disabled:opacity-50 font-mono shrink-0 active:scale-95 flex items-center justify-center"
                       >
-                        <Send className="w-4 h-4" />
+                        Enter
                       </button>
                     </div>
                   )}

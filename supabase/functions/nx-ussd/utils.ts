@@ -16,14 +16,11 @@ export function floorToFive(n: number): number {
 export function normaliseVariant(raw: string | null, skuCode: string): string | null {
   if (!raw) return null;
   const v = raw.trim().toLowerCase()
-    .replace(/\s+/g, "")
-    .replace("litres", "L").replace("litre", "L")
-    .replace("liter", "L").replace("liters", "L")
-    .replace(/(\d)l$/, "$1L")
+    .replace(/\s+/g, "").replace("litres", "L").replace("litre", "L")
+    .replace("liter", "L").replace("liters", "L").replace(/(\d)l$/, "$1L")
     .replace("grams", "g").replace("gram", "g")
     .replace("kilograms", "kg").replace("kilogram", "kg")
     .replace("milliliters", "ml").replace("millilitres", "ml").replace("millilitre", "ml");
-
   const known = SKU_VARIANTS[skuCode] ?? [];
   const exact = known.find(k => k.toLowerCase() === v);
   if (exact) return exact;
@@ -38,20 +35,14 @@ export function skuName(lang: string, code: string): string {
 
 export function t(lang: string, key: string, params: Record<string, any> = {}): string {
   let str = T[key]?.[lang] || T[key]?.["en"] || key;
-  for (const [k, v] of Object.entries(params)) {
-    str = str.replaceAll(`{${k}}`, String(v));
-  }
+  for (const [k, v] of Object.entries(params)) str = str.replaceAll(`{${k}}`, String(v));
   return str;
 }
 
-export function roundDown(n: number): number {
-  return Math.floor(n);
-}
+export function roundDown(n: number): number { return Math.floor(n); }
 
 export function startOfCycle(): string {
-  const d = new Date();
-  d.setDate(1); d.setHours(0, 0, 0, 0);
-  return d.toISOString();
+  const d = new Date(); d.setDate(1); d.setHours(0, 0, 0, 0); return d.toISOString();
 }
 
 export function isValidNationalId(id: string): boolean {
@@ -66,16 +57,20 @@ export function isValidPin(pin: string): boolean {
   return pin.length === 4 && /^\d+$/.test(pin);
 }
 
-export async function hashPin(pin: string, phone: string): Promise<string> {
+export async function hashPin(pin: string, _phone: string): Promise<string> {
   const { data, error } = await supabase.rpc("hash_password", { password: pin });
   if (error || !data) throw error || new Error("Failed to hash pin");
   return data;
 }
 
+export async function verifyPin(pin: string, hash: string): Promise<boolean> {
+  const { data, error } = await supabase.rpc("verify_password", { password: pin, hash });
+  if (error) { console.error("verifyPin error:", error); return false; }
+  return data === true;
+}
+
 export function merchantMenuStr(user: any, lang: string): string {
   let menu = t(lang, "merchant_menu");
-  if (user?.franchise_tier === "HUB") {
-    menu += `\n5 My Hub`;
-  }
+  if (user?.franchise_tier === "HUB") menu += `\n5 My Hub`;
   return menu;
 }

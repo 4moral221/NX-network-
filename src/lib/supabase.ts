@@ -236,11 +236,11 @@ const createMockSupabase = (reason: string) => {
 
 const createSupabaseClient = (key: string | undefined, isServiceRole: boolean = false) => {
   const isUrlValid = supabaseUrl && supabaseUrl.startsWith('http') && supabaseUrl.includes('.');
-  const isDeadUrl = supabaseUrl && (supabaseUrl.includes('balrpczytusvzzquzqob.supabase.co') || supabaseUrl.includes('balrpczytusvzzquzqob'));
+  const isDeadUrl = false; // Live active project is in use
   
-  // If key is missing, URL is invalid, or points to the known dead dev project, return mock
-  if (!key || !isUrlValid || isDeadUrl) {
-    const reason = isDeadUrl ? "Known inactive/paused Supabase URL detected" : (!key ? "Key is missing" : "VITE_SUPABASE_URL is invalid");
+  // If key is missing or URL is invalid, return mock
+  if (!key || !isUrlValid) {
+    const reason = !key ? "Key is missing" : "VITE_SUPABASE_URL is invalid";
     return createMockSupabase(reason);
   }
 

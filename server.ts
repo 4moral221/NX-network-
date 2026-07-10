@@ -12,6 +12,7 @@ import cors from "cors";
 import rateLimit from "express-rate-limit";
 
 const app = express();
+app.set('trust proxy', 1);
 
 function escapeLike(str: string) {
   return str.replace(/[%_]/g, '\\$&');
@@ -22,6 +23,7 @@ const apiLimiter = rateLimit({
   max: 100,
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { trustProxy: false },
 });
 
 const authLimiter = rateLimit({
@@ -30,6 +32,7 @@ const authLimiter = rateLimit({
   message: { success: false, error: 'Too many authentication or OTP attempts. Please try again after 15 minutes.' },
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { trustProxy: false },
 });
 
 app.use(cors());
@@ -120,6 +123,7 @@ const keyGenLimiter = rateLimit({
   message: { success: false, error: 'Too many API key actions from this IP, please try again after an hour' },
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { trustProxy: false },
 });
 
 app.get("/api/health", (req, res) => {
