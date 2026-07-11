@@ -83,6 +83,17 @@ export const T: Record<string, Record<string, string>> = {
   log_basket_enter:       { en: "CON Enter items sold:\nFormat: BR*2, pembe 2kg@120*1\n(Name Variant@Price*Qty)", sw: "CON Weka bidhaa:\nMfumo: BR*2, pembe 2kg@120*1" },
   fraud_suspended:        { en: "END Account suspended: {reason}", sw: "END Akaunti imesimamishwa: {reason}" },
   error:                  { en: "An error occurred. Please try again.", sw: "Hitilafu imetokea. Tafadhali jaribu tena." },
+  customer_menu:         { en: "CON NX Customer Menu:\n1 Lipa na NX\n2 Check Balance\n3 Family Account\n4 Help", sw: "CON Menyu ya Mteja:\n1 Lipa na NX\n2 Angalia Salio\n3 Family Account\n4 Msaada" },
+  nx_balance:            { en: "END Your current NX balance is {bal} NX.", sw: "END Salio lako la sasa la NX ni {bal} NX." },
+  family_menu:           { en: "CON Family Menu:\n1 Create Family Account\n2 View Family Info", sw: "CON Menyu ya Familia:\n1 Unda Akaunti ya Familia\n2 Taarifa za Familia" },
+  enter_family_code:     { en: "CON Enter Family Code:", sw: "CON Weka Nambari ya Familia:" },
+  family_created:        { en: "END Family account created!\nCode: {code}\nShared spending: ACTIVE", sw: "END Akaunti ya familia imeundwa!\nNambari: {code}\nMatumizi: ACTIVE" },
+  family_not_found:      { en: "END Error: Family account not found.", sw: "END Makosa: Akaunti haikupatikana." },
+  family_spending_disabled:{ en: "END Error: Shared spending is disabled.", sw: "END Makosa: Matumizi yamezimwa." },
+  family_insufficient:   { en: "END Error: Parent balance is insufficient.", sw: "END Makosa: Salio la mzazi halitoshi." },
+  family_info:           { en: "END Family Code: {code}\nParent: {parent}\nSpending: {spending}\nBalance: {bal} NX", sw: "END Nambari: {code}\nMzazi: {parent}\nMatumizi: {spending}\nSalio: {bal} NX" },
+  family_no_info:        { en: "END You don't have a Family Account.", sw: "END Huna Akaunti ya Familia." },
+  confirm_family_pay:    { en: "CON Pay FAM: {amount} KES at {shop}?\nFamily Code: {code}\nParent Bal: {bal} NX\nRedeem: {red} NX\nCash: {cash} KSH\n1 Confirm\n2 Cancel", sw: "CON Lipa FAM: {amount} KES kwa {shop}?\nNambari: {code}\nSalio la Mzazi: {bal} NX\nRedeem: {red} NX\nKiasi: {cash} KSH\n1 Thibitisha\n2 Ghairi" },
 };
 
 const rawRestockPhone = Deno.env.get("RESTOCK_PHONE")?.trim() || "0781550151";

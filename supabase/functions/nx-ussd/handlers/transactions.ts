@@ -3,13 +3,60 @@ import { t, isValidAmount, floorToFive, tierConfig } from "../utils.ts";
 
 export async function handleCustomerMenu(phoneNumber: string, lang: string, parts: string[], user: any) {
   const subChoice = parts[1];
-  if (!subChoice) return `CON ${t(lang, "customer_menu") || "CON Customer Menu\n1 Pay with NX\n2 My Balance\n3 Shortcuts"}`;
+  if (!subChoice) return `CON ${t(lang, "customer_menu")}`;
   switch (subChoice) {
     case "1": return await handlePayWithNX(phoneNumber, lang, parts, user);
-    case "2": return `END NX Balance: ${await getBalance(phoneNumber)} NX`;
-    case "3": return `END Send: M[CODE][AMOUNT] to *384*6180#`;
-    default:  return `CON Customer Menu\n1 Pay with NX\n2 My Balance\n3 Shortcuts`;
+    case "2": {
+      const bal = await getBalance(phoneNumber);
+      return t(lang, "nx_balance", { bal });
+    }
+    case "3": return await handleFamilyAccountMenu(phoneNumber, lang, parts, user);
+    case "4": return `END ${t(lang, "help")}`;
+    default:  return `CON ${t(lang, "customer_menu")}`;
   }
+}
+
+async function handleFamilyAccountMenu(phoneNumber: string, lang: string, parts: string[], user: any) {
+  const option = parts[2];
+
+  if (!option) {
+    return `CON ${t(lang, "family_menu")}`;
+  }
+
+  if (option === "1") {
+    const { data: existing } = await supabase.from("family_accounts").select("family_code").eq("parent_phone", phoneNumber).maybeSingle();
+    if (existing) {
+      return `END ${t(lang, "family_created", { code: existing.family_code })}`;
+    }
+
+    const code = "FAM" + Math.floor(10000 + Math.random() * 90000);
+    const { error } = await supabase.from("family_accounts").insert({
+      parent_phone: phoneNumber,
+      family_code: code,
+      status: "active",
+      allow_spending: true
+    });
+
+    if (error) return `END ${t(lang, "tx_failed")}`;
+    return `END ${t(lang, "family_created", { code })}`;
+  }
+
+  if (option === "2") {
+    const { data: family } = await supabase.from("family_accounts").select("*").eq("parent_phone", phoneNumber).maybeSingle();
+    if (!family) {
+      return `END ${t(lang, "family_no_info")}`;
+    }
+
+    const bal = await getBalance(phoneNumber);
+    return `END ${t(lang, "family_info", {
+      code: family.family_code,
+      parent: phoneNumber,
+      spending: family.allow_spending ? "ENABLED" : "DISABLED",
+      bal: String(bal)
+    })}`;
+  }
+
+  return `END Invalid option.`;
 }
 
 async function handlePayWithNX(phoneNumber: string, lang: string, parts: string[], user: any) {

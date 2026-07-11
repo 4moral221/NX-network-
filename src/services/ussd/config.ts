@@ -31,7 +31,7 @@ export const T: Record<string, Record<string, string>> = {
   lang_pick:             { en: "Welcome to NX Loyalty\nChoose language:\n1 English\n2 Kiswahili", sw: "Karibu NX Loyalty\nChagua lugha:\n1 English\n2 Kiswahili" },
   main_menu:             { en: "Welcome to NX Loyalty\n1 Register\n2 Help\n3 Continue\n4 Recover Account", sw: "Karibu NX Loyalty\n1 Jiandikishe\n2 Msaada\n3 Endelea\n4 Rudisha Akaunti" },
   customer_menu:         { en: "NX Customer Menu:\n1 Lipa na NX\n2 Check Balance\n3 Family Account\n4 Help", sw: "Menyu ya Mteja:\n1 Lipa na NX\n2 Angalia Salio\n3 Family Account\n4 Msaada" },
-  family_menu:           { en: "Family Menu:\n1 Family Payment\n2 Create Family Account\n3 View Family Info", sw: "Menyu ya Familia:\n1 Lipa na Familia\n2 Unda Akaunti ya Familia\n3 Taarifa za Familia" },
+  family_menu:           { en: "Family Menu:\n1 Create Family Account\n2 View Family Info", sw: "Menyu ya Familia:\n1 Unda Akaunti ya Familia\n2 Taarifa za Familia" },
   enter_family_code:     { en: "Enter Family Code:", sw: "Weka Nambari ya Familia:" },
   family_created:        { en: "Family account created!\nCode: {code}\nShared spending: ACTIVE", sw: "Akaunti ya familia imeundwa!\nNambari: {code}\nMatumizi: ACTIVE" },
   family_not_found:      { en: "Error: Family account not found.", sw: "Makosa: Akaunti haikupatikana." },
