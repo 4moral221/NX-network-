@@ -2546,11 +2546,21 @@ Please output a JSON object obeying the requested schema. Ensure that you:
   app.post('/api/auth/merchant-login', authLimiter, async (req, res) => {
     try {
       const { phone, password } = req.body;
-      const { data: user, error: err2 } = await supabase.from('users').select('id, dashboard_password, role, status').eq('phone', phone).maybeSingle();
+      if (!phone || !password) return res.status(400).json({ success: false, error: 'Phone/code and password are required' });
+
+      const cleanInput = String(phone).trim();
+      
+      // Look up user by phone or merchant_code
+      const { data: user, error: err2 } = await supabase
+        .from('users')
+        .select('id, dashboard_password, role, status, merchant_code, phone')
+        .or(`phone.eq.${cleanInput},merchant_code.eq.${cleanInput}`)
+        .maybeSingle();
+
       if (err2 || !user) return res.status(401).json({ success: false, error: 'User not found' });
 
       // Compare password with sha256
-      const hash = crypto.createHash('sha256').update(password).digest('hex');
+      const hash = crypto.createHash('sha256').update(password.trim()).digest('hex');
       
       if (user.dashboard_password === hash) {
         return res.json({ success: true, user_id: user.id });

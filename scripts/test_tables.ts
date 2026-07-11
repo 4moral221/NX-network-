@@ -10,19 +10,18 @@ const supabase = createClient(url, key);
 async function check() {
   console.log("Checking tables using service role key...");
   
-  const tables = ["partners", "api_keys", "whitelist", "admin_approvals", "ops_audit_logs", "nx_logs"];
-  
-  for (const table of tables) {
-    try {
-      const { data, error, status } = await supabase.from(table).select("*").limit(1);
-      if (error) {
-        console.log(`❌ Table [${table}] returned error:`, error.message, `(Status: ${status})`);
-      } else {
-        console.log(`✅ Table [${table}] exists! Found rows count:`, data?.length);
-      }
-    } catch (err: any) {
-      console.log(`❌ Exception checking table [${table}]:`, err.message);
-    }
+  try {
+    const { data: users, error: uErr } = await supabase.from("users").select("id, phone, name, role, franchise_tier, email, status");
+    console.log("=== USERS ===");
+    if (uErr) console.error("Error reading users:", uErr.message);
+    else console.log(users);
+    
+    const { data: partners, error: pErr } = await supabase.from("fmcg_partners").select("id, name, contact, active, category");
+    console.log("=== FMCG PARTNERS ===");
+    if (pErr) console.error("Error reading fmcg_partners:", pErr.message);
+    else console.log(partners);
+  } catch (err: any) {
+    console.error("Query failed:", err.message);
   }
 }
 

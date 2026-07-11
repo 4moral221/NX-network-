@@ -1,0 +1,39 @@
+{
+  "whitelist": [
+    {
+      "id": "wl-unilever",
+      "email": "formidablefoe254@gmail.com",
+      "brand_name": "Unilever",
+      "portal": "fmcgs",
+      "active": true,
+      "created_at": "2026-07-11T20:26:10.032Z"
+    },
+    {
+      "id": "wl-dhl-express",
+      "email": "partner@nxnetwork.com",
+      "brand_name": "DHL Express",
+      "portal": "partners",
+      "active": true,
+      "created_at": "2026-07-11T20:26:10.033Z"
+    }
+  ],
+  "approvals": [
+    {
+      "id": "app-unilever",
+      "partner_id": "42",
+      "email": "formidablefoe254@gmail.com",
+      "companyName": "Unilever",
+      "status": "approved",
+      "created_at": "2026-07-11T20:26:10.033Z"
+    },
+    {
+      "id": "app-dhl-express",
+      "partner_id": "44",
+      "email": "partner@nxnetwork.com",
+      "companyName": "DHL Express",
+      "status": "approved",
+      "created_at": "2026-07-11T20:26:10.033Z"
+    }
+  ],
+  "audit_logs": []
+}
