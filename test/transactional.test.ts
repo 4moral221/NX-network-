@@ -1,7 +1,17 @@
 import { test, expect } from 'vitest';
-import { supabaseAdmin } from '../src/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 import { handleUssdRequest } from '../src/services/ussd';
 import { openOrGetBatch } from '../src/services/batchHelper';
+
+const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://balrpczytusvzzquzqob.supabase.co';
+const supabaseServiceKey = process.env.VITE_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey || 'mock-key', {
+  auth: {
+    persistSession: false,
+    autoRefreshToken: false,
+  }
+});
 
 function createMockRequest(text: string, phone: string, sessionId: string = 'test-session-123') {
   const body = new URLSearchParams({

@@ -1188,7 +1188,7 @@ app.get('/api/admin/logs', requireAdmin, async (req, res) => {
   app.post("/api/staff/location", requireAuth, async (req, res) => {
     try {
       const { lat, lng } = req.body;
-      const phone = req.user.phone; // Restrict to authenticated user
+      const phone = (req as any).user?.phone; // Restrict to authenticated user
       if (!phone || lat === undefined || lng === undefined) {
         return res.status(400).json({ error: "Missing phone, lat, or lng" });
       }

@@ -574,10 +574,10 @@ export default function AdminPortal() {
           if (userIdentifier) {
             setAdminEmail(userIdentifier);
             // Search in users by email or phone
-            supabase.from('users')
+            Promise.resolve(supabase.from('users')
               .select('is_admin, admin_role, phone, email')
               .or(`email.eq.${userIdentifier.trim().toLowerCase()},phone.eq.${userIdentifier.trim()}`)
-              .maybeSingle()
+              .maybeSingle())
               .then(({ data }) => {
                 if (
                   data?.is_admin ||
@@ -2161,7 +2161,7 @@ export default function AdminPortal() {
                               try {
                                 const { error } = await supabase.auth.signInWithOtp({ 
                                   email: adminEmail.trim().toLowerCase(),
-                                  options: { redirectTo: window.location.origin + window.location.pathname }
+                                  options: { emailRedirectTo: window.location.origin + window.location.pathname }
                                 });
                                 if (error) throw error;
                                 setAuthError('New OTP sent successfully!');
