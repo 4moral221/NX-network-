@@ -42,6 +42,13 @@ app.use('/api/', apiLimiter);
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
+const FALLBACK_DIR = process.env.VERCEL ? path.join('/tmp', 'data') : path.join(process.cwd(), 'data');
+if (!fs.existsSync(FALLBACK_DIR)) {
+  try {
+    fs.mkdirSync(FALLBACK_DIR, { recursive: true });
+  } catch (err) {}
+}
+
 // Simple request logger
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
@@ -259,6 +266,93 @@ app.post("/api/redis/flush", requireAdmin, async (req, res) => {
   }
 });
 
+// ============================================================
+// Family Accounts Local Storage Fallback API
+// Handles read/write for family_accounts table on the server
+// ============================================================
+const FAMILY_ACCOUNTS_FILE = path.join(FALLBACK_DIR, 'family_accounts.json');
+
+const readFamilyAccounts = (): any[] => {
+  try {
+    if (!fs.existsSync(FAMILY_ACCOUNTS_FILE)) {
+      return [];
+    }
+    const data = fs.readFileSync(FAMILY_ACCOUNTS_FILE, 'utf8');
+    return JSON.parse(data);
+  } catch (err) {
+    console.error('[FamilyAccounts] Error reading file:', err);
+    return [];
+  }
+};
+
+const writeFamilyAccounts = (data: any[]) => {
+  try {
+    fs.writeFileSync(FAMILY_ACCOUNTS_FILE, JSON.stringify(data, null, 2), 'utf8');
+  } catch (err) {
+    console.error('[FamilyAccounts] Error writing file:', err);
+  }
+};
+
+app.get('/api/family_accounts', (req, res) => {
+  const { parent_phone, family_code, id } = req.query;
+  let accounts = readFamilyAccounts();
+  if (parent_phone) {
+    accounts = accounts.filter(a => String(a.parent_phone) === String(parent_phone));
+  }
+  if (family_code) {
+    accounts = accounts.filter(a => String(a.family_code).toUpperCase() === String(family_code).toUpperCase());
+  }
+  if (id) {
+    accounts = accounts.filter(a => String(a.id) === String(id));
+  }
+  res.json(accounts);
+});
+
+app.post('/api/family_accounts', (req, res) => {
+  const { parent_phone, family_code, status, allow_spending } = req.body;
+  const accounts = readFamilyAccounts();
+  
+  if (accounts.some(a => String(a.family_code).toUpperCase() === String(family_code).toUpperCase())) {
+    return res.status(400).json({ error: 'Family code already exists' });
+  }
+
+  const newAccount = {
+    id: 'fam-' + Math.random().toString(36).substring(2),
+    parent_phone,
+    family_code: family_code.toUpperCase(),
+    status: status || 'active',
+    allow_spending: allow_spending === true,
+    created_at: new Date().toISOString()
+  };
+  accounts.push(newAccount);
+  writeFamilyAccounts(accounts);
+  res.json(newAccount);
+});
+
+app.put('/api/family_accounts', (req, res) => {
+  const { id, parent_phone, family_code } = req.query;
+  const updates = req.body;
+  const accounts = readFamilyAccounts();
+  
+  const idx = accounts.findIndex(a => {
+    if (id && String(a.id) !== String(id) && String(a.family_code) !== String(id)) return false;
+    if (parent_phone && String(a.parent_phone) !== String(parent_phone)) return false;
+    if (family_code && String(a.family_code) !== String(family_code)) return false;
+    return true;
+  });
+
+  if (idx === -1) {
+    return res.status(404).json({ error: 'Family account not found' });
+  }
+  
+  accounts[idx] = {
+    ...accounts[idx],
+    ...updates
+  };
+  writeFamilyAccounts(accounts);
+  res.json(accounts[idx]);
+});
+
 // Initialize Supabase client
 let supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "";
 let supabaseKey = process.env.VITE_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || "";
@@ -469,12 +563,7 @@ if (!supabase) {
   supabase = createBackendMockSupabase(reason);
 }
 
-const FALLBACK_DIR = process.env.VERCEL ? path.join('/tmp', 'data') : path.join(process.cwd(), 'data');
-if (!fs.existsSync(FALLBACK_DIR)) {
-  try {
-    fs.mkdirSync(FALLBACK_DIR, { recursive: true });
-  } catch (err) {}
-}
+// FALLBACK_DIR and existence check handled at top of file
 
 function getLocalFallbackFile<T>(filename: string): T[] {
   const filePath = path.join(FALLBACK_DIR, filename);

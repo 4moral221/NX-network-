@@ -49,6 +49,148 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 });
 
 // ============================================================
+// Transparent Interceptor for family_accounts table
+// Redirects queries to server-side JSON-file API endpoint
+// ============================================================
+class FamilyAccountsMockBuilder {
+  private method: 'select' | 'insert' | 'update' | 'delete' = 'select';
+  private filterCol: string | null = null;
+  private filterVal: any = null;
+  private insertData: any = null;
+  private updateData: any = null;
+  private isMaybeSingle = false;
+  private isSingle = false;
+
+  select(columns?: string) {
+    this.method = 'select';
+    return this;
+  }
+
+  insert(data: any) {
+    this.method = 'insert';
+    this.insertData = data;
+    return this;
+  }
+
+  update(data: any) {
+    this.method = 'update';
+    this.updateData = data;
+    return this;
+  }
+
+  delete() {
+    this.method = 'delete';
+    return this;
+  }
+
+  eq(column: string, value: any) {
+    this.filterCol = column;
+    this.filterVal = value;
+    return this;
+  }
+
+  maybeSingle() {
+    this.isMaybeSingle = true;
+    return this;
+  }
+
+  single() {
+    this.isSingle = true;
+    return this;
+  }
+
+  order(column: string, options?: any) {
+    return this;
+  }
+
+  limit(count: number) {
+    return this;
+  }
+
+  async then(onfulfilled?: (value: any) => any, onrejected?: (reason: any) => any) {
+    try {
+      const getApiUrl = () => {
+        if (typeof window === 'undefined') {
+          return 'http://127.0.0.1:3000/api/family_accounts';
+        }
+        return '/api/family_accounts';
+      };
+
+      let result: any = null;
+      let error: any = null;
+
+      if (this.method === 'select') {
+        let url = getApiUrl();
+        if (this.filterCol && this.filterVal) {
+          url += `?${encodeURIComponent(this.filterCol)}=${encodeURIComponent(this.filterVal)}`;
+        }
+        const res = await fetch(url);
+        if (!res.ok) {
+          throw new Error('Failed to fetch family accounts');
+        }
+        const data = await res.json();
+        
+        if (this.isMaybeSingle) {
+          result = data[0] || null;
+        } else if (this.isSingle) {
+          result = data[0];
+          if (!result) {
+            error = { message: 'Not found' };
+          }
+        } else {
+          result = data;
+        }
+      } else if (this.method === 'insert') {
+        const url = getApiUrl();
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(this.insertData)
+        });
+        if (!res.ok) {
+          throw new Error('Failed to insert family account');
+        }
+        result = await res.json();
+      } else if (this.method === 'update') {
+        let url = getApiUrl();
+        if (this.filterCol && this.filterVal) {
+          url += `?${encodeURIComponent(this.filterCol)}=${encodeURIComponent(this.filterVal)}`;
+        }
+        const res = await fetch(url, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(this.updateData)
+        });
+        if (!res.ok) {
+          throw new Error('Failed to update family account');
+        }
+        result = await res.json();
+      }
+
+      const response = { data: result, error };
+      if (onfulfilled) {
+        return Promise.resolve(onfulfilled(response));
+      }
+      return response;
+    } catch (err: any) {
+      const response = { data: null, error: { message: err.message } };
+      if (onrejected) {
+        return Promise.resolve(onrejected(response));
+      }
+      return response;
+    }
+  }
+}
+
+const originalFrom = supabase.from;
+supabase.from = function(table: string) {
+  if (table === 'family_accounts') {
+    return new FamilyAccountsMockBuilder() as any;
+  }
+  return originalFrom.call(this, table);
+};
+
+// ============================================================
 // mockSupabase — in-memory/localStorage demo client used ONLY by
 // the USSD simulator's demo mode (src/services/ussd/db.ts checks
 // context.isDemo before routing to this instead of the real client).
@@ -89,6 +231,8 @@ const getStoredMockTable = (table: string): any[] => {
       { id: 'p-1', name: 'Unilever', partner_type: 'fmcg', active: true, created_at: new Date().toISOString() },
       { id: 'p-2', name: 'Kapa Oil', partner_type: 'fmcg', active: true, created_at: new Date().toISOString() },
     ];
+  } else if (table === 'family_accounts') {
+    defaults = [];
   }
 
   localStorage.setItem(`nx_mock_table_${table}`, JSON.stringify(defaults));

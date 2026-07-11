@@ -1,5 +1,5 @@
 import { useState, useEffect, FormEvent } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { supabase } from '../../lib/supabase';
 import { matchProduct } from '../../services/skuMatcher';
 import NXLogo from '../../components/NXLogo';
@@ -21,12 +21,14 @@ import {
   Truck,
   Sparkles,
   RefreshCw,
-  FileText
+  FileText,
+  Menu
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { toast } from 'react-hot-toast';
 
 export default function MerchantDashboard({ user, onLogout }: { user: any, onLogout: () => void }) {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [pool, setPool] = useState(0);
   const [utilization, setUtilization] = useState(0);
   const [totalRedeemed, setTotalRedeemed] = useState(0);
@@ -811,10 +813,16 @@ export default function MerchantDashboard({ user, onLogout }: { user: any, onLog
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-nx-ink">
+    <div className="flex-1 flex flex-col bg-nx-ink relative">
       {/* Header */}
       <header className="px-6 py-5 border-b border-nx-border flex items-center justify-between bg-nx-card">
         <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setIsSidebarOpen(true)}
+            className="p-2 -ml-2 text-nx-muted hover:text-nx-paper transition-colors rounded-lg hover:bg-nx-border/20"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
           <div className="relative">
             <NXLogo title={user.name} />
             {notifications.length > 0 && (
@@ -829,7 +837,143 @@ export default function MerchantDashboard({ user, onLogout }: { user: any, onLog
         </button>
       </header>
 
-      <div className="flex-1 overflow-y-auto p-6 space-y-6 pb-24">
+      {/* Sidebar Overlay */}
+      <AnimatePresence>
+        {isSidebarOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.5 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsSidebarOpen(false)}
+              className="fixed inset-0 bg-black z-40 cursor-pointer"
+            />
+
+            {/* Sidebar Box */}
+            <motion.div
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed inset-y-0 left-0 w-72 bg-nx-card border-r border-nx-border shadow-2xl z-50 flex flex-col p-6"
+            >
+              <div className="flex items-center justify-between mb-8 pb-4 border-b border-nx-border">
+                <NXLogo title="NX Portal" />
+                <button
+                  onClick={() => setIsSidebarOpen(false)}
+                  className="p-1.5 rounded-lg text-nx-muted hover:text-nx-paper hover:bg-nx-border/20 transition-all"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* User Profile Info */}
+              <div className="mb-8 p-4 bg-nx-ink/50 border border-nx-border rounded-xl flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-nx-amber/10 border border-nx-amber/20 flex items-center justify-center font-display text-nx-amber font-bold">
+                  {user.name ? user.name[0].toUpperCase() : 'M'}
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-nx-paper">{user.name}</div>
+                  <div className="text-[10px] text-nx-muted font-mono">{user.phone}</div>
+                  <div className="text-[9px] text-nx-amber font-bold uppercase tracking-wider">{user.franchise_tier || user.tier || 'MERCHANT'}</div>
+                </div>
+              </div>
+
+              {/* Navigation Items */}
+              <div className="flex-1 space-y-2">
+                <button
+                  onClick={() => {
+                    setActiveTab('home');
+                    setIsSidebarOpen(false);
+                  }}
+                  className={cn(
+                    "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all",
+                    activeTab === 'home'
+                      ? "bg-nx-amber/10 text-nx-amber border border-nx-amber/20"
+                      : "text-nx-muted hover:text-nx-paper hover:bg-nx-border/10"
+                  )}
+                >
+                  <Store className="w-4 h-4" />
+                  <span>Portal</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setActiveTab('restock');
+                    setIsSidebarOpen(false);
+                  }}
+                  className={cn(
+                    "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all",
+                    activeTab === 'restock'
+                      ? "bg-nx-amber/10 text-nx-amber border border-nx-amber/20"
+                      : "text-nx-muted hover:text-nx-paper hover:bg-nx-border/10"
+                  )}
+                >
+                  <Package className="w-4 h-4" />
+                  <span>Restock</span>
+                </button>
+
+                {((user.franchise_tier || user.tier) === 'HUB') && (
+                  <button
+                    onClick={() => {
+                      setActiveTab('network');
+                      setIsSidebarOpen(false);
+                    }}
+                    className={cn(
+                      "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all",
+                      activeTab === 'network'
+                        ? "bg-nx-amber/10 text-nx-amber border border-nx-amber/20"
+                        : "text-nx-muted hover:text-nx-paper hover:bg-nx-border/10"
+                    )}
+                  >
+                    <Zap className="w-4 h-4" />
+                    <span>Network</span>
+                  </button>
+                )}
+
+                <button
+                  onClick={() => {
+                    setActiveTab('tiers');
+                    setIsSidebarOpen(false);
+                  }}
+                  className={cn(
+                    "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all",
+                    activeTab === 'tiers'
+                      ? "bg-nx-amber/10 text-nx-amber border border-nx-amber/20"
+                      : "text-nx-muted hover:text-nx-paper hover:bg-nx-border/10"
+                  )}
+                >
+                  <Award className="w-4 h-4" />
+                  <span>Tiers</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setActiveTab('referral');
+                    setIsSidebarOpen(false);
+                  }}
+                  className={cn(
+                    "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all",
+                    activeTab === 'referral'
+                      ? "bg-nx-amber/10 text-nx-amber border border-nx-amber/20"
+                      : "text-nx-muted hover:text-nx-paper hover:bg-nx-border/10"
+                  )}
+                >
+                  <Share2 className="w-4 h-4" />
+                  <span>Refer</span>
+                </button>
+              </div>
+
+              <div className="pt-4 border-t border-nx-border flex items-center justify-between">
+                <span className="text-[10px] font-mono text-nx-muted uppercase tracking-widest">NX Network v1.2</span>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      <div className="flex-1 overflow-y-auto p-6 space-y-6 pb-12">
         {activeTab === 'home' && (
           <>
             {/* New Notifications Section */}
@@ -1501,28 +1645,7 @@ export default function MerchantDashboard({ user, onLogout }: { user: any, onLog
         )}
       </div>
 
-      {/* Bottom Navigation */}
-      <nav className="absolute bottom-0 left-0 right-0 bg-nx-card border-t border-nx-border px-4 py-3 flex items-center justify-between z-40">
-        {[
-          { id: 'home', icon: <Store className="w-5 h-5" />, label: 'Portal' },
-          { id: 'restock', icon: <Package className="w-5 h-5" />, label: 'Restock' },
-          ...((user.franchise_tier || user.tier) === 'HUB' ? [{ id: 'network', icon: <Zap className="w-5 h-5" />, label: 'Network' }] : []),
-          { id: 'tiers', icon: <Award className="w-5 h-5" />, label: 'Tiers' },
-          { id: 'referral', icon: <Share2 className="w-5 h-5" />, label: 'Refer' },
-        ].map((item) => (
-          <button
-            key={item.id}
-            onClick={() => setActiveTab(item.id as any)}
-            className={cn(
-              "flex flex-col items-center gap-1 transition-colors",
-              activeTab === item.id ? "text-nx-amber" : "text-nx-muted hover:text-nx-paper"
-            )}
-          >
-            {item.icon}
-            <span className="text-[9px] font-bold uppercase tracking-widest">{item.label}</span>
-          </button>
-        ))}
-      </nav>
+      {/* Bottom navigation removed in favor of sidebar */}
 
       {/* Restock Modal */}
       {isRestockModalOpen && (

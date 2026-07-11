@@ -529,7 +529,7 @@ export default function CustomerDashboard({ user, onLogout }: { user: any, onLog
         )}
       </AnimatePresence>
 
-      <div className="flex-1 overflow-y-auto p-6 space-y-6 pb-24">
+      <div className="flex-1 overflow-y-auto p-6 space-y-6 pb-12">
         {activeTab === 'home' && (
           <>
             {/* Balance Card */}
@@ -943,27 +943,7 @@ export default function CustomerDashboard({ user, onLogout }: { user: any, onLog
         )}
       </div>
 
-      {/* Bottom Navigation */}
-      <nav className="absolute bottom-0 left-0 right-0 bg-nx-card border-t border-nx-border px-6 py-3 flex items-center justify-between z-40">
-        {[
-          { id: 'home', icon: <Wallet className="w-5 h-5" />, label: 'Wallet' },
-          { id: 'merchants', icon: <MapPin className="w-5 h-5" />, label: 'Shops' },
-          { id: 'family', icon: <Users className="w-5 h-5" />, label: 'Family' },
-          { id: 'history', icon: <History className="w-5 h-5" />, label: 'History' },
-        ].map((item) => (
-          <button
-            key={item.id}
-            onClick={() => setActiveTab(item.id as any)}
-            className={cn(
-              "flex flex-col items-center gap-1 transition-colors",
-              activeTab === item.id ? "text-nx-amber" : "text-nx-muted hover:text-nx-paper"
-            )}
-          >
-            {item.icon}
-            <span className="text-[9px] font-bold uppercase tracking-widest">{item.label}</span>
-          </button>
-        ))}
-      </nav>
+      {/* Bottom navigation removed in favor of sidebar */}
 
       {/* Payment Modal */}
       {isPayModalOpen && (
