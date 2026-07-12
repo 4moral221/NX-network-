@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import NXLogo from '../../components/NXLogo';
+import NotificationIcon from '../../components/NotificationIcon';
 import { cn } from '@/src/lib/utils';
 import { supabase } from '@/src/lib/supabase';
 import { getPortalLink } from '@/src/lib/constants';
@@ -569,7 +570,8 @@ export default function MerchantPortal() {
             <span className="border border-[#ff6b35] text-[#ff6b35] px-3 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest">HUB TIER</span>
           </div>
         </div>
-        <div className="flex bg-nx-card2 items-center gap-4">
+        <div className="flex items-center gap-4">
+          <NotificationIcon />
           <button 
             onClick={() => setIsLoggedIn(false)}
             className="flex items-center gap-2 text-[#5a5a7a] hover:text-[#e2e2f0] text-xs transition-colors border border-[#2a2a3e] px-4 py-2 rounded-lg"

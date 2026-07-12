@@ -4,12 +4,14 @@ import { LayoutDashboard, Store, Package, Truck, Trophy, Zap, Clock, BarChart3, 
 import { cn } from '@/src/lib/utils';
 import { supabase } from '@/src/lib/supabase';
 import NXLogo from '../../components/NXLogo';
+import NotificationIcon from '../../components/NotificationIcon';
 
 // Map Imports for Custom Leaflet Implementation
 import { MapContainer, TileLayer, Marker, Popup, useMap, CircleMarker } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Map as MapIcon } from 'lucide-react';
+import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 
 const hasGoogleMapsKey = false;
 
@@ -1173,6 +1175,7 @@ export default function FmcgsPortal() {
         </div>
         <div className="flex items-center gap-6">
           <div className="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] uppercase tracking-widest text-nx-amber font-bold">{brand?.name}</div>
+          <NotificationIcon />
           <button onClick={async () => {
             await supabase.auth.signOut();
             setIsLoggedIn(false);
@@ -1280,16 +1283,58 @@ export default function FmcgsPortal() {
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 
-                <div className="p-8 border border-nx-border bg-nx-card rounded-2xl">
-                  <h2 className="text-lg font-display text-nx-amber mb-6 uppercase tracking-widest">SKU Inventory Status</h2>
-                  <div className="space-y-4">
-                    {skuStatus.map(sku => (
-                      <div key={sku.name} className={cn("flex justify-between items-center p-4 border rounded-xl transition-all hover:bg-white/5", sku.border)}>
-                        <span className="text-xs font-bold text-white uppercase tracking-widest">{sku.name}</span>
-                        <span className={cn("text-[10px] font-bold uppercase tracking-widest", sku.color)}>{sku.status}</span>
+                <div className="p-8 border border-nx-border bg-nx-card rounded-2xl flex flex-col">
+                  <h2 className="text-lg font-display text-white mb-6 uppercase tracking-widest font-bold">INVENTORY STATUS & ALERTS</h2>
+                  <div className="flex-1 flex items-center justify-between">
+                    <div className="h-48 w-48 relative">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={[
+                              { name: 'Active', value: 85, color: '#4ade80' },
+                              { name: 'Low Stock', value: 12, color: '#fbbf24' },
+                              { name: 'Out of Stock', value: 3, color: '#f87171' }
+                            ]}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={60}
+                            outerRadius={80}
+                            paddingAngle={5}
+                            dataKey="value"
+                            stroke="none"
+                          >
+                            {
+                              [
+                                { name: 'Active', value: 85, color: '#4ade80' },
+                                { name: 'Low Stock', value: 12, color: '#fbbf24' },
+                                { name: 'Out of Stock', value: 3, color: '#f87171' }
+                              ].map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.color} />
+                              ))
+                            }
+                          </Pie>
+                          <RechartsTooltip 
+                            contentStyle={{ backgroundColor: '#181817', borderColor: '#2b2b28', borderRadius: '8px' }}
+                            itemStyle={{ color: '#fff' }}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                    
+                    <div className="flex flex-col justify-center space-y-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-4 h-4 rounded-full bg-[#4ade80]" />
+                        <span className="text-white font-medium">Active <span className="text-[#4ade80] ml-1">(85%)</span></span>
                       </div>
-                    ))}
-                    {skuStatus.length === 0 && <p className="text-[10px] text-nx-muted uppercase tracking-widest text-center py-8">Awaiting Network SKU Data...</p>}
+                      <div className="flex items-center gap-3">
+                        <div className="w-4 h-4 rounded-full bg-[#fbbf24]" />
+                        <span className="text-white font-medium">Low Stock <span className="text-[#fbbf24] ml-1">(12%)</span></span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-4 h-4 rounded-full bg-[#f87171]" />
+                        <span className="text-white font-medium">Out of Stock <span className="text-[#f87171] ml-1">(3%)</span></span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 

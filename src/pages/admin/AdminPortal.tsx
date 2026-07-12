@@ -50,6 +50,7 @@ import { supabase } from '@/src/lib/supabase';
 import { getPortalLink } from '@/src/lib/constants';
 import UssdSimulator from '@/src/components/admin/UssdSimulator';
 import NXLogo from '../../components/NXLogo';
+import NotificationIcon from '../../components/NotificationIcon';
 import LiveMap from '@/src/components/admin/LiveMap';
 import Sidebar from '@/src/pages/admin/components/Sidebar';
 import { TIER_CONFIG } from '@/src/services/ussd/config';
@@ -2432,6 +2433,7 @@ export default function AdminPortal() {
           )}
 
           <div className="flex items-center gap-3">
+            <NotificationIcon />
             <button 
               onClick={fetchAdminData}
               className="flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-1.5 rounded text-[10px] font-mono font-bold uppercase tracking-widest hover:border-[#00ff88] hover:text-[#00ff88] transition-all"

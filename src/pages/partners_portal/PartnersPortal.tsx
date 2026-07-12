@@ -11,6 +11,7 @@ import {
 import { cn } from '@/src/lib/utils';
 import { supabase } from '@/src/lib/supabase';
 import NXLogo from '../../components/NXLogo';
+import NotificationIcon from '../../components/NotificationIcon';
 
 // Map Imports for Partners Portal Leaflet Map
 import { MapContainer, TileLayer, Marker, Popup, useMap, CircleMarker } from 'react-leaflet';
@@ -1770,6 +1771,7 @@ MERCHANT_CODE: M-104 | PHONE: +254766666666 | ORDER_SPEC: Pembe 2kg*22 | ORDER_Q
         <div className="flex items-center gap-4">
           <a href="/" className="text-[10px] uppercase tracking-widest text-white/40 hover:text-white/80 transition-colors">← Landing</a>
           <span className="bg-white/10 px-3 py-1 rounded-full text-xs font-semibold">{brand?.name}</span>
+          <NotificationIcon />
           <button onClick={async () => {
             await supabase.auth.signOut();
             setIsLoggedIn(false);
