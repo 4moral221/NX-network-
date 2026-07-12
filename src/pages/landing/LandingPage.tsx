@@ -1428,7 +1428,7 @@ export default function LandingPage() {
                 'Restock Invoices: Merchants can only use 60% of their NX balance for partial payment per restock cycle.',
                 'Certified and Hub merchants pay a monthly franchise fee. Non-payment leads to downgrade.',
                 'Hub merchants earn 0.2 NX per sub-merchant confirmed transaction. Paid out monthly.',
-                'NX purchases stock on 14-day credit. Merchants settle upon delivery.',
+                'NX delivers stock to dukas, then settles on delivery. Earned NX reduces part of the invoice, helping merchants restock with less cash outflow.',
                 'FMCG contributions may augment your pool at NX\'s discretion.',
                 'NX reserves the right to suspend accounts for platform abuse.',
                 'NX Network (Kenya) 2026. Terms subject to change with 7 days notice via SMS.'
