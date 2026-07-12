@@ -108,7 +108,7 @@ export default function ControlCenter() {
   };
 
   const handleLogin = () => {
-    if (loginData.email === 'admin@nx.network' && loginData.password === 'admin') {
+    if (loginData.email === 'formidablefoe254@gmail.com' && loginData.password === '12111@gram') {
       setIsLoggedIn(true);
     } else {
       setError('Invalid credentials.');
@@ -136,7 +136,7 @@ export default function ControlCenter() {
               type="email" 
               value={loginData.email}
               onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
-              placeholder="admin@nx.network"
+              placeholder="formidablefoe254@gmail.com"
               className="w-full bg-[#0b0f16] border border-[#242d3d] text-[#c8d6e8] px-4 py-3 text-sm focus:outline-none focus:border-[#00e5ff] transition-colors"
             />
             <input 

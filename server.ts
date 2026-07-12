@@ -402,31 +402,17 @@ class BackendSupabaseMockBuilder {
     let data: any[] = [];
     if (this.table === 'users') {
       data = [
-        { id: '1', phone: '254700000001', merchant_code: 'M10001', role: 'merchant', franchise_tier: 'BASIC', name: 'Duka One', status: 'active', nx_balance: 1500 },
-        { id: '2', phone: '254700000002', merchant_code: 'M10002', role: 'merchant', franchise_tier: 'CERTIFIED', name: 'Duka Two', status: 'active', nx_balance: 2800 },
-        { id: '3', phone: '254700000003', merchant_code: 'M10003', role: 'merchant', franchise_tier: 'HUB', name: 'Duka Hub', status: 'active', nx_balance: 5000 },
-        { id: '4', phone: '254700000004', role: 'customer', name: 'John Customer', status: 'active', nx_balance: 350 },
-        { id: 'p-1', email: 'neorealm618@gmail.com', phone: '254700000005', role: 'partner', company_name: 'Unilever', name: 'Unilever', status: 'active', nx_balance: 0 }
+        { id: '1', email: 'formidablefoe254@gmail.com', phone: '254700000000', role: 'admin', is_admin: true, admin_role: 'super_admin', name: 'Admin', status: 'active' },
+        { id: '2', phone: '254700000005', role: 'customer', name: 'Alex jaka', status: 'active', nx_balance: 350, recovery_pin: '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4' }
       ];
     } else if (this.table === 'transactions') {
-      data = [
-        { id: 'tx-1', merchant_code: 'M10001', nx_earned: 15, nx_redeemed: 0, amount: 150, status: 'completed', created_at: new Date().toISOString() },
-        { id: 'tx-2', merchant_code: 'M10002', nx_earned: 25, nx_redeemed: 10, amount: 250, status: 'completed', created_at: new Date().toISOString() }
-      ];
+      data = [];
     } else if (this.table === 'merchant_margins') {
-      data = [
-        { id: 'm-1', merchant_code: 'M10001', gross_margin: 5000, created_at: new Date().toISOString() },
-        { id: 'm-2', merchant_code: 'M10002', gross_margin: 12000, created_at: new Date().toISOString() }
-      ];
+      data = [];
     } else if (this.table === 'fmcg_margin_contributions') {
-      data = [
-        { id: 'f-1', merchant_code: 'M10002', contribution_amount: 1500, status: 'active', effective_from: '2026-01-01', effective_to: null }
-      ];
+      data = [];
     } else if (this.table === 'fmcg_partners' || this.table === 'partners') {
-      data = [
-        { id: 'p-1', name: 'Unilever', company_name: 'Unilever', status: 'active', active: true, contact: 'neorealm618@gmail.com', dashboard_password: crypto.createHash('sha256').update('Unilever123!').digest('hex'), api_key_hash: crypto.createHash('sha256').update('Unilever123!').digest('hex'), created_at: new Date().toISOString() },
-        { id: 'p-2', name: 'Kapa Oil', company_name: 'Kapa Oil', status: 'active', active: true, contact: 'kapa@example.com', dashboard_password: crypto.createHash('sha256').update('Kapa123!').digest('hex'), api_key_hash: crypto.createHash('sha256').update('Kapa123!').digest('hex'), created_at: new Date().toISOString() }
-      ];
+      data = [];
     } else if (this.table === 'visitors') {
       data = [
         { id: 'v-1', visit_time: new Date().toISOString(), ip_address: '127.0.0.1' }

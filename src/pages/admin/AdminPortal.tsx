@@ -583,8 +583,8 @@ export default function AdminPortal() {
                 if (
                   data?.is_admin ||
                   userIdentifier.toLowerCase() === 'formidablefoe254@gmail.com' ||
-                  userIdentifier.toLowerCase() === 'admin@nx.network' ||
-                  userIdentifier === '+254712345678'
+                  
+                  false
                 ) {
                   setAdminRole(data?.admin_role || 'super_admin');
                   setIsLoggedIn(true);
@@ -602,8 +602,8 @@ export default function AdminPortal() {
                 // Fallback for known administrators in case of query/network errors
                 if (
                   userIdentifier.toLowerCase() === 'formidablefoe254@gmail.com' ||
-                  userIdentifier.toLowerCase() === 'admin@nx.network' ||
-                  userIdentifier === '+254712345678'
+                  
+                  false
                 ) {
                   setAdminRole('super_admin');
                   setIsLoggedIn(true);
@@ -1944,7 +1944,7 @@ export default function AdminPortal() {
           .eq('email', adminEmail.trim().toLowerCase())
           .maybeSingle();
           
-        if (adminRecord?.is_admin || adminEmail.trim().toLowerCase() === 'formidablefoe254@gmail.com' || adminEmail.trim().toLowerCase() === 'admin@nx.network') {
+        if (adminRecord?.is_admin || adminEmail.trim().toLowerCase() === 'formidablefoe254@gmail.com') {
           console.log('[AdminAuth] Admin status confirmed:', adminRecord?.admin_role || 'super_admin');
           setAdminRole(adminRecord?.admin_role || 'super_admin');
           localStorage.setItem('admin_token', targetSessionToken);
@@ -1960,7 +1960,7 @@ export default function AdminPortal() {
         let role = 'super_admin';
         
         console.log('[AdminAuth] Checking password authentication...');
-        if ((adminEmail.trim().toLowerCase() === 'admin@nx.network' && adminPassword === 'admin') || 
+        if (
             (adminEmail.trim().toLowerCase() === 'formidablefoe254@gmail.com' && adminPassword === '12111@gram')) {
           console.log('[AdminAuth] Authorized credentials detected');
           isPasswordValid = true;
@@ -1998,7 +1998,7 @@ export default function AdminPortal() {
         if (isPasswordValid) {
            console.log('[AdminAuth] Password valid. Checking session...');
            // If using the default demo credentials, bypass supabase auth and just log them in
-           if ((adminEmail.trim().toLowerCase() === 'admin@nx.network' && adminPassword === 'admin') || 
+           if (
              (adminEmail.trim().toLowerCase() === 'formidablefoe254@gmail.com' && adminPassword === '12111@gram')) {
               localStorage.setItem('admin_token', 'supabase_bypass_session');
               localStorage.setItem('admin_phone', adminEmail.trim().toLowerCase());
