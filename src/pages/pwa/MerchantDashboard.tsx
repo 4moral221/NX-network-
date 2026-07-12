@@ -1,5 +1,6 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { supabase } from '../../lib/supabase';
 import { matchProduct } from '../../services/skuMatcher';
 import NXLogo from '../../components/NXLogo';
@@ -51,6 +52,7 @@ export default function MerchantDashboard({ user, onLogout }: { user: any, onLog
   const [pendingInvoices, setPendingInvoices] = useState<any[]>([]);
   const [unpaidInvoices, setUnpaidInvoices] = useState<any[]>([]);
   const [hasPendingRequest, setHasPendingRequest] = useState(false);
+  const [chartData, setChartData] = useState<any[]>([]);
 
   // Hub Enrollment States
   const [enrollPhone, setEnrollPhone] = useState('');
@@ -242,6 +244,36 @@ export default function MerchantDashboard({ user, onLogout }: { user: any, onLog
       .eq('is_read', false)
       .order('created_at', { ascending: false });
     if (notes) setNotifications(notes);
+
+    // Fetch Chart Data (last 7 days)
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const { data: chartTxns } = await supabase
+      .from('transactions')
+      .select('created_at, amount, nx_earned')
+      .eq('merchant_code', user.merchant_code)
+      .gte('created_at', sevenDaysAgo)
+      .order('created_at', { ascending: true });
+
+    if (chartTxns) {
+      const grouped = chartTxns.reduce((acc: any, tx: any) => {
+        const date = new Date(tx.created_at).toLocaleDateString('en-US', { weekday: 'short' });
+        if (!acc[date]) {
+          acc[date] = { date, volume: 0, rewards: 0 };
+        }
+        acc[date].volume += Number(tx.amount || 0);
+        acc[date].rewards += Number(tx.nx_earned || 0);
+        return acc;
+      }, {});
+
+      const template = Array.from({ length: 7 }).map((_, i) => {
+        const d = new Date(Date.now() - (6 - i) * 24 * 60 * 60 * 1000);
+        const dayStr = d.toLocaleDateString('en-US', { weekday: 'short' });
+        return grouped[dayStr] || { date: dayStr, volume: 0, rewards: 0 };
+      });
+      setChartData(template);
+    } else {
+      setChartData([]);
+    }
 
     setLoading(false);
     fetchPendingInvoices();
@@ -1128,6 +1160,36 @@ export default function MerchantDashboard({ user, onLogout }: { user: any, onLog
                 </div>
                 <span className="text-[10px] font-bold text-nx-paper uppercase tracking-widest text-center">Order<br/>Restock</span>
               </button>
+            </div>
+
+            {/* Chart Section */}
+            <div className="bg-nx-card border border-nx-border rounded-xl p-4 overflow-hidden">
+              <h3 className="text-[10px] uppercase tracking-widest text-nx-muted font-bold mb-4">7-Day Performance</h3>
+              <div className="h-48">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={chartData} margin={{ top: 5, right: 0, left: -20, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorVolume" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#f5a623" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#f5a623" stopOpacity={0}/>
+                      </linearGradient>
+                      <linearGradient id="colorRewards" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#22c55e" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#2a2723" vertical={false} />
+                    <XAxis dataKey="date" stroke="#8b8682" fontSize={10} tickLine={false} axisLine={false} />
+                    <YAxis stroke="#8b8682" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(v) => `KES ${v}`} />
+                    <Tooltip 
+                      contentStyle={{ backgroundColor: '#1a1714', border: '1px solid #3d3833', borderRadius: '8px', fontSize: '12px' }}
+                      itemStyle={{ color: '#f5f0e6' }}
+                    />
+                    <Area type="monotone" dataKey="volume" stroke="#f5a623" fillOpacity={1} fill="url(#colorVolume)" name="Volume" />
+                    <Area type="monotone" dataKey="rewards" stroke="#22c55e" fillOpacity={1} fill="url(#colorRewards)" name="Rewards" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
             </div>
 
             {/* FMCG & Batch Notifications */}

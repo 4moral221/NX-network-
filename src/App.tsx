@@ -6,6 +6,7 @@ import { SpeedInsights } from "@vercel/speed-insights/react";
 
 // Lazy loading to ensure the main chunk is small and app doesn't hang on 'INITIALIZING' screen for slow connections
 import ThemeSwitcher from './components/ThemeSwitcher';
+import NetworkStatus from './components/NetworkStatus';
 
 const LandingPage = lazy(() => import('./pages/landing/LandingPage'));
 const MerchantPortal = lazy(() => import('./pages/merchant/MerchantPortal'));
@@ -232,6 +233,7 @@ export default function App() {
   return (
     <ErrorBoundary>
       <Router>
+        <NetworkStatus />
         <ThemeSwitcher />
         <Analytics />
         <SpeedInsights />
