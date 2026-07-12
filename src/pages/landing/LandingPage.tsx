@@ -51,6 +51,7 @@ export default function LandingPage() {
   const [selectedTier, setSelectedTier] = useState<'BASIC' | 'CERTIFIED' | 'HUB'>('BASIC');
   const [activeStoryIndex, setActiveStoryIndex] = useState(0);
   const [isStoryPlaying, setIsStoryPlaying] = useState(true);
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
 
   const stories = [
     {
@@ -1397,6 +1398,144 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="mt-4 text-[10px] uppercase tracking-widest text-nx-muted">Works on Safaricom · Airtel · Telkom · Any Kenyan network</div>
+        </div>
+      </section>
+
+      {/* Platform FAQ / Deep Dive (Accordions below the fold) */}
+      <section id="faq" className="py-24 px-6 md:px-10 max-w-6xl mx-auto border-t border-nx-border scroll-mt-20">
+        <div className="flex items-center gap-4 text-[9px] uppercase tracking-[0.4em] text-nx-amber mb-6">
+          <div className="w-8 h-[1px] bg-nx-amber" /> Platform FAQ &amp; Deep Dive
+        </div>
+        <h2 className="font-display text-[clamp(40px,6vw,80px)] leading-none tracking-tight text-nx-paper mb-16 uppercase">
+          QUESTIONS &amp;<br/>ANSWERS.
+        </h2>
+
+        <div className="max-w-4xl mx-auto space-y-4">
+          {[
+            {
+              id: 0,
+              question: "How does the NX pool stay solvent?",
+              answer: (
+                <div className="space-y-4 text-xs md:text-sm text-[#b5b3aa] leading-relaxed">
+                  <p>
+                    We cap how much NX each customer can earn per purchase, how much each merchant can redeem per cycle, and how long unredeemed NX can stay active.
+                  </p>
+                  <p>
+                    Behind the scenes, every transaction is logged, hashed, and audited. This lets us match rewards and redemptions against real stock, so the pool never runs ahead of actual business.
+                  </p>
+                </div>
+              )
+            },
+            {
+              id: 1,
+              question: "Do dukas get credit?",
+              answer: (
+                <div className="space-y-4 text-xs md:text-sm text-[#b5b3aa] leading-relaxed">
+                  <p>
+                    NX delivers stock and settles on delivery, not open-ended loans.
+                  </p>
+                  <p>
+                    Qualified merchants can use their NX pool to offset up to a capped percentage of each invoice per cycle. That means less cash out on restock days, without turning NX into a risky debt product.
+                  </p>
+                </div>
+              )
+            },
+            {
+              id: 2,
+              question: "What do brands actually see?",
+              answer: (
+                <div className="space-y-4 text-xs md:text-sm text-[#b5b3aa] leading-relaxed">
+                  <p>
+                    FMCG partners see anonymized, kiosk-level demand patterns: what sells, where, and how often. They don’t see individual customer identities.
+                  </p>
+                  <p>
+                    This helps brands plan promotions, stock, and activations without changing how dukas run their day-to-day.
+                  </p>
+                </div>
+              )
+            },
+            {
+              id: 3,
+              question: "How do you prevent fraud?",
+              answer: (
+                <div className="space-y-4 text-xs md:text-sm text-[#b5b3aa] leading-relaxed">
+                  <p>
+                    Every transaction is tied to a registered phone number and duka profile. Suspicious patterns trigger throttling and manual review.
+                  </p>
+                  <p>
+                    Earn and redeem rates can be adjusted per region or product to match real demand and keep the system fair.
+                  </p>
+                </div>
+              )
+            },
+            {
+              id: 4,
+              question: "What’s the difference between tiers?",
+              answer: (
+                <div className="space-y-4 text-xs md:text-sm text-[#b5b3aa] leading-relaxed">
+                  <p>
+                    Our ecosystem structure features three tailored operational levels:
+                  </p>
+                  <ul className="space-y-3 list-none pl-0">
+                    <li className="flex items-start gap-2.5">
+                      <span className="text-nx-amber font-mono text-[10px] uppercase font-bold shrink-0 mt-0.5">• BASIC:</span>
+                      <span>Free, standard earn and redeem rates, lower invoice offset caps.</span>
+                    </li>
+                    <li className="flex items-start gap-2.5">
+                      <span className="text-nx-amber font-mono text-[10px] uppercase font-bold shrink-0 mt-0.5">• CERTIFIED:</span>
+                      <span>Subscription, higher pool earn, higher offset caps, priority support.</span>
+                    </li>
+                    <li className="flex items-start gap-2.5">
+                      <span className="text-nx-green font-mono text-[10px] uppercase font-bold shrink-0 mt-0.5">• HUB:</span>
+                      <span>Advanced tools, higher limits, and deeper data for distribution partners.</span>
+                    </li>
+                  </ul>
+                </div>
+              )
+            }
+          ].map((faq) => {
+            const isOpen = openFaqIndex === faq.id;
+            return (
+              <div 
+                key={faq.id} 
+                className="bg-nx-card border border-nx-border rounded-xl overflow-hidden transition-all duration-300 hover:border-nx-amber/30"
+              >
+                <button
+                  onClick={() => setOpenFaqIndex(isOpen ? null : faq.id)}
+                  className="w-full text-left px-6 py-5 flex items-center justify-between gap-4 select-none hover:text-nx-paper transition-colors focus:outline-hidden"
+                >
+                  <span className="font-serif text-base md:text-lg text-nx-paper font-semibold tracking-tight">
+                    {faq.question}
+                  </span>
+                  <div className="p-1.5 border border-nx-border rounded-lg bg-nx-ink shrink-0 group-hover:border-nx-amber/40 transition-colors">
+                    <svg 
+                      className={cn("w-3.5 h-3.5 text-nx-muted hover:text-nx-paper transition-transform duration-300", isOpen && "rotate-45 text-nx-amber")} 
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      stroke="currentColor"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+                    </svg>
+                  </div>
+                </button>
+                
+                <AnimatePresence initial={false}>
+                  {isOpen && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3, ease: "easeInOut" }}
+                    >
+                      <div className="px-6 pb-6 pt-1 border-t border-nx-border/20">
+                        {faq.answer}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            );
+          })}
         </div>
       </section>
 

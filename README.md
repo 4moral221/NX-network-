@@ -33,3 +33,22 @@ Rates adjust automatically based on Pool Health (Utilization):
 1. Ensure `.env` is populated with `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
 2. Run `npm install`
 3. Run `npm run dev`
+
+## 5. Monetization & Ads Strategy (Secondary Revenue Line)
+
+To keep the platform's user experience clean and prioritize core utility, advertising and sponsored placements are designed as a carefully controlled secondary revenue line.
+
+### PWA Ads Principles
+- **Placement**: All ads are displayed below the primary action (e.g., below "Place Order" or "View Basket"), never blocking checkout flow or critical actions. Full-screen interstitials are strictly prohibited.
+- **Relevance**: Prioritize FMCG and merchant-relevant promos (e.g., maize flour promos, bulk package discounts, new SKU releases) matched to real purchase behavior.
+- **Transparency**: Every advertisement is clearly labeled as "Sponsored" or "Promo from [Brand]". A client setting is provided ("Fewer ads — but you may miss some offers") to let users adjust ad density.
+
+### USSD Ads Principles
+- **Conciseness**: Ads are restricted to a maximum of one line of text (e.g., `Promo: Buy 5kg Pembe this week, earn extra NX.`).
+- **Timing**: Ads are only rendered on receipt/confirmation screens after the core transaction is complete, or as optional selection menus (e.g., `1. Complete, 2. View current brand offers`). They are never injected in-between transactional steps.
+- **Integrity**: Promo text is kept lightweight to avoid breaking USSD page length limits.
+
+### Business Model & Retail Media Integration
+- **Retail Media / Activation**: Brands pay to place targeted offers inside both restock and customer demand flows.
+- **Performance-Based Pricing**: Pricing models support cost-per-impression (CPM), cost-per-click (CPC) inside the PWA, and cost-per-redemption for sponsored loyalty boosts.
+- **Ecosystem Integration**: Promos tie directly back to our FMCG data & loyalty pool system, allowing partners to sponsor specific merchant restock incentives.
