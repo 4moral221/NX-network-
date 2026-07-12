@@ -509,7 +509,116 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
+      {/* Demand Aggregation Section */}
+      <section id="demand-aggregation" className="py-24 px-6 md:px-10 max-w-6xl mx-auto border-t border-nx-border">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+        >
+          <div className="flex items-center gap-4 text-[9px] uppercase tracking-[0.4em] text-nx-amber mb-6">
+            <div className="w-8 h-[1px] bg-nx-amber" /> Demand Aggregation
+          </div>
+          
+          <div className="grid lg:grid-cols-12 gap-12 mb-16">
+            <div className="lg:col-span-5 space-y-6">
+              <h2 className="font-display text-[clamp(36px,5vw,64px)] leading-[1.1] tracking-tight text-nx-paper uppercase">
+                DEMAND<br/>AGGREGATION<br/>FOR EVERY <span className="text-nx-amber italic">DUKA.</span>
+              </h2>
+              <p className="font-serif text-lg text-nx-paper/70 leading-relaxed">
+                We combine many small duka orders into one powerful demand stream – so retailers buy better, restock faster, and never lose customers to empty shelves.
+              </p>
+              <div className="p-5 bg-nx-amber/5 border-l-2 border-nx-amber text-xs text-[#b5b3aa] leading-relaxed">
+                <strong>Infrastructure means more than points</strong> — NX aggregates duka demand so brands and suppliers can serve them better.
+              </div>
+            </div>
+            
+            <div className="lg:col-span-7 space-y-6">
+              <div className="grid gap-4">
+                <div className="bg-nx-card p-6 rounded-xl border border-nx-border hover:border-nx-amber/20 transition-all">
+                  <div className="flex gap-4">
+                    <div className="p-3 bg-nx-amber/10 text-nx-amber rounded-lg h-fit">
+                      <Layers className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="font-sans font-bold text-sm text-nx-paper mb-1">Better buying power</h4>
+                      <p className="text-xs text-nx-muted leading-relaxed">
+                        NX groups orders from nearby dukas so they can access better prices, promos, and priority stock they would never get negotiating alone.
+                      </p>
+                    </div>
+                  </div>
+                </div>
 
+                <div className="bg-nx-card p-6 rounded-xl border border-nx-border hover:border-nx-amber/20 transition-all">
+                  <div className="flex gap-4">
+                    <div className="p-3 bg-nx-amber/10 text-nx-amber rounded-lg h-fit">
+                      <Truck className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="font-sans font-bold text-sm text-nx-paper mb-1">Reliable restocks</h4>
+                      <p className="text-xs text-nx-muted leading-relaxed">
+                        By pooling demand, NX helps distributors and FMCGs plan deliveries more efficiently, reducing stock-outs and late deliveries in informal neighborhoods.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-nx-card p-6 rounded-xl border border-nx-border hover:border-nx-amber/20 transition-all">
+                  <div className="flex gap-4">
+                    <div className="p-3 bg-nx-amber/10 text-nx-amber rounded-lg h-fit">
+                      <BarChart3 className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="font-sans font-bold text-sm text-nx-paper mb-1">Smarter inventory</h4>
+                      <p className="text-xs text-nx-muted leading-relaxed">
+                        Every USSD and PWA order feeds live demand data, helping brands and hubs know what is selling, where, and when – down to the kiosk.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Micro-flow */}
+          <div className="border-t border-nx-border pt-12">
+            <h3 className="text-[10px] uppercase tracking-[0.3em] text-nx-amber mb-8 text-center">How Aggregation Flows</h3>
+            <div className="grid md:grid-cols-3 gap-0.5 bg-nx-border">
+              <div className="bg-nx-ink p-8 hover:bg-nx-card transition-colors group">
+                <div className="text-nx-amber mb-4 font-display text-4xl">01</div>
+                <h4 className="font-serif text-lg text-nx-paper mb-2">Dukas Join NX</h4>
+                <p className="text-xs text-nx-muted leading-relaxed">
+                  Dukas join NX via USSD or the Duka PWA and register their shop.
+                </p>
+              </div>
+
+              <div className="bg-nx-ink p-8 hover:bg-nx-card transition-colors group">
+                <div className="text-nx-amber mb-4 font-display text-4xl">02</div>
+                <h4 className="font-serif text-lg text-nx-paper mb-2">Orders are Pooled</h4>
+                <p className="text-xs text-nx-muted leading-relaxed">
+                  Orders are pooled by area and supplier, so wholesalers and FMCGs see a single consolidated demand signal instead of scattered calls and texts.
+                </p>
+              </div>
+
+              <div className="bg-nx-ink p-8 hover:bg-nx-card transition-colors group">
+                <div className="text-nx-amber mb-4 font-display text-4xl">03</div>
+                <h4 className="font-serif text-lg text-nx-paper mb-2">Deliveries &amp; Rewards</h4>
+                <p className="text-xs text-nx-muted leading-relaxed">
+                  Deliveries and rewards flow through hubs, with dukas earning loyalty and access to flexible restock options on every aggregated order.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Proof Quote */}
+          <div className="mt-12 p-8 bg-nx-card/50 border border-nx-border rounded-xl text-center max-w-3xl mx-auto">
+            <blockquote className="font-serif text-sm md:text-base text-nx-paper/85 italic leading-relaxed">
+              "Over 70% of everyday essentials in Africa move through informal retail – NX makes that demand visible, consolidated, and bankable for the first time."
+            </blockquote>
+          </div>
+        </motion.div>
+      </section>
 
       {/* Registration Details */}
       <section id="registration" className="py-24 px-6 md:px-10 max-w-6xl mx-auto border-t border-nx-border">
