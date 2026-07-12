@@ -43,6 +43,7 @@ export default function LandingPage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [showBrandPortalChoice, setShowBrandPortalChoice] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [visitorCount, setVisitorCount] = useState<string>('—');
   const [showUssd, setShowUssd] = useState(false);
@@ -102,7 +103,7 @@ export default function LandingPage() {
   }, []);
 
   useEffect(() => {
-    if (showPrivacy || showHelp) {
+    if (showPrivacy || showHelp || showBrandPortalChoice) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
@@ -110,7 +111,7 @@ export default function LandingPage() {
     return () => {
       document.body.style.overflow = '';
     };
-  }, [showPrivacy, showHelp]);
+  }, [showPrivacy, showHelp, showBrandPortalChoice]);
 
   useEffect(() => {
     // Track visitor with a delay to not block initial render
@@ -236,16 +237,16 @@ export default function LandingPage() {
         
         <motion.h1 
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-          className="font-display text-[clamp(50px,8vw,120px)] leading-[0.91] tracking-tight text-nx-paper mb-9"
+          className="font-display text-[clamp(40px,6vw,90px)] leading-[0.95] tracking-tight text-nx-paper mb-9 uppercase"
         >
-          LOYALTY<br/>FOR EVERY<br/><span className="text-nx-amber italic">DUKA.</span>
+          ONE NETWORK<br/>FOR DUKA DEMAND,<br/><span className="text-nx-amber italic">RESTOCK &amp; REWARDS.</span>
         </motion.h1>
         
         <motion.p 
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
           className="font-serif text-[clamp(16px,2vw,22px)] text-nx-paper/70 max-w-2xl leading-relaxed mb-6"
         >
-          A USSD loyalty and supply chain network that helps dukas earn more, restock smarter, and give customers instant savings — on any phone.
+          NX aggregates duka orders, delivers stock, and settles on delivery – while customers earn rewards on every purchase.
         </motion.p>
         
         <motion.div 
@@ -339,127 +340,93 @@ export default function LandingPage() {
         ))}
       </div>
 
-      {/* Audience-Specific Navigation Helpers */}
-      <div className="border-b border-nx-border bg-nx-card/20 py-6 px-6 md:px-10 flex flex-wrap justify-center items-center gap-6 text-xs font-display tracking-widest uppercase">
-        <span className="text-nx-muted text-[10px] tracking-[0.3em] font-mono">I want to explore as:</span>
-        <a href="#benefits-customers" className="text-nx-amber hover:text-nx-paper transition-all flex items-center gap-2 border border-nx-amber/20 px-4 py-2 rounded-lg hover:border-nx-amber/60 bg-nx-amber/5">
-          I’m a Customer <ArrowRight className="w-3.5 h-3.5" />
-        </a>
-        <a href="#benefits-merchants" className="text-nx-amber hover:text-nx-paper transition-all flex items-center gap-2 border border-nx-amber/20 px-4 py-2 rounded-lg hover:border-nx-amber/60 bg-nx-amber/5">
-          I’m a Merchant <ArrowRight className="w-3.5 h-3.5" />
-        </a>
-        <a href="#benefits-partners" className="text-blue-400 hover:text-nx-paper transition-all flex items-center gap-2 border border-blue-500/20 px-4 py-2 rounded-lg hover:border-blue-500/60 bg-blue-500/5">
-          I’m an FMCG Partner / Investor <ArrowRight className="w-3.5 h-3.5" />
-        </a>
-      </div>
+      {/* Strategic Brand Statement Section */}
+      <section className="py-24 px-6 md:px-10 max-w-5xl mx-auto text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="space-y-8"
+        >
+          <div className="flex justify-center items-center gap-3 text-[9px] uppercase tracking-[0.4em] text-nx-amber">
+            <div className="w-8 h-[1px] bg-nx-amber" /> OUR NORTH STAR <div className="w-8 h-[1px] bg-nx-amber" />
+          </div>
+          <h2 className="font-display text-[clamp(44px,7vw,96px)] leading-[0.95] tracking-tight text-nx-paper uppercase font-black">
+            LOYALTY<br/>FOR EVERY<br/><span className="text-nx-amber italic">DUKA.</span>
+          </h2>
+          <div className="w-16 h-[1px] bg-nx-border mx-auto" />
+          <p className="font-serif text-[clamp(18px,2.5vw,26px)] text-[#b5b3aa]/90 max-w-3xl mx-auto leading-relaxed italic">
+            "A USSD loyalty and supply chain network that helps dukas earn more, restock smarter, and give customers instant savings — on any phone."
+          </p>
+        </motion.div>
+      </section>
 
-      {/* Top Simple Benefit Blocks */}
-      <section id="benefits-top" className="py-20 px-6 md:px-10 max-w-6xl mx-auto">
+      {/* Who NX Is For Section */}
+      <section id="who-nx-is-for" className="py-24 px-6 md:px-10 max-w-6xl mx-auto border-t border-nx-border scroll-mt-16">
         <div className="flex items-center gap-4 text-[9px] uppercase tracking-[0.4em] text-nx-amber mb-6">
-          <div className="w-8 h-[1px] bg-nx-amber" /> Overview
+          <div className="w-8 h-[1px] bg-nx-amber" /> WHO WE SERVE
         </div>
         <h2 className="font-display text-[clamp(40px,5vw,72px)] leading-none tracking-tight text-nx-paper mb-16 uppercase">
-          Ecosystem Benefits <br/>At a Glance.
+          WHO NX IS FOR.
         </h2>
 
         <div className="grid md:grid-cols-3 gap-8">
           
-          {/* For Customers */}
-          <div id="benefits-customers" className="bg-nx-card p-8 border border-nx-border rounded-2xl flex flex-col justify-between scroll-mt-24 hover:border-nx-amber/30 transition-all">
+          {/* Journey 1: Dukas / Retailers */}
+          <div className="bg-nx-card p-8 border border-nx-border rounded-2xl flex flex-col justify-between hover:border-nx-amber/30 transition-all">
             <div>
-              <div className="text-[10px] uppercase tracking-[0.3em] text-nx-amber font-mono font-semibold mb-4">For Customers</div>
-              <h3 className="font-serif text-2xl text-nx-paper mb-6">Instant Savings</h3>
-              <ul className="space-y-4">
-                <li className="flex gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-nx-amber shrink-0 mt-0.5" />
-                  <p className="text-xs text-nx-muted leading-relaxed">
-                    <strong className="text-nx-paper block mb-0.5">Instant savings:</strong> Earn 10% on your first purchase and 5% on every purchase after at NX dukas.
-                  </p>
-                </li>
-                <li className="flex gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-nx-amber shrink-0 mt-0.5" />
-                  <p className="text-xs text-nx-muted leading-relaxed">
-                    <strong className="text-nx-paper block mb-0.5">No app, no data:</strong> Just dial <strong className="text-nx-amber font-mono">*384*6180#</strong> on any network, your phone number is your wallet.
-                  </p>
-                </li>
-                <li className="flex gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-nx-amber shrink-0 mt-0.5" />
-                  <p className="text-xs text-nx-muted leading-relaxed">
-                    <strong className="text-nx-paper block mb-0.5">Trusted kiosks:</strong> Only certified merchants can accept NX, so your rewards are always honored.
-                  </p>
-                </li>
-              </ul>
+              <div className="text-[10px] uppercase tracking-[0.3em] text-nx-amber font-mono font-semibold mb-4">For Retailers</div>
+              <h3 className="font-serif text-2xl text-nx-paper mb-4">Dukas &amp; Kiosks</h3>
+              <p className="text-sm text-nx-muted leading-relaxed mb-6">
+                Restock daily essentials directly, reduce your restock invoice using earned customer rewards, and secure local client loyalty.
+              </p>
             </div>
-            <div className="mt-8 pt-6 border-t border-nx-border/50">
-              <button onClick={() => { setShowUssd(true); window.scrollTo({top: 0, behavior: 'smooth'}); }} className="w-full py-3 bg-nx-amber/10 border border-nx-amber/30 text-nx-amber hover:bg-nx-amber hover:text-nx-ink transition-all text-xs font-display tracking-widest uppercase rounded-xl font-bold">
-                Dial *384*6180# to start earning on your next purchase
+            <div className="pt-6 border-t border-nx-border/50">
+              <a 
+                href={getPortalLink('pwa')}
+                className="block text-center w-full py-3 bg-nx-amber text-nx-ink hover:bg-nx-amber/90 transition-all text-xs font-display tracking-widest uppercase rounded-xl font-bold"
+              >
+                Restock and earn
+              </a>
+            </div>
+          </div>
+
+          {/* Journey 2: Hubs / Distributors */}
+          <div className="bg-nx-card p-8 border border-nx-border rounded-2xl flex flex-col justify-between hover:border-nx-amber/30 transition-all">
+            <div>
+              <div className="text-[10px] uppercase tracking-[0.3em] text-nx-green font-mono font-semibold mb-4">For Distributors</div>
+              <h3 className="font-serif text-2xl text-nx-paper mb-4">Hubs &amp; Wholesalers</h3>
+              <p className="text-sm text-nx-muted leading-relaxed mb-6">
+                Manage high-velocity bulk delivery requests, aggregate nearby duka orders, and earn commissions on network transactions.
+              </p>
+            </div>
+            <div className="pt-6 border-t border-nx-border/50">
+              <a 
+                href={getPortalLink('hub')}
+                className="block text-center w-full py-3 bg-nx-green text-nx-ink hover:bg-nx-green/90 transition-all text-xs font-display tracking-widest uppercase rounded-xl font-bold"
+              >
+                Manage orders and deliveries
+              </a>
+            </div>
+          </div>
+
+          {/* Journey 3: Brands / Partners */}
+          <div className="bg-nx-card p-8 border border-nx-border rounded-2xl flex flex-col justify-between hover:border-blue-500/30 transition-all">
+            <div>
+              <div className="text-[10px] uppercase tracking-[0.3em] text-blue-400 font-mono font-semibold mb-4">For Brands &amp; FMCGs</div>
+              <h3 className="font-serif text-2xl text-nx-paper mb-4">Brands &amp; Partners</h3>
+              <p className="text-sm text-nx-muted leading-relaxed mb-6">
+                Get real last-mile sell-through velocity maps, run direct duka promotions, and visibility below distributor channels.
+              </p>
+            </div>
+            <div className="pt-6 border-t border-nx-border/50">
+              <button 
+                onClick={() => setShowBrandPortalChoice(true)}
+                className="block text-center w-full py-3 bg-blue-500 text-white hover:bg-blue-600 transition-all text-xs font-display tracking-widest uppercase rounded-xl font-bold cursor-pointer"
+              >
+                See your duka network
               </button>
-            </div>
-          </div>
-
-          {/* For Merchants */}
-          <div id="benefits-merchants" className="bg-nx-card p-8 border border-nx-border rounded-2xl flex flex-col justify-between scroll-mt-24 hover:border-nx-amber/30 transition-all">
-            <div>
-              <div className="text-[10px] uppercase tracking-[0.3em] text-nx-green font-mono font-semibold mb-4">For Merchants (Dukas & Hubs)</div>
-              <h3 className="font-serif text-2xl text-nx-paper mb-6">Restock Smarter</h3>
-              <ul className="space-y-4">
-                <li className="flex gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-nx-green shrink-0 mt-0.5" />
-                  <p className="text-xs text-nx-muted leading-relaxed">
-                    <strong className="text-nx-paper block mb-0.5">More repeat customers:</strong> Loyalty rewards keep shoppers coming back to your duka.
-                  </p>
-                </li>
-                <li className="flex gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-nx-green shrink-0 mt-0.5" />
-                  <p className="text-xs text-nx-muted leading-relaxed">
-                    <strong className="text-nx-paper block mb-0.5">Restock with less cash:</strong> Use your NX pool to offset up to 60% of your invoice balance per cycle.
-                  </p>
-                </li>
-                <li className="flex gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-nx-green shrink-0 mt-0.5" />
-                  <p className="text-xs text-nx-muted leading-relaxed">
-                    <strong className="text-nx-paper block mb-0.5">Smart AI restock:</strong> Get smart alerts and order using simple Kiswahili/English phrases.
-                  </p>
-                </li>
-              </ul>
-            </div>
-            <div className="mt-8 pt-6 border-t border-nx-border/50">
-              <a href="tel:0781550151" className="block text-center w-full py-3 bg-nx-green/10 border border-nx-green/30 text-nx-green hover:bg-nx-green hover:text-nx-ink transition-all text-xs font-display tracking-widest uppercase rounded-xl font-bold">
-                Call 0781550151 to upgrade to certified or hub
-              </a>
-            </div>
-          </div>
-
-          {/* For FMCG Partners */}
-          <div id="benefits-partners" className="bg-nx-card p-8 border border-nx-border rounded-2xl flex flex-col justify-between scroll-mt-24 hover:border-blue-500/30 transition-all">
-            <div>
-              <div className="text-[10px] uppercase tracking-[0.3em] text-blue-400 font-mono font-semibold mb-4">For FMCG Partners</div>
-              <h3 className="font-serif text-2xl text-nx-paper mb-6">Last-Mile Execution</h3>
-              <ul className="space-y-4">
-                <li className="flex gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
-                  <p className="text-xs text-nx-muted leading-relaxed">
-                    <strong className="text-nx-paper block mb-0.5">Real kiosk-level data:</strong> Weekly SKU-level sell-through by kiosk and region, far beyond distributor reporting.
-                  </p>
-                </li>
-                <li className="flex gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
-                  <p className="text-xs text-nx-muted leading-relaxed">
-                    <strong className="text-nx-paper block mb-0.5">Guaranteed activation:</strong> Pool injections turn promotions into higher redemption at the exact kiosks you care about.
-                  </p>
-                </li>
-                <li className="flex gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
-                  <p className="text-xs text-nx-muted leading-relaxed">
-                    <strong className="text-nx-paper block mb-0.5">Direct suggestions:</strong> Priority brand visibility in smart restocks directly to retailers.
-                  </p>
-                </li>
-              </ul>
-            </div>
-            <div className="mt-8 pt-6 border-t border-nx-border/50">
-              <a href="mailto:nxnetwork618@gmail.com?subject=FMCG%20Partnership%20Inquiry" className="block text-center w-full py-3 bg-blue-500/10 border border-blue-500/30 text-blue-400 hover:bg-blue-500 hover:text-white transition-all text-xs font-display tracking-widest uppercase rounded-xl font-bold">
-                Email partners@nx-network.com to see kiosk-level data
-              </a>
             </div>
           </div>
 
@@ -611,11 +578,25 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Proof Quote */}
-          <div className="mt-12 p-8 bg-nx-card/50 border border-nx-border rounded-xl text-center max-w-3xl mx-auto">
-            <blockquote className="font-serif text-sm md:text-base text-nx-paper/85 italic leading-relaxed">
-              "Over 70% of everyday essentials in Africa move through informal retail – NX makes that demand visible, consolidated, and bankable for the first time."
-            </blockquote>
+          {/* Settle on Delivery & Proof Quote */}
+          <div className="mt-12 grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            {/* Cash flow, not credit risk */}
+            <div className="p-8 bg-nx-card border border-nx-amber/20 rounded-xl text-left flex flex-col justify-between">
+              <div>
+                <div className="text-[10px] uppercase tracking-[0.3em] text-nx-amber mb-3 font-mono font-bold">Payment Handling</div>
+                <h4 className="font-serif text-lg text-nx-paper mb-3 font-bold">Cash flow, not credit risk.</h4>
+                <p className="text-xs text-[#b5b3aa] leading-relaxed">
+                  NX delivers stock and settles on delivery. Earned NX reduces part of the invoice, so dukas restock with less cash out, without taking on open-ended loans.
+                </p>
+              </div>
+            </div>
+
+            {/* Proof Quote */}
+            <div className="p-8 bg-nx-card/50 border border-nx-border rounded-xl text-left flex flex-col justify-center">
+              <blockquote className="font-serif text-sm text-nx-paper/85 italic leading-relaxed">
+                "Over 70% of everyday essentials in Africa move through informal retail – NX makes that demand visible, consolidated, and bankable for the first time."
+              </blockquote>
+            </div>
           </div>
         </motion.div>
       </section>
@@ -971,7 +952,7 @@ export default function LandingPage() {
         <div className="mt-0.5 p-6 bg-nx-card flex flex-col md:flex-row items-center gap-6">
           <div className="text-[9px] uppercase tracking-[0.3em] text-nx-muted shrink-0">Smart restock</div>
           <p className="text-xs text-nx-paper leading-relaxed">
-            Type any brand name or description — <span className="text-nx-amber">Pembe 2kg, Brookside 500ml, mafuta 1L</span> — NX resolves it to the right SKU automatically using AI semantic matching. Inventory tracked per variant.
+            Dukas can type <span className="text-nx-amber">Pembe 2kg, Brookside 500ml, mafuta 1L</span> or any custom item description, and NX’s smart matching engine finds the right product SKU automatically. Inventory is tracked simply per item.
           </p>
         </div>
       </section>
@@ -988,31 +969,53 @@ export default function LandingPage() {
           {[
             { 
               label: 'Customers', title: 'EARN & REDEEM', 
-              body: 'Every purchase earns NX units credited to your phone automatically. Redeem at any NX-certified duka for a real discount. Earn 10% on your first purchase, 5% on every purchase after. These rates are dynamic: if a merchant\'s pool health is low, earn rates may be throttled to protect the ecosystem. A flat 2 NX service fee is charged per confirmed transaction — only if you have a positive balance.',
+              body: (
+                <div className="space-y-2">
+                  <p>• <strong className="text-nx-paper">Instant Rewards:</strong> Earn 10% on your first purchase and 5% on every purchase after at registered NX dukas.</p>
+                  <p>• <strong className="text-nx-paper">No-Data USSD:</strong> Register and claim points on any simple phone with zero internet required.</p>
+                  <p>• <strong className="text-nx-paper">Flat Transact Fee:</strong> A minor flat fee of 2 NX applies only when completing successful transactions with a positive balance.</p>
+                </div>
+              ),
               note: <><strong>Expiry:</strong> Customer NX balances expire <strong>2 months after issuance</strong>. You\'ll receive SMS reminders before expiry. Use your NX before it lapses.</>,
               highlight: '10% → 5%'
             },
             { 
               label: 'Merchants', title: 'SETTLE SMARTER', 
-              body: 'NX delivers your stock on credit. Each delivery creates a settlement pool funded from NX\'s trading margin on your order — not from your retail margin. Customers redeeming NX at your duka consume your pool. At invoice time, use your accumulated NX balance to offset the bill (capped at 60% of your current NX balance per cycle to maintain liquidity for the whole network).',
+              body: (
+                <div className="space-y-2">
+                  <p>• <strong className="text-nx-paper">Margin-Funded:</strong> Loyalty pools are funded directly by NX\'s bulk trading margins, never cutting into your retail profit.</p>
+                  <p>• <strong className="text-nx-paper">60% Settlement Cap:</strong> Settle and offset your regular restock invoices up to 60% using customer-redeemed NX.</p>
+                  <p>• <strong className="text-nx-paper">Ecosystem Solvency:</strong> Dynamic caps keep customer point balances backed by real wholesale warehouse inventory value.</p>
+                </div>
+              ),
               note: <><strong>Pool Health Matters:</strong> If your pool utilization exceeds 70%, acceptance rates for NX redemption are automatically lowered until you restock and replenish the pool.</>,
               highlight: '60% CAP'
             },
             { 
               label: 'The Network', title: 'USSD FIRST', 
-              body: 'Runs on USSD — every phone, every network, zero data. Safaricom, Airtel, Telkom — it doesn\'t matter. Your phone number is your wallet, captured automatically by the network. No app. No login. No smartphone required. The people who need this most can access it without barriers.',
+              body: (
+                <div className="space-y-2">
+                  <p>• <strong className="text-nx-paper">USSD Coverage:</strong> Works instantly on any network (Safaricom, Airtel, Telkom) using basic analog or smart devices.</p>
+                  <p>• <strong className="text-nx-paper">No Passwords:</strong> Your unique mobile number acts as your secure transaction wallet automatically.</p>
+                </div>
+              ),
               highlight: 'Any Phone'
             },
             { 
               label: 'Supply Chain', title: 'LAST MILE STOCK', 
-              body: 'NX sources from producers and delivers direct to your duka. You settle in cash, or using your NX pool. Low stock alerts are velocity-powered: "BR 600g: 3 left (~1 day — URGENT)". Restock before you run out.',
+              body: (
+                <div className="space-y-2">
+                  <p>• <strong className="text-nx-paper">Direct Sourcing:</strong> Stock arrives directly from FMCG brands to your kiosk without middleman fees.</p>
+                  <p>• <strong className="text-nx-paper">Low Stock Alerts:</strong> Receive automatic low inventory USSD prompts before losing clients to empty shelves.</p>
+                </div>
+              ),
               highlight: 'Direct Delivery'
             }
           ].map((item, i) => (
             <div key={i} className="bg-nx-card p-10 hover:bg-nx-card2 transition-colors group">
               <div className="text-[9px] uppercase tracking-[0.3em] text-nx-amber mb-4">{item.label}</div>
               <h3 className="font-display text-3xl text-nx-paper tracking-wider mb-4">{item.title}</h3>
-              <p className="text-sm text-nx-muted leading-relaxed mb-6">{item.body}</p>
+              <div className="text-sm text-nx-muted leading-relaxed mb-6">{item.body}</div>
               {item.note && (
                 <div className="p-3 bg-nx-amber/5 border-l-2 border-nx-amber text-[11px] text-nx-muted leading-relaxed mb-6">
                   {item.note}
@@ -1027,7 +1030,7 @@ export default function LandingPage() {
       {/* Pool Mechanics */}
       <section id="pool-mechanics" className="py-24 px-6 md:px-10 max-w-6xl mx-auto border-t border-nx-border">
         <div className="flex items-center gap-4 text-[9px] uppercase tracking-[0.4em] text-nx-amber mb-6">
-          <div className="w-8 h-[1px] bg-nx-amber" /> Pool Mechanics
+          <div className="w-8 h-[1px] bg-nx-amber" /> Pool Solvency
         </div>
         <h2 className="font-display text-[clamp(40px,6vw,80px)] leading-none tracking-tight text-nx-paper mb-12">
           HOW YOUR<br/>POOL WORKS.
@@ -1038,10 +1041,10 @@ export default function LandingPage() {
           <div className="text-[10px] uppercase tracking-[0.3em] text-nx-amber mb-6 font-mono font-bold">Core Mechanics Overview</div>
           <div className="grid md:grid-cols-4 gap-6">
             {[
-              { num: '1', title: 'Trading Margin', text: 'NX earns trading margin when supplying stock to dukas.' },
-              { num: '2', title: 'Fund the Pool', text: 'Most of that margin directly funds the merchant’s loyalty pool.' },
-              { num: '3', title: 'Brand Boosts', text: 'FMCG partners can boost that pool to run targeted promotions.' },
-              { num: '4', title: 'Redemption', text: 'Customers redeem at the duka; merchants use pooled NX to reduce their invoice.' }
+              { num: '1', title: 'Trading Margin', text: 'NX earns bulk trading spreads when supplying stock to dukas.' },
+              { num: '2', title: 'Fund the Pool', text: 'Spreads directly fund the merchant’s customer loyalty pool.' },
+              { num: '3', title: 'Brand Boosts', text: 'FMCG partners can augment that pool to run targeted campaigns.' },
+              { num: '4', title: 'Solvent Settlement', text: 'Customers redeem points; merchants offset real restock invoices up to 60%.' }
             ].map((step, idx) => (
               <div key={idx} className="space-y-2">
                 <div className="font-display text-3xl text-nx-green font-bold">0{step.num}</div>
@@ -1054,15 +1057,14 @@ export default function LandingPage() {
 
         <div className="grid md:grid-cols-2 gap-0.5 bg-nx-border">
           <div className="bg-nx-card p-10">
-            <div className="font-display text-[clamp(16px,2.2vw,22px)] tracking-widest text-nx-amber leading-relaxed mb-8">
-              POOL <span className="text-nx-amber/35">=</span> NX TRADING MARGIN <span className="text-nx-amber/35">×</span> TIER RATE<br/>
-              <span className="text-sm tracking-normal">+ FMCG CONTRIBUTIONS</span>
+            <div className="text-[11px] font-mono uppercase tracking-[0.3em] text-nx-amber mb-6">
+              Eco-Outcomes, Not Complex Formulas
             </div>
             <div className="space-y-6">
               {[
-                'NX buys stock at trade price and sells to merchants at a markup. Your tier\'s pool rate (60–70%) of NX\'s gross markup on your order funds your settlement pool.',
-                'FMCG partners boost your pool directly when they contract with NX. You simply see a larger pool and can offer bigger customer discounts.',
-                'As customers transact, they earn NX at 5–10% of their cash spend. Merchants hold this NX in their ledger pool. At invoice time, the merchant uses accumulated NX to offset up to their tier\'s acceptance ceiling.'
+                'Every restock order creates a settlement pool funded by NX\'s bulk wholesale trading margins — never on duka markup.',
+                'Certified merchants can accept customer rewards securely knowing their pool has a clear physical inventory backing.',
+                'When you place restock orders, accumulated customer point balances are offset directly, meaning less cash outflow on delivery.'
               ].map((text, i) => (
                 <div key={i} className="flex gap-4 text-sm text-nx-muted leading-relaxed">
                   <span className="font-display text-2xl text-nx-green leading-none">0{i+1}</span>
@@ -1089,20 +1091,27 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="bg-nx-card p-10">
-            <div className="text-[9px] uppercase tracking-[0.3em] text-nx-amber mb-6">Hybrid Match Engine — Jina AI Powered</div>
+            <div className="text-[9px] uppercase tracking-[0.3em] text-nx-amber mb-6">Our Smart Matching Engine</div>
             <div className="space-y-6">
               {[
-                'Merchants order using natural language via USSD (e.g. "20 pembe 2kg"). NX uses Jina AI Vector Embeddings to resolve these into exact SKU matches across thousands of product variants with 98% accuracy.',
-                'Real-time inventory mapping connects your order to the nearest FMCG distributor, bypassing 3-4 traditional middlemen layers.',
-                'The system maintains a "Pool Health" ratio. If your duka accepts too much NX without restocking, the system helps you recalibrate by dynamically adjusting acceptance rates for 24-48 hours.'
+                'Dukas place restock orders simply by typing ordinary language descriptions via USSD (e.g. "20 pembe 2kg"). Our smart matching engine automatically resolves these to exact product SKUs with 98% accuracy.',
+                'Direct logistics connection routes your consolidated neighborhood demands straight to certified distributor hubs, bypassing multiple middleman layers.',
+                'Platform solvency is maintained automatically. If a merchant duka accepts excessive redemptions without restocking, the system dynamic multipliers adjust to protect the ecosystem.'
               ].map((text, i) => (
                 <div key={i} className="flex gap-4 text-sm text-nx-muted leading-relaxed">
-                  <span className="font-display text-2xl text-nx-green leading-none">{i === 0 ? 'AI' : `0${i+1}`}</span>
+                  <span className="font-display text-2xl text-nx-green leading-none">0{i+1}</span>
                   <span>{text}</span>
                 </div>
               ))}
             </div>
           </div>
+        </div>
+        
+        {/* Whitepaper link */}
+        <div className="mt-12 flex justify-center">
+          <a href="#contact" className="px-6 py-3 border border-nx-amber/30 text-nx-amber hover:bg-nx-amber/10 transition-all text-xs font-display tracking-widest uppercase rounded-xl font-bold">
+            Request Whitepaper &amp; Technical Docs
+          </a>
         </div>
       </section>
 
@@ -1828,6 +1837,113 @@ export default function LandingPage() {
                   className="px-5 py-2.5 bg-nx-amber text-nx-ink font-display text-[10px] font-bold uppercase tracking-wider hover:bg-nx-amber/90 transition-all cursor-pointer rounded-xl"
                 >
                   Close Help Desk
+                </button>
+              </div>
+
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Brand & FMCG Portal Choice Modal */}
+      <AnimatePresence>
+        {showBrandPortalChoice && (
+          <div className="fixed inset-0 z-[600] flex items-center justify-center p-4 md:p-6 select-text overflow-hidden">
+            {/* Backdrop */}
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }}
+              onClick={() => setShowBrandPortalChoice(false)}
+              className="absolute inset-0 bg-black/85 backdrop-blur-md"
+            />
+            
+            {/* Modal Body */}
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }} 
+              animate={{ opacity: 1, scale: 1, y: 0 }} 
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ type: 'spring', duration: 0.4 }}
+              className="relative w-full max-w-xl bg-nx-card border border-nx-border rounded-2xl shadow-2xl flex flex-col max-h-[85vh] z-10"
+              style={{ touchAction: 'pan-y' }}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between px-6 py-5 border-b border-nx-border">
+                <div className="flex items-center gap-3">
+                  <Layers className="w-5 h-5 text-blue-400" />
+                  <div>
+                    <h3 className="font-display text-lg text-nx-paper uppercase tracking-wider font-bold">Select Portal</h3>
+                    <div className="text-[9px] uppercase tracking-[0.2em] text-nx-muted font-mono">NX Network Kenya · Enterprise Gateway</div>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setShowBrandPortalChoice(false)} 
+                  className="p-2 border border-nx-border hover:border-nx-amber text-nx-muted hover:text-nx-paper transition-all cursor-pointer rounded-lg bg-transparent"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Selection Content */}
+              <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4 font-sans text-sm text-nx-muted leading-relaxed select-text">
+                <p className="text-xs text-nx-muted mb-4 text-center">
+                  Please select which enterprise portal interface you would like to access:
+                </p>
+
+                <div className="grid sm:grid-cols-2 gap-4">
+                  {/* FMCGs Portal */}
+                  <a 
+                    href={getPortalLink('fmcgs')}
+                    onClick={() => setShowBrandPortalChoice(false)}
+                    className="group bg-nx-ink/50 border border-nx-border hover:border-blue-500/40 p-5 rounded-xl text-left transition-all flex flex-col justify-between h-48 hover:bg-blue-500/[0.02]"
+                  >
+                    <div>
+                      <div className="p-2.5 bg-blue-500/10 text-blue-400 rounded-lg w-fit mb-3 group-hover:scale-105 transition-all">
+                        <Activity className="w-5 h-5" />
+                      </div>
+                      <h4 className="font-display text-sm tracking-wider text-nx-paper uppercase font-bold group-hover:text-blue-400 transition-colors">
+                        FMCGs Portal
+                      </h4>
+                      <p className="text-[11px] text-nx-muted leading-relaxed mt-2">
+                        Access real-time duka sales dashboards, SKU-level maps, and directly inject pool promo boosts.
+                      </p>
+                    </div>
+                    <div className="text-[10px] uppercase font-mono tracking-wider text-blue-400 flex items-center gap-1.5 mt-2">
+                      Access FMCGs <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </a>
+
+                  {/* Partners Portal */}
+                  <a 
+                    href={getPortalLink('partners')}
+                    onClick={() => setShowBrandPortalChoice(false)}
+                    className="group bg-nx-ink/50 border border-nx-border hover:border-nx-amber/40 p-5 rounded-xl text-left transition-all flex flex-col justify-between h-48 hover:bg-nx-amber/[0.02]"
+                  >
+                    <div>
+                      <div className="p-2.5 bg-nx-amber/10 text-nx-amber rounded-lg w-fit mb-3 group-hover:scale-105 transition-all">
+                        <Users className="w-5 h-5" />
+                      </div>
+                      <h4 className="font-display text-sm tracking-wider text-nx-paper uppercase font-bold group-hover:text-nx-amber transition-colors">
+                        Partners Portal
+                      </h4>
+                      <p className="text-[11px] text-nx-muted leading-relaxed mt-2">
+                        Manage distributor networks, coordinate localized hubs, and view overall regional transactional logs.
+                      </p>
+                    </div>
+                    <div className="text-[10px] uppercase font-mono tracking-wider text-nx-amber flex items-center gap-1.5 mt-2">
+                      Access Partners <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </a>
+                </div>
+              </div>
+
+              {/* Close Action */}
+              <div className="px-6 py-4 bg-black/40 border-t border-nx-border flex justify-end">
+                <button 
+                  onClick={() => setShowBrandPortalChoice(false)}
+                  className="px-5 py-2.5 border border-nx-border text-nx-muted hover:text-nx-paper font-display text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer rounded-xl"
+                >
+                  Cancel
                 </button>
               </div>
 
