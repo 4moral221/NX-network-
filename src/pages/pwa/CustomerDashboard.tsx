@@ -1198,23 +1198,6 @@ export default function CustomerDashboard({ user, onLogout }: { user: any, onLog
                     </button>
                   </div>
 
-                  {isFamilyPaymentMode && (
-                    <div>
-                      <label className="block text-[10px] uppercase tracking-widest text-nx-muted mb-2">Family Code</label>
-                      <input 
-                        type="text" 
-                        value={familyCodePaymentInput}
-                        onChange={(e) => setFamilyCodePaymentInput(e.target.value.toUpperCase())}
-                        placeholder="e.g. FAM12345"
-                        className="w-full bg-nx-ink border border-nx-border rounded-xl px-4 py-3 text-nx-paper focus:outline-none focus:border-nx-amber transition-colors font-mono uppercase"
-                        required
-                      />
-                      <p className="text-[10px] text-nx-muted mt-2">
-                        Enter your family's unique Family Code. The redemption will draw from the parent's wallet.
-                      </p>
-                    </div>
-                  )}
-
                   <div>
                     <label className="block text-[10px] uppercase tracking-widest text-nx-muted mb-2">Merchant Code</label>
                     <input 
