@@ -810,7 +810,7 @@ export default function PartnersPortal() {
   const fetchApiKeys = async () => {
     if (!brand) return;
     try {
-      const res = await fetch(`/api/fmcg/api-keys?brand_name=${encodeURIComponent(brand.name)}`, {
+      const res = await fetch(`/api/logistics/api-keys?brand_name=${encodeURIComponent(brand.name)}`, {
         headers: await getAuthHeaders()
       });
       const data = await res.json();
@@ -826,7 +826,7 @@ export default function PartnersPortal() {
     if (!confirm("Are you sure you want to revoke this integration key immediately? All system connections utilizing it will be cut off.")) return;
     setLoading(true);
     try {
-      const res = await fetch('/api/fmcg/revoke-key', {
+      const res = await fetch('/api/logistics/revoke-key', {
         method: 'POST',
         headers: await getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ key_id: keyId })
@@ -912,9 +912,14 @@ export default function PartnersPortal() {
 
   const handleGenerateKey = async () => {
     if (!brand) return;
+    if (apiKeys.length > 0) {
+      if (!confirm("Regenerating your integration key will immediately revoke and disable all of your existing keys. Do you wish to proceed?")) {
+        return;
+      }
+    }
     setLoading(true);
     try {
-      const res = await fetch('/api/fmcg/generate-key', {
+      const res = await fetch('/api/logistics/generate-key', {
         method: 'POST',
         headers: await getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ brand_name: brand.name, brand_id: brand.id })
@@ -931,191 +936,86 @@ export default function PartnersPortal() {
     }
   };
 
-  const verifyAndSignup = async () => {
-    setError('');
-    setLoading(true);
-    try {
-      // 1. Verify OTP
-      const verifyRes = await fetch('/api/auth/verify-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: signupData.email, otp: verificationOtp })
-      });
-      const verifyData = await verifyRes.json();
-      if (!verifyRes.ok || !verifyData.success) throw new Error(verifyData.error || 'Invalid OTP');
-
-      // 2. Sign up via proxy to auto-confirm
-      const response = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          email: signupData.email, 
-          password: signupData.password, 
-          companyName: signupData.companyName 
-        })
-      });
-      const resData = await response.json();
-      if (!response.ok || !resData.success) throw new Error(resData.error || 'Signup failed');
-
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-        email: signupData.email,
-        password: signupData.password
-      });
-      if (signInError) throw signInError;
-
-      // 3. Set the partner records returned from the backend (inserted using service role)
-      if (!resData.fmcgPartner) {
-        throw new Error('Failed to create partner profile in the system.');
-      }
-
-      setBrand(resData.fmcgPartner);
-      setShowEmailVerification(false);
-      setIsLoggedIn(true);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleAuth = async () => {
     setError('');
     setLoading(true);
     try {
       if (authMode === 'register') {
         if (!signupData.email || !signupData.password || !signupData.companyName) {
-           throw new Error('All fields required');
+          throw new Error('All fields are required.');
         }
-        const res = await fetch('/api/auth/send-otp', {
-           method: 'POST',
-           headers: { 'Content-Type': 'application/json' },
-           body: JSON.stringify({ email: signupData.email, type: 'partners_verification' })
+
+        const signupResponse = await fetch('/api/auth/logistics/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: signupData.email,
+            password: signupData.password,
+            companyName: signupData.companyName
+          })
         });
-        const data = await res.json();
-        if (!res.ok || !data.success) throw new Error(data.error || 'Failed to send verification code');
-        setShowEmailVerification(true);
-      } else {
-        // Custom Secure Login Flow using client-side Supabase Auth first
-        if (!loginData.brand || !loginData.password) { setError('All fields required.'); setLoading(false); return; }
-        
-        let targetEmail = loginData.brand.toLowerCase().trim();
-        let directAuthSuccess = false;
-        let pId = null;
 
-        // Try direct Supabase Sign-in
-        try {
-          if (!targetEmail.includes('@')) {
-            // Retrieve email for this brand name
-            const { data: pRec } = await supabase
-              .from('fmcg_partners')
-              .select('contact')
-              .ilike('name', targetEmail)
-              .maybeSingle();
-            
-            if (pRec?.contact) {
-              targetEmail = pRec.contact;
-            }
-          }
-
-          if (targetEmail.includes('@')) {
-            const { data: authResult, error: signInError } = await supabase.auth.signInWithPassword({
-              email: targetEmail,
-              password: loginData.password
-            });
-
-            if (!signInError && authResult?.user) {
-              pId = authResult.user.id;
-              directAuthSuccess = true;
-            }
-          }
-        } catch (e) {
-          console.warn("Client-side direct login skipped or error:", e);
+        const signupResult = await signupResponse.json();
+        if (!signupResponse.ok || !signupResult.success) {
+          throw new Error(signupResult.error || 'Registration failed.');
         }
 
-        let partnerData = null;
+        // Automatic login on successful signup
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+          email: signupData.email,
+          password: signupData.password
+        });
+        if (signInError) throw signInError;
 
-        if (directAuthSuccess && pId) {
-          // Resolve standard fmcg_partner profile from the database
-          const { data } = await supabase
-            .from('fmcg_partners')
-            .select('*')
-            .or(`contact.ilike."${targetEmail}",id.eq."${pId}"`)
-            .maybeSingle();
-          if (data) {
-            partnerData = data;
-          } else {
-            // Find by user_id linked in standard partners table
-            const { data: pData } = await supabase.from('partners').select('*').eq('user_id', pId).maybeSingle();
-            if (pData) {
-              partnerData = {
-                id: pData.id,
-                name: pData.company_name,
-                contact: targetEmail,
-                active: pData.status === 'active',
-                category: 'Partner'
-              };
-            }
-          }
-        }
-
-        // Fallback to Backend proxy in case user hasn't synced with Auth schema or uses old SHA256 hashed password
-        if (!partnerData) {
-          const response = await fetch('/api/auth/fmcg-login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ brand: loginData.brand, password: loginData.password })
-          });
-          const authData = await response.json();
-
-          if (!response.ok || !authData.success) {
-            setError(authData.error || 'Incorrect brand name or password.');
-            setLoading(false);
-            return;
-          }
-
-          const { data } = await supabase
-            .from('fmcg_partners')
-            .select('*')
-            .eq('id', authData.brand_id)
-            .maybeSingle();
-          partnerData = data;
-
-          if (!partnerData) {
-            // Standard partners check
-            const { data: pData } = await supabase.from('partners').select('*').eq('id', authData.brand_id).maybeSingle();
-            if (pData) {
-               partnerData = {
-                 id: pData.id,
-                 name: pData.company_name,
-                 contact: pData.contact || loginData.brand,
-                 active: pData.status === 'active',
-                 category: 'Partner'
-               };
-            }
-          }
-          
-          if (partnerData) {
-            // Ensure client-side session is logged in in the background too
-            try {
-              await supabase.auth.signInWithPassword({
-                email: partnerData.contact || loginData.brand,
-                password: loginData.password
-              });
-            } catch (e) {}
-          }
-        }
-
-        if (!partnerData) {
-          setError('Could not resolve business partner profile.');
-          setLoading(false);
-          return;
-        }
-
-        setBrand(partnerData); 
+        setBrand({
+          id: signupResult.partner.id,
+          name: signupResult.partner.company_name,
+          contact: signupResult.partner.email,
+          active: true,
+          category: 'Logistics'
+        });
         setIsLoggedIn(true);
+        showNotification('Logistics Partner registered successfully!', 'success');
+      } else {
+        // Sign in flow
+        if (!loginData.brand || !loginData.password) {
+          throw new Error('Email and password are required.');
+        }
+
+        const email = loginData.brand.toLowerCase().trim();
+
+        const loginResponse = await fetch('/api/auth/logistics/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email,
+            password: loginData.password
+          })
+        });
+
+        const loginResult = await loginResponse.json();
+        if (!loginResponse.ok || !loginResult.success) {
+          throw new Error(loginResult.error || 'Incorrect email or password.');
+        }
+
+        // Complete client-side sign in
+        await supabase.auth.signInWithPassword({
+          email,
+          password: loginData.password
+        });
+
+        setBrand({
+          id: loginResult.partner.id,
+          name: loginResult.partner.name,
+          contact: loginResult.partner.contact,
+          active: true,
+          category: 'Logistics'
+        });
+        setIsLoggedIn(true);
+        showNotification('Signed in successfully!', 'success');
       }
-    } catch (e: any) { 
-      setError(e.message || 'Auth failed.'); 
+    } catch (e: any) {
+      setError(e.message || 'Authentication failed.');
     } finally {
       setLoading(false);
     }
@@ -1382,15 +1282,15 @@ MERCHANT_CODE: M-104 | PHONE: +254766666666 | ORDER_SPEC: Pembe 2kg*22 | ORDER_Q
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="relative z-10 w-full max-w-sm mx-auto">
           <div className="flex items-center justify-between gap-3 mb-8">
             <div className="scale-[0.8] origin-left">
-              <NXLogo title="Partner" />
+              <NXLogo title="Logistics" />
             </div>
             <div className="text-right border-l border-[#e4e6ea] pl-4">
-              <div className="font-bold text-xl text-[#1a1d23]">Partner Portal</div>
-              <div className="text-[10px] text-[#6b7280] uppercase tracking-widest">Demand Intelligence</div>
+              <div className="font-bold text-lg text-[#1a1d23]">Logistics Portal</div>
+              <div className="text-[10px] text-[#6b7280] uppercase tracking-widest">Fleet & Route Orchestration</div>
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-1 bg-[#f4f5f7] p-1 rounded-xl mb-8 border border-[#e4e6ea]">
+          <div className="grid grid-cols-2 gap-1 bg-[#f4f5f7] p-1 rounded-xl mb-8 border border-[#e4e6ea]">
             <button 
               onClick={() => { setAuthMode('login'); setError(''); }}
               className={cn("py-2 text-[9px] font-bold uppercase tracking-widest rounded-lg transition-all text-center", authMode === 'login' ? "bg-[#1a1d23] text-white" : "text-[#6b7280] hover:text-[#1a1d23]")}
@@ -1403,37 +1303,16 @@ MERCHANT_CODE: M-104 | PHONE: +254766666666 | ORDER_SPEC: Pembe 2kg*22 | ORDER_Q
             >
               Register
             </button>
-            <button 
-              onClick={() => { setAuthMode('whitelist_signup'); setError(''); setWhitelistError(''); setWhitelistResult(null); }}
-              className={cn("py-2 text-[9px] font-bold uppercase tracking-widest rounded-lg transition-all text-center", authMode === 'whitelist_signup' ? "bg-[#1a1d23] text-white" : "text-[#6b7280] hover:text-[#1a1d23]")}
-            >
-              Get API Key
-            </button>
           </div>
 
-          {showEmailVerification ? (
-            <div className="space-y-4">
-               <div>
-                  <label className="block text-[11px] font-bold uppercase tracking-widest text-[#0066cc] mb-2">Verification Code</label>
-                  <p className="text-xs text-[#6b7280] mb-4">Please enter the 6-digit code sent to your email to confirm registration.</p>
-                  <input type="text" value={verificationOtp} onChange={e => setVerificationOtp(e.target.value)} className="w-full bg-[#f4f5f7] border border-[#e4e6ea] focus:border-[#0066cc] rounded-xl px-4 py-3 text-2xl tracking-[0.5em] text-center outline-none transition-all text-[#1a1d23]" placeholder="000000" maxLength={6} />
-               </div>
-               {error && <div className="flex items-center gap-2 text-red-500 text-xs"><AlertCircle className="w-3 h-3" /> {error}</div>}
-               <button disabled={loading || verificationOtp.length !== 6} onClick={verifyAndSignup} className="w-full bg-[#0066cc] text-white font-display font-bold py-3.5 rounded-xl hover:bg-[#005bb5] transition-all mt-4 tracking-widest disabled:opacity-50">
-                 {loading ? 'VERIFYING...' : 'VERIFY & COMPLETE SETUP'}
-               </button>
-               <button disabled={loading} onClick={() => setShowEmailVerification(false)} className="w-full bg-transparent text-[#6b7280] font-bold text-[10px] py-2 uppercase tracking-widest hover:text-[#1a1d23] transition-all disabled:opacity-50">
-                 Cancel
-               </button>
-            </div>
-          ) : authMode === 'register' ? (
+          {authMode === 'register' ? (
             <div className="space-y-4">
               <div>
-                <label className="block text-[11px] font-bold uppercase tracking-widest text-[#6b7280] mb-2">Company Name</label>
-                <input type="text" value={signupData.companyName} onChange={e => setSignupData({ ...signupData, companyName: e.target.value })} className="w-full border-2 border-[#e4e6ea] focus:border-[#1a1d23] rounded-xl px-4 py-2.5 text-sm outline-none transition-colors" placeholder="e.g. Pembe Foods" />
+                <label className="block text-[11px] font-bold uppercase tracking-widest text-[#6b7280] mb-2">Company / Fleet Name</label>
+                <input type="text" value={signupData.companyName} onChange={e => setSignupData({ ...signupData, companyName: e.target.value })} className="w-full border-2 border-[#e4e6ea] focus:border-[#1a1d23] rounded-xl px-4 py-2.5 text-sm outline-none transition-colors" placeholder="e.g. Nairobi Logistics Hub" />
               </div>
               <div>
-                <label className="block text-[11px] font-bold uppercase tracking-widest text-[#6b7280] mb-2">Work Email</label>
+                <label className="block text-[11px] font-bold uppercase tracking-widest text-[#6b7280] mb-2">Work Email Address</label>
                 <input type="email" value={signupData.email} onChange={e => setSignupData({ ...signupData, email: e.target.value })} className="w-full border-2 border-[#e4e6ea] focus:border-[#1a1d23] rounded-xl px-4 py-2.5 text-sm outline-none transition-colors" placeholder="partner@company.com" />
               </div>
               <div>
@@ -1455,184 +1334,36 @@ MERCHANT_CODE: M-104 | PHONE: +254766666666 | ORDER_SPEC: Pembe 2kg*22 | ORDER_Q
                 </div>
               </div>
               {error && <div className="flex items-center gap-2 text-red-500 text-xs"><AlertCircle className="w-3 h-3" /> {error}</div>}
-              <button disabled={loading} onClick={handleAuth} className="w-full bg-[#1a1d23] text-white font-bold py-3 rounded-xl hover:bg-[#2a2d35] transition-colors mt-4">{loading ? 'Creating Account...' : 'Continue to Dashboard'}</button>
+              <button disabled={loading} onClick={handleAuth} className="w-full bg-[#1a1d23] text-white font-bold py-3 rounded-xl hover:bg-[#2a2d35] transition-colors mt-4">{loading ? 'Creating Account...' : 'Register & Log In'}</button>
             </div>
-          ) : authMode === 'whitelist_signup' ? (
-            <div className="space-y-4">
-              <div className="text-xs text-[#6b7280] mb-4 bg-gray-50 p-4 border-l-4 border-blue-600 rounded-r-xl">
-                Retrieve your designated portal API key using your whitelisted professional domain or representative email.
-              </div>
-
-              {!whitelistResult ? (
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-[11px] font-bold uppercase tracking-widest text-[#6b7280] mb-2">Representative Work Email</label>
-                    <input 
-                      type="email" 
-                      value={whitelistEmail} 
-                      onChange={e => setWhitelistEmail(e.target.value)} 
-                      className="w-full border-2 border-[#e4e6ea] focus:border-[#1a1d23] rounded-xl px-4 py-2.5 text-sm outline-none transition-colors" 
-                      placeholder="e.g. rep@pembe.com" 
-                      required
-                    />
-                  </div>
-
-                  {whitelistError && (
-                    <div className="flex items-center gap-2 text-red-500 text-xs">
-                      <AlertCircle className="w-3 h-3 shrink-0" />
-                      <span>{whitelistError}</span>
-                    </div>
-                  )}
-
-                  <button 
-                    disabled={whitelistLoading} 
-                    onClick={async () => {
-                      if (!whitelistEmail) {
-                        setWhitelistError('Please enter your work email.');
-                        return;
-                      }
-                      setWhitelistLoading(true);
-                      setWhitelistError('');
-                      try {
-                        const res = await fetch('/api/auth/request-signup-link', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ email: whitelistEmail, portal: 'partners' })
-                        });
-                        const data = await res.json();
-                        if (!res.ok || !data.success) {
-                          throw new Error(data.error || 'Failed to dispatch magic link.');
-                        }
-                        setWhitelistResult(data);
-                      } catch (err: any) {
-                        setWhitelistError(err.message);
-                      } finally {
-                        setWhitelistLoading(false);
-                      }
-                    }} 
-                    className="w-full bg-[#1a1d23] hover:bg-[#2a2d35] text-white font-bold py-3 rounded-xl transition-all"
-                  >
-                    {whitelistLoading ? 'Verifying Whitelist...' : 'Dispatch Setup Link'}
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-4 p-4 bg-emerald-50 rounded-xl border border-emerald-200">
-                  <h4 className="text-xs uppercase font-bold text-emerald-800 flex items-center gap-2">
-                    <Check className="w-4 h-4 text-emerald-600" /> LINK DISPATCHED SUCCESSFULLY
-                  </h4>
-                  <p className="text-[10px] text-gray-600 leading-relaxed uppercase tracking-wider">
-                    A secure authentication payload has been generated for <b>{whitelistResult.brand_name}</b> ({whitelistResult.email}).
-                  </p>
-                  
-                  <div className="p-3 bg-[#111827] rounded-lg border border-gray-700 font-mono text-[9px] text-emerald-400 break-all select-all">
-                    Link: {window.location.origin + window.location.pathname + whitelistResult.magic_link}
-                  </div>
-
-                  <p className="text-[8px] text-gray-500 leading-relaxed uppercase">
-                    In actual production setup, representatives click this link inside their email. For developer preview verification, click the fast-track button below to instantly load the claimed API key credentials.
-                  </p>
-
-                  <a 
-                    href={whitelistResult.magic_link}
-                    className="w-full bg-emerald-600 text-white text-center block font-bold py-3 rounded-xl hover:bg-emerald-700 transition-all text-xs"
-                  >
-                    FAST-TRACK MAGIC SETUP LINK
-                  </a>
-
-                  <button 
-                    onClick={() => setWhitelistResult(null)} 
-                    className="w-full text-center text-[10px] text-gray-500 hover:text-black uppercase tracking-widest mt-2"
-                  >
-                    Retrieve for another email
-                  </button>
-                </div>
-              )}
-            </div>
-          ) : authMode === 'login' ? (
-            <>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-[11px] font-bold uppercase tracking-widest text-[#6b7280] mb-2">Brand Name</label>
-                  <input type="text" value={loginData.brand} onChange={e => setLoginData({ ...loginData, brand: e.target.value })} onKeyDown={e => e.key === 'Enter' && handleAuth()} className="w-full border-2 border-[#e4e6ea] focus:border-[#1a1d23] rounded-xl px-4 py-2.5 text-sm outline-none transition-colors" placeholder="e.g. Pembe Foods" />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold uppercase tracking-widest text-[#6b7280] mb-2">Password</label>
-                  <div className="relative">
-                    <input 
-                      type={showPassword ? "text" : "password"} 
-                      value={loginData.password} 
-                      onChange={e => setLoginData({ ...loginData, password: e.target.value })} 
-                      onKeyDown={e => e.key === 'Enter' && handleAuth()} 
-                      className="w-full border-2 border-[#e4e6ea] focus:border-[#1a1d23] rounded-xl pl-4 pr-10 py-2.5 text-sm outline-none transition-colors" 
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b7280] hover:text-[#1a1d23] transition-colors cursor-pointer bg-transparent"
-                    >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-                {error && <div className="flex items-center gap-2 text-red-500 text-xs"><AlertCircle className="w-3 h-3" /> {error}</div>}
-                <button disabled={loading} onClick={handleAuth} className="w-full bg-[#1a1d23] text-white font-bold py-3 rounded-xl hover:bg-[#2a2d35] transition-colors mt-2">{loading ? 'Authenticating...' : 'Sign In'}</button>
-              </div>
-              <div className="mt-8 space-y-4">
-                <button onClick={() => setAuthMode('setup')} className="w-full text-center text-[10px] text-[#6b7280] hover:text-[#1a1d23] transition-colors uppercase tracking-widest">Already have a key? Set up password →</button>
-              </div>
-            </>
           ) : (
-            <>
-              <div className="text-xs text-[#6b7280] mb-6 bg-[#f4f5f7] rounded-xl p-4">Use your FMCG API Key to verify identity.</div>
-              <div className="space-y-4">
-                {[
-                  { label: 'Brand Name', key: 'brand', type: 'text', ph: 'e.g. Pembe Foods' },
-                  { label: 'FMCG API Key', key: 'apiKey', type: 'text', ph: 'nx_live_...' },
-                  { label: 'New Password', key: 'newPassword', type: 'password', ph: '' },
-                  { label: 'Confirm Password', key: 'confirmPassword', type: 'password', ph: '' },
-                ].map(f => (
-                  <div key={f.key}>
-                    <label className="block text-[11px] font-bold uppercase tracking-widest text-[#6b7280] mb-2">{f.label}</label>
-                    <div className="relative">
-                      <input 
-                        type={f.type === 'password' ? (f.key === 'newPassword' ? (showNewPassword ? 'text' : 'password') : (showConfirmPassword ? 'text' : 'password')) : f.type} 
-                        value={(setupData as any)[f.key]} 
-                        onChange={e => {
-                          let val = e.target.value;
-                          if (f.key === 'apiKey' || f.key === 'brand') val = val.trim();
-                          setSetupData({ ...setupData, [f.key]: val });
-                        }} 
-                        placeholder={f.ph} 
-                        className={cn("w-full border-2 border-[#e4e6ea] focus:border-[#1a1d23] rounded-xl py-2 text-sm outline-none transition-colors", f.type === 'password' ? "pl-4 pr-10" : "px-4")} 
-                      />
-                      {f.type === 'password' && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (f.key === 'newPassword') {
-                              setShowNewPassword(!showNewPassword);
-                            } else {
-                              setShowConfirmPassword(!showConfirmPassword);
-                            }
-                          }}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b7280] hover:text-[#1a1d23] transition-colors cursor-pointer bg-transparent"
-                        >
-                          {f.key === 'newPassword' ? (
-                            showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />
-                          ) : (
-                            showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />
-                          )}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-                {setupError && <div className="flex items-center gap-2 text-red-500 text-xs"><AlertCircle className="w-3 h-3" /> {setupError}</div>}
-                {setupSuccess && <div className="flex items-center gap-2 text-green-600 text-xs"><CheckCircle2 className="w-3 h-3" /> Password set! You can now sign in.</div>}
-                <button onClick={handleSetupPassword} className="w-full bg-[#1a1d23] text-white font-bold py-3 rounded-xl hover:bg-[#2a2d35] transition-colors mt-2">Save Password</button>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-widest text-[#6b7280] mb-2">Work Email Address</label>
+                <input type="email" value={loginData.brand} onChange={e => setLoginData({ ...loginData, brand: e.target.value })} onKeyDown={e => e.key === 'Enter' && handleAuth()} className="w-full border-2 border-[#e4e6ea] focus:border-[#1a1d23] rounded-xl px-4 py-2.5 text-sm outline-none transition-colors" placeholder="partner@company.com" />
               </div>
-              <button onClick={() => setAuthMode('login')} className="w-full text-center text-xs text-[#6b7280] mt-4 hover:text-[#1a1d23] transition-colors">← Back to sign in</button>
-            </>
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-widest text-[#6b7280] mb-2">Password</label>
+                <div className="relative">
+                  <input 
+                    type={showPassword ? "text" : "password"} 
+                    value={loginData.password} 
+                    onChange={e => setLoginData({ ...loginData, password: e.target.value })} 
+                    onKeyDown={e => e.key === 'Enter' && handleAuth()} 
+                    className="w-full border-2 border-[#e4e6ea] focus:border-[#1a1d23] rounded-xl pl-4 pr-10 py-2.5 text-sm outline-none transition-colors" 
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b7280] hover:text-[#1a1d23] transition-colors cursor-pointer bg-transparent"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+              {error && <div className="flex items-center gap-2 text-red-500 text-xs"><AlertCircle className="w-3 h-3" /> {error}</div>}
+              <button disabled={loading} onClick={handleAuth} className="w-full bg-[#1a1d23] text-white font-bold py-3 rounded-xl hover:bg-[#2a2d35] transition-colors mt-2">{loading ? 'Authenticating...' : 'Sign In'}</button>
+            </div>
           )}
         </motion.div>
       </div>

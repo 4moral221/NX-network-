@@ -2359,6 +2359,324 @@ Please output a JSON object obeying the requested schema. Ensure that you:
     }
   });
 
+  // --- Logistics & Delivery Partner Endpoints ---
+  app.post('/api/auth/logistics/signup', async (req, res) => {
+    try {
+      const { email, password, companyName } = req.body;
+      if (!email || !password || !companyName) {
+        return res.status(400).json({ success: false, error: 'Email, password, and company name are required' });
+      }
+
+      const cleanEmail = email.trim().toLowerCase();
+      const cleanCompany = companyName.trim();
+
+      // 1. Check if user already exists
+      const { data: existingUser } = await supabase.auth.admin.listUsers();
+      const exists = existingUser?.users?.some(u => u.email?.toLowerCase() === cleanEmail);
+      if (exists) {
+        return res.status(400).json({ success: false, error: 'User with this email already registered' });
+      }
+
+      // 2. Generate dummy phone to bypass the sync_auth_users trigger
+      const dummyPhone = `LOGISTICS_${Date.now()}`;
+
+      // 3. Create the user in Supabase Auth
+      const { data, error } = await supabase.auth.admin.createUser({
+        email: cleanEmail,
+        password,
+        email_confirm: true,
+        user_metadata: {
+          company_name: cleanCompany,
+          phone: dummyPhone,
+          name: cleanCompany
+        }
+      });
+
+      if (error) throw error;
+      const userId = data.user.id;
+
+      // 4. Update the user role to 'partner' in users table if needed or insert standard partner profile
+      try {
+        await supabase.from('users').update({ role: 'partner' }).eq('id', userId);
+      } catch (e) {
+        console.warn("Failed to update users role to partner:", e);
+      }
+
+      // 5. Insert into 'partners' table with 'active' status
+      let partnerRec: any = null;
+      try {
+        const { data: pData, error: pErr } = await supabase.from('partners').insert([{
+          user_id: userId,
+          company_name: cleanCompany,
+          status: 'active'
+        }]).select().single();
+        if (pErr) throw pErr;
+        partnerRec = pData;
+      } catch (pErr: any) {
+        console.warn("Failed to insert into partners table:", pErr.message || pErr);
+        // Fallback local storage partner record
+        partnerRec = {
+          id: crypto.randomUUID(),
+          company_name: cleanCompany,
+          user_id: userId,
+          status: 'active',
+          created_at: new Date().toISOString(),
+          is_fallback: true
+        };
+        const localPartners = getLocalFallbackFile<any>('partners.json');
+        localPartners.push(partnerRec);
+        saveLocalFallbackFile('partners.json', localPartners);
+      }
+
+      // 6. Insert legacy fmcg_partners record for maximum query compatibility
+      const hash = crypto.createHash('sha256').update(password).digest('hex');
+      try {
+        await supabase.from('fmcg_partners').insert([{
+          id: partnerRec.id,
+          name: cleanCompany,
+          contact: cleanEmail,
+          api_key_hash: hash,
+          dashboard_password: hash,
+          active: true,
+          category: 'Logistics'
+        }]);
+      } catch (fmcgErr) {
+        console.warn("Failed to insert legacy fmcg_partners:", fmcgErr);
+      }
+
+      res.json({
+        success: true,
+        message: 'Logistics partner registered successfully',
+        partner: {
+          id: partnerRec.id,
+          company_name: cleanCompany,
+          email: cleanEmail
+        }
+      });
+    } catch (err: any) {
+      console.error("Logistics signup error:", err);
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  app.post('/api/auth/logistics/login', async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      if (!email || !password) {
+        return res.status(400).json({ success: false, error: 'Email and password are required' });
+      }
+
+      const cleanEmail = email.trim().toLowerCase();
+
+      // 1. Sign in via client-side Supabase Auth
+      const { data: authData, error: authErr } = await supabase.auth.signInWithPassword({
+        email: cleanEmail,
+        password
+      });
+
+      if (authErr || !authData?.user) {
+        return res.status(401).json({ success: false, error: authErr?.message || 'Invalid email or password' });
+      }
+
+      const userId = authData.user.id;
+
+      // 2. Resolve partner profile
+      let partnerRec: any = null;
+      try {
+        const { data: pData } = await supabase.from('partners').select('*').eq('user_id', userId).maybeSingle();
+        if (pData) partnerRec = pData;
+      } catch (e) {}
+
+      if (!partnerRec) {
+        try {
+          const { data: fData } = await supabase.from('fmcg_partners').select('*').eq('contact', cleanEmail).maybeSingle();
+          if (fData) {
+            partnerRec = {
+              id: fData.id,
+              company_name: fData.name,
+              status: 'active'
+            };
+          }
+        } catch (e) {}
+      }
+
+      // Check fallback
+      if (!partnerRec) {
+        const localPartners = getLocalFallbackFile<any>('partners.json');
+        const lp = localPartners.find((p: any) => p.user_id === userId || p.company_name?.toLowerCase() === cleanEmail || p.email?.toLowerCase() === cleanEmail);
+        if (lp) partnerRec = lp;
+      }
+
+      if (!partnerRec) {
+        // Safe auto-creation in case profile didn't get stored
+        partnerRec = {
+          id: crypto.randomUUID(),
+          company_name: cleanEmail.split('@')[0],
+          user_id: userId,
+          status: 'active',
+          created_at: new Date().toISOString(),
+          is_fallback: true
+        };
+        const localPartners = getLocalFallbackFile<any>('partners.json');
+        localPartners.push(partnerRec);
+        saveLocalFallbackFile('partners.json', localPartners);
+      }
+
+      res.json({
+        success: true,
+        partner: {
+          id: partnerRec.id,
+          name: partnerRec.company_name,
+          contact: cleanEmail
+        },
+        session: authData.session
+      });
+    } catch (err: any) {
+      console.error("Logistics login error:", err);
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  app.post('/api/logistics/generate-key', requirePartner, async (req, res) => {
+    try {
+      const { brand_name, brand_id } = req.body;
+      if (!brand_id) {
+        return res.status(400).json({ success: false, error: 'Partner ID (brand_id) is required' });
+      }
+
+      const partnerId = brand_id;
+      const finalBrandName = brand_name || 'Logistics Partner';
+
+      // 1. Revoke all previous active keys for this partner (decoupling / regeneration revocation)
+      try {
+        await supabase.from('api_keys').delete().eq('partner_id', partnerId);
+      } catch (e) {
+        console.warn("DB api_keys deletion error (proceeding to fallback):", e);
+      }
+
+      try {
+        const localKeys = getLocalFallbackFile<any>('api_keys.json');
+        const filtered = localKeys.filter((k: any) => k.partner_id !== partnerId);
+        saveLocalFallbackFile('api_keys.json', filtered);
+      } catch (e) {
+        console.error("Local api_keys revocation error:", e);
+      }
+
+      // 2. Generate brand new nx_logistics_ API Key
+      const newKey = 'nx_logistics_' + crypto.randomBytes(32).toString('hex');
+      const keyHash = crypto.createHash('sha256').update(newKey).digest('hex');
+      const prefix = 'nx_logistics_';
+      const last4 = newKey.slice(-4);
+
+      let savedToDb = false;
+      try {
+        const { data: keyData, error: keyError } = await supabase.from('api_keys').insert([{
+          partner_id: partnerId,
+          key_hash: keyHash,
+          prefix,
+          last4
+        }]).select().single();
+
+        if (keyError) throw keyError;
+        savedToDb = true;
+      } catch (dbErr: any) {
+        console.warn("[logistics-generate-key] DB insert failed, using local fallback:", dbErr.message);
+      }
+
+      if (!savedToDb) {
+        const localKeys = getLocalFallbackFile<any>('api_keys.json');
+        localKeys.push({
+          id: crypto.randomUUID(),
+          partner_id: partnerId,
+          key_hash: keyHash,
+          prefix,
+          last4,
+          created_at: new Date().toISOString(),
+          revoked: false
+        });
+        saveLocalFallbackFile('api_keys.json', localKeys);
+      }
+
+      res.json({ success: true, key: newKey });
+    } catch (err: any) {
+      console.error("Logistics Generate Key error:", err);
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  app.get('/api/logistics/api-keys', requirePartner, async (req, res) => {
+    try {
+      const { brand_name } = req.query;
+      if (!brand_name) return res.status(400).json({ success: false, error: 'Partner name required' });
+
+      const cleanBrand = String(brand_name).trim().toLowerCase();
+      let pRec: any = null;
+
+      // Resolve partner
+      try {
+        const partnersResult = await supabase.from('partners').select('id, company_name');
+        const partnersList = partnersResult?.data || null;
+        if (partnersList && partnersList.length > 0) {
+          pRec = partnersList.find((p: any) => p.company_name?.trim().toLowerCase() === cleanBrand);
+        }
+      } catch (e) {}
+
+      if (!pRec) {
+        const localPartners = getLocalFallbackFile<any>('partners.json');
+        pRec = localPartners.find((p: any) => p.company_name?.trim().toLowerCase() === cleanBrand);
+      }
+
+      if (!pRec) {
+        return res.json({ success: true, keys: [] });
+      }
+
+      let keys: any[] = [];
+      try {
+        const { data: keysResult } = await supabase.from('api_keys').select('*').eq('partner_id', pRec.id).order('created_at', { ascending: false });
+        keys = keysResult || [];
+      } catch (dbErr: any) {
+        console.warn("DB api_keys fetch failed:", dbErr.message);
+      }
+
+      // Merge with local fallback keys
+      try {
+        const localKeys = getLocalFallbackFile<any>('api_keys.json');
+        const filteredLocal = localKeys.filter((k: any) => k.partner_id === pRec.id);
+        for (const lk of filteredLocal) {
+          if (!keys.some(k => k.id === lk.id)) {
+            keys.push(lk);
+          }
+        }
+        keys.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      } catch (localErr) {}
+
+      res.json({ success: true, keys });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  app.post('/api/logistics/revoke-key', requirePartner, async (req, res) => {
+    try {
+      const { key_id } = req.body;
+      if (!key_id) return res.status(400).json({ success: false, error: 'Key ID required' });
+
+      try {
+        await supabase.from('api_keys').delete().eq('id', key_id);
+      } catch (e) {}
+
+      try {
+        const localKeys = getLocalFallbackFile<any>('api_keys.json');
+        const filtered = localKeys.filter((k: any) => k.id !== key_id);
+        saveLocalFallbackFile('api_keys.json', filtered);
+      } catch (e) {}
+
+      res.json({ success: true, message: 'Key revoked successfully' });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
   app.post('/api/auth/send-otp', authLimiter, async (req, res) => {
     try {
       const { email, type = 'admin' } = req.body;

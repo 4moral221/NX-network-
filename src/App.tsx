@@ -17,6 +17,7 @@ const ControlCenter = lazy(() => import('./pages/control/ControlCenter'));
 const UssdSimulator = lazy(() => import('./pages/simulator/UssdSimulator'));
 const PwaApp = lazy(() => import('./pages/pwa/PwaApp'));
 const FmcgOnboarding = lazy(() => import('./pages/fmcg_onboarding/OnboardingApp'));
+const LogisticsApiDocs = lazy(() => import('./pages/docs/LogisticsApiDocs'));
 
 class ErrorBoundary extends Component<{children: ReactNode}, {hasError: boolean, error: Error | null}> {
   public state: {hasError: boolean, error: Error | null} = { hasError: false, error: null };
@@ -117,26 +118,26 @@ export default function App() {
       if (hostname.includes('admin')) {
         return 'admin';
       }
-      if (hostname.includes('partners')) {
-        return 'partners';
-      }
-      if (hostname.includes('fmcg')) {
-        return 'fmcg';
-      }
-      if (hostname.includes('merchant') || hostname.includes('hub')) {
-        return 'merchant';
-      }
-      if (hostname.includes('landing') || hostname.includes('main')) {
-        return 'main';
-      }
       if (hostname.includes('pwa') || hostname.includes('app') || hostname === 'nx-network' || hostname.startsWith('nx-network-')) {
         return 'pwa';
+      }
+      if (
+        hostname.includes('landing') || 
+        hostname.includes('main') || 
+        hostname.includes('partners') || 
+        hostname.includes('fmcg') || 
+        hostname.includes('merchant') || 
+        hostname.includes('hub')
+      ) {
+        return 'main';
       }
     }
 
     const envTarget = import.meta.env.VITE_APP_TARGET;
     if (envTarget) {
-      if (envTarget === 'landing') return 'main';
+      if (envTarget === 'landing' || envTarget === 'partners' || envTarget === 'fmcg' || envTarget === 'merchant') {
+        return 'main';
+      }
       return envTarget;
     }
 
@@ -164,39 +165,12 @@ export default function App() {
         </>
       );
     }
-    if (target === 'merchant') {
-      return (
-        <>
-          <Route path="/hub/*" element={<MerchantPortal />} />
-          <Route path="/app/*" element={<PwaApp />} />
-          <Route path="/" element={<Navigate to="/hub" replace />} />
-        </>
-      );
-    }
     if (target === 'pwa') {
       return (
         <>
           <Route path="/hub/*" element={<MerchantPortal />} />
           <Route path="/app/*" element={<PwaApp />} />
           <Route path="/" element={<Navigate to="/app" replace />} />
-        </>
-      );
-    }
-    if (target === 'fmcg') {
-      return (
-        <>
-          <Route path="/fmcg-onboarding" element={<FmcgOnboarding />} />
-          <Route path="/fmcgs/*" element={<FmcgsPortal />} />
-          <Route path="/" element={<Navigate to="/fmcgs" replace />} />
-        </>
-      );
-    }
-    if (target === 'partners') {
-      return (
-        <>
-          <Route path="/fmcg-onboarding" element={<FmcgOnboarding />} />
-          <Route path="/partners/*" element={<PartnersPortal />} />
-          <Route path="/" element={<Navigate to="/partners" replace />} />
         </>
       );
     }
@@ -210,6 +184,7 @@ export default function App() {
           <Route path="/fmcgs/*" element={<FmcgsPortal />} />
           <Route path="/app/*" element={<PwaApp />} />
           <Route path="/sim" element={<UssdSimulator />} />
+          <Route path="/docs/logistics-partners" element={<LogisticsApiDocs />} />
         </>
       );
     }
@@ -226,6 +201,7 @@ export default function App() {
         <Route path="/app/*" element={<PwaApp />} />
         <Route path="/sim" element={<UssdSimulator />} />
         <Route path="/control" element={<ControlCenter />} />
+        <Route path="/docs/logistics-partners" element={<LogisticsApiDocs />} />
       </>
     );
   };
