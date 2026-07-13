@@ -111,8 +111,10 @@ function normalizePhoneNumber(phone: string): string {
 export default function AdminPortal() {
   const getAuthHeaders = (extraHeaders: Record<string, string> = {}) => {
     const token = localStorage.getItem('admin_token') || 'admin_token';
+    const phone = localStorage.getItem('admin_phone') || '';
     return {
       'Authorization': `Bearer ${token}`,
+      'x-admin-phone': phone,
       ...extraHeaders
     };
   };
@@ -771,102 +773,26 @@ export default function AdminPortal() {
     setLoading(true);
     setError(null);
     try {
-      if (activeSection === 'overview' || activeSection === 'treasury' || activeSection === 'merchants' || activeSection === 'staff') {
-        const { count: mCount, error: mErr } = await supabase.from('users').select('id', { count: 'exact', head: true }).eq('role', 'merchant');
-        if (mErr) throw mErr;
-        
-        const { count: cCount, error: cErr } = await supabase.from('users').select('id', { count: 'exact', head: true }).eq('role', 'customer');
-        if (cErr) throw cErr;
-
-        const { count: tCount, error: tErr } = await supabase.from('transactions').select('id', { count: 'exact', head: true }).in('status', ['confirmed', 'completed']);
-        if (tErr) throw tErr;
-
-        // Fetching more applications to make searching more robust even from overview
-        const { data: recentApps, count: totalAppsCount, error: aErr } = await supabase.from('merchant_applications').select('*', { count: 'exact' }).order('applied_at', { ascending: false });
-        if (aErr) throw aErr;
-        
-        const { data: txns, error: txErr } = await supabase
-          .from('transactions')
-          .select('nx_earned, nx_redeemed, amount, status')
-          .eq('status', 'completed');
-        
-        if (txErr) throw txErr;
-
-        const volume = txns?.reduce((acc, curr) => acc + Number(curr.amount), 0) || 0;
-        const issued = txns?.reduce((acc, curr) => acc + Number(curr.nx_earned), 0) || 0;
-        const redeemed = txns?.reduce((acc, curr) => acc + Number(curr.nx_redeemed), 0) || 0;
-        
-        // Dynamic metrics adjustment based on user rules:
-        // Pool = what customers can redeem (remaining supply)
-        // Merchant Balance = what merchants earned (total redeemed)
-        const customerPool = issued - redeemed;
-        const merchantBalance = redeemed;
-
-        // Revenue logic: Fetch actual NX_SYSTEM balance (Transaction fees)
-        const { data: systemBalance } = await supabase.rpc('get_nx_system_balance');
-        const calculatedRevenue = Number(systemBalance || 0);
-
-        setLedgerEntries([]); 
-        const ratio = merchantBalance > 0 ? Math.min(100, Math.round((customerPool / merchantBalance) * 100)) : 100;
-
-        const { count: pendingRestockCount } = await supabase.from('restock_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending');
-        const { count: pendingInvoiceCount } = await supabase.from('restock_invoices').select('id', { count: 'exact', head: true }).eq('status', 'pending');
-        const { count: fraudCount } = await supabase.from('fraud_logs').select('id', { count: 'exact', head: true }).eq('severity', 'CRITICAL');
-
-        setStats({
-          merchants: mCount || 0,
-          customers: cCount || 0,
-          txns: tCount || 0,
-          volume,
-          revenue: calculatedRevenue,
-          issued,
-          redeemed,
-          customerPool,
-          merchantBalance,
-          apps: recentApps?.filter((a: any) => a.status === 'pending').length || 0,
-          pending_restock: pendingRestockCount || 0,
-          pending_invoices: pendingInvoiceCount || 0,
-          fraud_alerts: fraudCount || 0
-        });
-
-        // Extended stats mapping
-        const [restockRes, invoiceRes, fraudRes, fmcgRes] = await Promise.all([
-          supabase.from('restock_requests').select('id', { count: 'exact', head: true }).in('status', ['pending', 'approving_prediction']),
-          supabase.from('restock_invoices').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-          supabase.from('fraud_logs').select('id', { count: 'exact', head: true }).eq('status', 'flagged'),
-          supabase.from('fmcg_margin_contributions').select('id', { count: 'exact', head: true }).eq('status', 'pending')
-        ]);
-
-        setStats(prev => ({
-          ...prev,
-          pending_restock: restockRes.count || 0,
-          pending_invoices: invoiceRes.count || 0,
-          fraud_alerts: fraudRes.count || 0,
-          pending_fmcg: fmcgRes.count || 0
-        }));
-
-        const { data: staffData, count: staffCount } = await supabase
-          .from('users')
-          .select('*', { count: 'exact' })
-          .eq('is_admin', true)
-          .order('created_at', { ascending: false });
-        
-        setStats(prev => ({ ...prev, staff: staffCount || 0 }));
-        setStaff(staffData || []);
-
-        setTreasuryData({
-          merchantBalance,
-          customerPool,
-          ratio,
-          expiring: issued * 0.05,
-          txnFees: calculatedRevenue,
-          expiredNX: issued * 0.15,
-          revenue: calculatedRevenue
-        });
-
-        const { data: recentTxns } = await supabase.from('transactions').select('*').order('created_at', { ascending: false }).limit(5);
-        setTransactions(recentTxns || []);
-        setApplications(recentApps || []);
+      if (activeSection === 'overview' || activeSection === 'treasury' || activeSection === 'merchants' || activeSection === 'staff' || activeSection === 'txns') {
+        const response = await fetch('/api/admin/overview-stats', { headers: getAuthHeaders() });
+        if (response.ok) {
+          const data = await response.json();
+          setStats({
+            merchants: data.mCount || 0,
+            customers: data.cCount || 0,
+            txns: data.tCount || 0,
+            pending_restock: restockRequests?.filter(r => r.status === 'pending').length || 0,
+            pending_invoices: invoices?.filter(i => i.status === 'pending').length || 0,
+            apps: applications?.filter(a => a.status === 'pending').length || 0,
+            pending_fmcg: fmcgPartners?.filter(f => f.status === 'pending').length || 0,
+            fraud_alerts: data.fraudLogs?.filter(f => f.status === 'unresolved').length || 0
+          });
+          setTransactions(data.recentTxns || []);
+          setApplications(data.recentApps || []);
+          if (activeSection === 'fraud' || activeSection === 'overview') {
+            setFraudLogs(data.fraudLogs || []);
+          }
+        }
       }
       
       if (activeSection === 'broadcasts') {
@@ -919,18 +845,17 @@ export default function AdminPortal() {
         }
       }
 
-      if (activeSection === 'txns') {
-        const { data, error: tErr } = await supabase.from('transactions').select('*').order('created_at', { ascending: false }).limit(50);
-        if (tErr) throw tErr;
-        setTransactions(data || []);
-      }
+      // txns now loaded in overview-stats endpoint
 
       if (activeSection === 'whitelist') {
         const { data, error: wErr } = await supabase.from('merchant_whitelist').select('*').order('added_at', { ascending: false });
         if (wErr) throw wErr;
         setWhitelist(data || []);
-        const { data: mData } = await supabase.from('users').select('phone').eq('role', 'merchant');
-        setRegisteredPhones(mData?.map(m => m.phone) || []);
+        const response = await fetch('/api/admin/merchants', { headers: getAuthHeaders() });
+        if (response.ok) {
+           const merchants = await response.json();
+           setRegisteredPhones(merchants.map(m => m.phone) || []);
+        }
       }
 
       if (activeSection === 'hub_payouts') {
@@ -992,7 +917,9 @@ export default function AdminPortal() {
         } catch (err) {
           console.warn('Audit views failed, performing manual reconciliation check...');
           // Manual Drift Calculation (Heavy but accurate fallback)
-          const { data: users } = await supabase.from('users').select('phone, merchant_code, role, nx_balance, name, franchise_tier').limit(20);
+          let users = [];
+          const resUsers = await fetch('/api/admin/merchants', { headers: getAuthHeaders() });
+          if (resUsers.ok) users = await resUsers.json();
           const { data: ledger } = await supabase.from('ledger_entries').select('account_phone, amount').gt('expires_at', new Date().toISOString());
           const { data: txns } = await supabase.from('transactions').select('merchant_code, nx_redeemed, status').gte('created_at', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString());
           const { data: margins } = await supabase.from('merchant_margins').select('*');
@@ -1034,10 +961,7 @@ export default function AdminPortal() {
         }
       }
 
-      if (activeSection === 'fraud' || activeSection === 'overview') {
-        const { data } = await supabase.from('fraud_logs').select('*').order('created_at', { ascending: false }).limit(50);
-        setFraudLogs(data || []);
-      }
+      // fraud_logs now loaded in overview-stats endpoint
 
       if (activeSection === 'redis') {
         await testRedisConnection();
@@ -1052,7 +976,12 @@ export default function AdminPortal() {
 
   const handleUpdateTier = async (userId: string, tier: string) => {
     try {
-      const { error } = await supabase.from('users').update({ franchise_tier: tier }).eq('id', userId);
+      const res = await fetch('/api/admin/db/update', {
+        method: 'POST',
+        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ table: 'users', match: { id: userId }, payload: { franchise_tier: tier } })
+      });
+      if (!res.ok) throw new Error(await res.text());
       if (error) throw error;
       logOpsAction('UPDATE_TIER', userId, { new_tier: tier });
       fetchAdminData();
@@ -1705,7 +1634,12 @@ export default function AdminPortal() {
   const handleSuspendUser = async (userId: number) => {
     if (!confirm('Are you sure you want to suspend this user?')) return;
     try {
-      const { error } = await supabase.from('users').update({ status: 'suspended' }).eq('id', userId);
+      const res = await fetch('/api/admin/db/update', {
+        method: 'POST',
+        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ table: 'users', match: { id: userId }, payload: { status: 'suspended' } })
+      });
+      if (!res.ok) throw new Error(await res.text());
       if (error) throw error;
       fetchAdminData();
     } catch (e: any) {
@@ -1743,7 +1677,12 @@ export default function AdminPortal() {
 
   const handleUnsuspendUser = async (userId: number) => {
     try {
-      const { error } = await supabase.from('users').update({ status: 'active' }).eq('id', userId);
+      const res = await fetch('/api/admin/db/update', {
+        method: 'POST',
+        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ table: 'users', match: { id: userId }, payload: { status: 'active' } })
+      });
+      if (!res.ok) throw new Error(await res.text());
       if (error) throw error;
       fetchAdminData();
     } catch (e: any) {
@@ -3665,7 +3604,11 @@ export default function AdminPortal() {
                                    .reduce((sum, curr) => sum + Number(curr.amount), 0);
                                  
                                  if (Math.abs(actualBalance - u.nx_balance) > 0.01) {
-                                   await supabase.from('users').update({ nx_balance: actualBalance }).eq('phone', u.phone);
+                                   await fetch('/api/admin/db/update', {
+                                     method: 'POST',
+                                     headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+                                     body: JSON.stringify({ table: 'users', match: { phone: u.phone }, payload: { nx_balance: actualBalance } })
+                                   });
                                    corrected++;
                                  }
                                }
@@ -3761,7 +3704,12 @@ export default function AdminPortal() {
                                               onClick={async () => {
                                                   if (!confirm('Remove admin access for this user?')) return;
                                                   setLoading(true);
-                                                  const { error } = await supabase.from('users').update({ is_admin: false }).eq('id', s.id);
+                                                  const res = await fetch('/api/admin/db/update', {
+        method: 'POST',
+        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ table: 'users', match: { id: s.id }, payload: { is_admin: false } })
+      });
+      const error = !res.ok ? new Error(await res.text()) : null;
                                                   setLoading(false);
                                                   if (error) toast.error('Failed to remove: ' + error.message);
                                                   else fetchAdminData();

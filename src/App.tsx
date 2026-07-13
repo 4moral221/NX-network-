@@ -118,7 +118,7 @@ export default function App() {
       if (hostname.includes('admin')) {
         return 'admin';
       }
-      if (hostname.includes('pwa') || hostname.includes('app') || hostname === 'nx-network' || hostname.startsWith('nx-network-')) {
+      if (hostname.includes('pwa') || hostname.includes('app')) {
         return 'pwa';
       }
       if (
