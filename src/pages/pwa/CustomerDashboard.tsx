@@ -25,7 +25,9 @@ import {
   Zap,
   Menu,
   Users,
-  Lock
+  Lock,
+  RefreshCw,
+  ShieldAlert
 } from 'lucide-react';
 import { AnimatedNumber } from '../../components/AnimatedNumber';
 import { cn } from '../../lib/utils';
@@ -62,6 +64,7 @@ export default function CustomerDashboard({ user, onLogout }: { user: any, onLog
   const [payError, setPayError] = useState('');
   const [receipt, setReceipt] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [confirmModal, setConfirmModal] = useState<{title: string, message: string, onConfirm: () => void} | null>(null);
 
   const fetchBalanceAndTxns = async () => {
     // Calculate balance dynamically from transactions
@@ -86,7 +89,7 @@ export default function CustomerDashboard({ user, onLogout }: { user: any, onLog
       .order('created_at', { ascending: false });
     
     if (recent) {
-      setTxns(recent.slice(0, 5));
+      setTxns(recent);
       
       // Calculate weekly savings
       const weekAgo = new Date();
@@ -687,7 +690,7 @@ export default function CustomerDashboard({ user, onLogout }: { user: any, onLog
                     No transactions yet
                   </div>
                 ) : (
-                  txns.map((txn) => (
+                  txns.slice(0, 5).map((txn) => (
                     <div key={txn.id} className="bg-nx-card border border-nx-border rounded-xl p-4 flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-lg bg-nx-ink flex items-center justify-center border border-nx-border">
@@ -853,6 +856,65 @@ export default function CustomerDashboard({ user, onLogout }: { user: any, onLog
                   )}
                 </div>
 
+                {/* Manage Code Section */}
+                <div className="bg-nx-card border border-nx-border rounded-xl p-5 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-xs font-bold text-nx-paper uppercase tracking-wider">Security & Access</h4>
+                      <p className="text-[10px] text-nx-muted">Regenerate your code or revoke all family access</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => {
+                        setConfirmModal({
+                          title: "Regenerate Family Code",
+                          message: "Are you sure you want to regenerate the family code? The old code will stop working immediately.",
+                          onConfirm: async () => {
+                            const newCode = `FAM${Math.floor(10000 + Math.random() * 90000)}`;
+                            const { error } = await supabase
+                              .from('family_accounts')
+                              .update({ family_code: newCode })
+                              .eq('id', familyAccount.id);
+                            if (!error) {
+                              setFamilyAccount({ ...familyAccount, family_code: newCode });
+                              toast.success("Family code regenerated successfully.");
+                            } else {
+                              toast.error("Failed to regenerate family code.");
+                            }
+                          }
+                        });
+                      }}
+                      className="flex-1 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider border border-nx-amber/30 text-nx-amber hover:bg-nx-amber/10 transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer bg-transparent"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" /> Regenerate Code
+                    </button>
+                    <button
+                      onClick={() => {
+                        setConfirmModal({
+                          title: "Revoke Family Access",
+                          message: "Are you sure you want to permanently revoke family access? This action cannot be undone.",
+                          onConfirm: async () => {
+                            const { error } = await supabase
+                              .from('family_accounts')
+                              .delete()
+                              .eq('id', familyAccount.id);
+                            if (!error) {
+                              setFamilyAccount(null);
+                              toast.success("Family access revoked.");
+                            } else {
+                              toast.error("Failed to revoke family access.");
+                            }
+                          }
+                        });
+                      }}
+                      className="flex-1 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider border border-nx-ember/30 text-nx-ember hover:bg-nx-ember/10 transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer bg-transparent"
+                    >
+                      <ShieldAlert className="w-3.5 h-3.5" /> Revoke Access
+                    </button>
+                  </div>
+                </div>
+
                 {/* Family Transactions Ledger */}
                 <div className="bg-nx-card border border-nx-border rounded-xl p-5 space-y-4">
                   <div className="flex items-center justify-between pb-2 border-b border-nx-border">
@@ -930,25 +992,69 @@ export default function CustomerDashboard({ user, onLogout }: { user: any, onLog
           <div className="space-y-6">
             <h3 className="text-xs uppercase tracking-widest text-nx-paper font-bold">Transaction History</h3>
             <div className="space-y-3">
-              {txns.map((txn) => (
-                <div key={txn.id} className="bg-nx-card border border-nx-border rounded-xl p-4 flex items-center justify-between">
-                  <div>
-                    <div className="text-xs text-nx-paper font-bold mb-1">Payment to {txn.merchant_code}</div>
-                    <div className="text-[10px] text-nx-muted">{new Date(txn.created_at).toLocaleString()}</div>
-                    <div className="text-[9px] text-nx-muted mt-1 font-mono uppercase">{txn.transaction_code}</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm font-mono text-nx-paper font-bold">KSH {txn.amount}</div>
-                    <div className="text-[10px] text-nx-ember">- {txn.nx_redeemed.toFixed(2)} NX</div>
-                  </div>
+              {txns.length === 0 ? (
+                <div className="text-center py-8 text-nx-muted text-xs border border-dashed border-nx-border rounded-xl">
+                  No transactions yet
                 </div>
-              ))}
+              ) : (
+                txns.map((txn) => (
+                  <div key={txn.id} className="bg-nx-card border border-nx-border rounded-xl p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-nx-ink flex items-center justify-center border border-nx-border shrink-0">
+                        <TrendingUp className="w-5 h-5 text-nx-green" />
+                      </div>
+                      <div>
+                        <div className="text-xs text-nx-paper font-bold mb-1">Paid {txn.merchant_code}</div>
+                        <div className="text-[10px] text-nx-muted">{new Date(txn.created_at).toLocaleString()}</div>
+                        <div className="text-[9px] text-nx-muted mt-1 font-mono uppercase">{txn.transaction_code}</div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-mono text-nx-paper font-bold">KSH {txn.amount}</div>
+                      <div className="flex items-center justify-end gap-2 mt-1">
+                        <div className="text-[10px] font-mono text-nx-ember font-bold">- {txn.nx_redeemed.toFixed(2)} NX</div>
+                        <div className="text-[10px] text-nx-green font-bold">+ {txn.nx_earned.toFixed(2)} NX</div>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         )}
       </div>
 
       {/* Bottom navigation removed in favor of sidebar */}
+
+      {/* Confirm Modal */}
+      {confirmModal && (
+        <div className="absolute inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="bg-nx-card border border-nx-border w-full max-w-sm rounded-2xl overflow-hidden p-6">
+            <h3 className="text-lg font-bold text-nx-paper mb-2">{confirmModal.title}</h3>
+            <p className="text-xs text-nx-muted mb-6">{confirmModal.message}</p>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setConfirmModal(null)}
+                className="flex-1 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider text-nx-paper bg-nx-border/20 hover:bg-nx-border/40 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  confirmModal.onConfirm();
+                  setConfirmModal(null);
+                }}
+                className={cn(
+                  "flex-1 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-colors",
+                  confirmModal.title.includes('Revoke') ? "bg-nx-ember text-white hover:opacity-90" : "bg-nx-amber text-nx-ink hover:opacity-90"
+                )}
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Payment Modal */}
       {isPayModalOpen && (

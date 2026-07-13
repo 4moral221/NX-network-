@@ -1,1 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 24 24" fill="none" stroke="#e8a020" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- Solid background circle for high visibility in tabs -->
+  <circle cx="256" cy="256" r="240" fill="#0a0a09" />
+  
+  <!-- Outer border ring -->
+  <circle cx="256" cy="256" r="230" fill="none" stroke="#e8a020" stroke-width="16" />
+  
+  <!-- Stylized "X" letter -->
+  <text x="256" y="235" font-family="system-ui, -apple-system, 'SF Pro Display', 'Inter', sans-serif" font-weight="900" font-size="190" fill="#ffffff" text-anchor="middle" dominant-baseline="central">X</text>
+  
+  <!-- Tilted line below the X -->
+  <line x1="100" y1="380" x2="412" y2="330" stroke="#e8a020" stroke-width="14" stroke-linecap="round" />
+  
+  <!-- Small dot below the tilted line -->
+  <circle cx="256" cy="415" r="16" fill="#e8a020" />
+</svg>

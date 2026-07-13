@@ -510,7 +510,6 @@ export default function PartnersPortal() {
   useEffect(() => {
     if (isLoggedIn) {
       checkEmailStatus();
-      fetchAgents();
     }
   }, [isLoggedIn]);
   const [brand, setBrand] = useState<any>(null);
@@ -617,12 +616,6 @@ export default function PartnersPortal() {
   const [transitPercent, setTransitPercent] = useState<number>(0);
   const [isSimulatingTransit, setIsSimulatingTransit] = useState(false);
   const [gpsLog, setGpsLog] = useState<string[]>([]);
-  const [agents, setAgents] = useState<any[]>([]);
-  const [agentName, setAgentName] = useState('');
-  const [onboardingAgent, setOnboardingAgent] = useState(false);
-  const [agentToConfirm, setAgentToConfirm] = useState<any>(null);
-  const [confirmationCode, setConfirmationCode] = useState('');
-  const [isSuspending, setIsSuspending] = useState(false);
 
   const fetchBatches = async () => {
     setBatchLoading(true);
@@ -842,73 +835,7 @@ export default function PartnersPortal() {
     }
   };
 
-  const fetchAgents = async () => {
-    if (!brand) return;
-    try {
-      const res = await fetch(`/api/agents?partner_id=${brand.id}`, {
-        headers: await getAuthHeaders()
-      });
-      const data = await res.json();
-      if (data.success) setAgents(data.agents || []);
-    } catch (err) {
-      console.error('Error fetching agents:', err);
-    }
-  };
 
-  const handleOnboardAgent = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!agentName.trim()) return;
-    setOnboardingAgent(true);
-    try {
-      const res = await fetch('/api/agents/onboard', {
-        method: 'POST',
-        headers: await getAuthHeaders({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify({ partner_id: brand.id, name: agentName })
-      });
-      const data = await res.json();
-      if (data.success) {
-        setAgentName('');
-        fetchAgents();
-        showNotification(`${data.agent.name} onboarded with code ${data.agent.agent_code}`, "success");
-      }
-    } catch (err) {
-      console.error('Error onboarding agent:', err);
-    } finally {
-      setOnboardingAgent(false);
-    }
-  };
-
-  const handleSuspendAgent = async () => {
-    if (!agentToConfirm || confirmationCode !== agentToConfirm.agent_code) {
-      showNotification('Confirmation code mismatch!', "error");
-      return;
-    }
-    setIsSuspending(true);
-    try {
-      const res = await fetch('/api/agents/suspend', {
-        method: 'POST',
-        headers: await getAuthHeaders({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify({ 
-          agent_id: agentToConfirm.id, 
-          agent_code: agentToConfirm.agent_code, 
-          confirmed_code: confirmationCode 
-        })
-      });
-      const data = await res.json();
-      if (data.success) {
-        setAgentToConfirm(null);
-        setConfirmationCode('');
-        fetchAgents();
-        showNotification(`Agent updated successfully`, "success");
-      } else {
-        showNotification(data.error, "error");
-      }
-    } catch (err) {
-      console.error('Error suspending agent:', err);
-    } finally {
-      setIsSuspending(false);
-    }
-  };
 
   const handleGenerateKey = async () => {
     if (!brand) return;
@@ -1213,26 +1140,20 @@ MERCHANT_CODE: M-104 | PHONE: +254766666666 | ORDER_SPEC: Pembe 2kg*22 | ORDER_Q
         };
       });
 
-      // Insert/update into our restock_invoices table in database
-      for (const loc of compilerOutput.localities) {
-        for (const o of loc.orders) {
-          const extId = `INV-SIM-${Math.floor(100000 + Math.random() * 900000)}`;
-          await supabase.from('restock_invoices').insert({
-            merchant_code: o.merchantCode,
-            invoice_amount: o.exactQuantity * 75,
-            status: 'pending',
-            logistics_status: 'dispatched',
-            external_id: extId,
-            notes: JSON.stringify({
-              driver_name: "Evans Omoke",
-              driver_phone: "+254712345678",
-              vehicle: "KCY 481G (Light Fuso)",
-              route_zone: loc.name,
-              specific_order: o.specificOrder
-            })
-          });
-        }
-      }
+      // Insert/update into our restock_invoices table in database via secure backend API
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token || '';
+
+      const res = await fetch('/api/logistics/dispatch', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ localities: compilerOutput.localities })
+      });
+      const resData = await res.json();
+      if (!resData.success) throw new Error(resData.error || 'Failed to dispatch route on backend');
 
       setDispatches(newDispatches);
       setSelectedDispatch(newDispatches[0]);
@@ -1251,12 +1172,22 @@ MERCHANT_CODE: M-104 | PHONE: +254766666666 | ORDER_SPEC: Pembe 2kg*22 | ORDER_Q
     try {
       const firstMerchantCode = selectedDispatch.points[2]?.merchantCode || 'M-910';
       
-      const { error } = await supabase
-        .from('restock_invoices')
-        .update({ status: 'paid', logistics_status: 'delivered' })
-        .eq('merchant_code', firstMerchantCode);
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token || '';
 
-      if (error) throw error;
+      const res = await fetch('/api/logistics/handshake', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          merchant_code: firstMerchantCode,
+          agent_code: 'NX-007' // Simulated delivery agent
+        })
+      });
+      const resData = await res.json();
+      if (!resData.success) throw new Error(resData.error || 'Handshake failed on backend API');
 
       const updatedDispatches = dispatches.map(d => {
         if (d.id === selectedDispatch.id) {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
-import { Menu, X, ArrowUpRight, Smartphone, ShoppingCart, Wallet, CheckCircle2, ArrowRight, BarChart3, ShieldCheck, Activity, Users, Phone, Cpu, Zap, Truck, Layers, MessageSquare, Send, Play, Pause, RefreshCw, FileText, ChevronDown, ChevronUp } from 'lucide-react';
+import { Menu, X, ArrowUpRight, Smartphone, ShoppingCart, Wallet, CheckCircle2, ArrowRight, BarChart3, ShieldCheck, Activity, Users, Phone, Cpu, Zap, Truck, Layers, MessageSquare, Send, Play, Pause, RefreshCw, FileText, ChevronDown, ChevronUp, Store } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/src/lib/utils';
 import { supabase } from '@/src/lib/supabase';
@@ -155,10 +155,17 @@ export default function LandingPage() {
         </Link>
 
         <div className="hidden lg:flex items-center gap-6">
-          {['How It Works', 'Features', 'Tiers', 'Mechanics', 'Business Model'].map((item) => (
-            <a key={item} href={`#${item.toLowerCase().replace(/\s+/g, '-')}`} 
+          {[
+            { label: 'How It Works', id: 'how-it-works' },
+            { label: 'Features', id: 'features' },
+            { label: 'Tiers', id: 'merchant-tiers', spec: 'tiers' },
+            { label: 'Mechanics', id: 'loyalty-mechanics', spec: 'mechanics' },
+            { label: 'Business Model', id: 'revenue-engine', spec: 'revenue' }
+          ].map((item) => (
+            <a key={item.label} href={`#${item.id}`} 
+               onClick={() => { if (item.spec) setOpenSpec(item.spec); }}
                className="text-[10px] uppercase tracking-[0.15em] text-nx-muted hover:text-nx-paper transition-colors">
-              {item}
+              {item.label}
             </a>
           ))}
           <div className="h-4 w-[1px] bg-nx-border" />
@@ -166,17 +173,30 @@ export default function LandingPage() {
             {[
               { label: 'Customer/Duka PWA', url: getPortalLink('pwa') },
               { label: 'Merchant Hub', url: getPortalLink('hub') },
-              { label: 'Partners Portal', url: getPortalLink('partners') },
-              { label: 'FMCGs Portal', url: getPortalLink('fmcgs') },
-            ].map((portal) => (
-              <a 
-                key={portal.url}
-                href={portal.url}
-                className="px-3 py-1.5 border border-nx-amber/30 text-nx-amber text-[9px] uppercase tracking-widest hover:bg-nx-amber hover:text-nx-ink transition-all hover:border-nx-amber"
-              >
-                {portal.label}
-              </a>
-            ))}
+              { label: 'Partners Portal', onClick: () => setShowBrandPortalChoice(true) },
+            ].map((portal) => {
+              if ('url' in portal) {
+                return (
+                  <a 
+                    key={portal.label}
+                    href={portal.url}
+                    className="px-3 py-1.5 border border-nx-amber/30 text-nx-amber text-[9px] uppercase tracking-widest hover:bg-nx-amber hover:text-nx-ink transition-all hover:border-nx-amber"
+                  >
+                    {portal.label}
+                  </a>
+                );
+              } else {
+                return (
+                  <button 
+                    key={portal.label}
+                    onClick={portal.onClick}
+                    className="px-3 py-1.5 border border-nx-amber/30 text-nx-amber text-[9px] uppercase tracking-widest hover:bg-nx-amber hover:text-nx-ink transition-all hover:border-nx-amber cursor-pointer bg-transparent"
+                  >
+                    {portal.label}
+                  </button>
+                );
+              }
+            })}
           </div>
         </div>
 
@@ -207,12 +227,50 @@ export default function LandingPage() {
               </div>
               <div className="flex-1 py-4 overflow-y-auto">
                 <div className="px-6 py-4 text-[9px] uppercase tracking-[0.3em] text-nx-muted">Platform</div>
-                {['How It Works', 'Features', 'Registration', 'Merchant Tiers', '5 Core SKUs', 'Loyalty Mechanics', 'Pool Mechanics'].map((item) => (
-                  <a key={item} href={`#${item.toLowerCase().replace(/\s+/g, '-')}`} onClick={() => setIsMenuOpen(false)}
+                {[
+                  { label: 'How It Works', id: 'how-it-works' },
+                  { label: 'Features', id: 'features' },
+                  { label: 'Registration', id: 'registration' },
+                  { label: 'Merchant Tiers', id: 'merchant-tiers', spec: 'tiers' },
+                  { label: '5 Core SKUs', id: '5-core-skus', spec: 'skus' },
+                  { label: 'Loyalty Mechanics', id: 'loyalty-mechanics', spec: 'mechanics' },
+                  { label: 'Pool Mechanics', id: 'pool-mechanics', spec: 'solvency' }
+                ].map((item) => (
+                  <a key={item.label} href={`#${item.id}`} onClick={() => { setIsMenuOpen(false); if (item.spec) setOpenSpec(item.spec as any); }}
                      className="flex items-center justify-between px-6 py-3 text-sm text-nx-paper/70 hover:text-nx-paper hover:bg-nx-amber/5 border-l-2 border-transparent hover:border-nx-amber transition-all">
-                    {item} <ArrowUpRight className="w-3 h-3 text-nx-muted" />
+                    {item.label} <ArrowUpRight className="w-3 h-3 text-nx-muted" />
                   </a>
                 ))}
+
+                <div className="px-6 mt-4 py-4 text-[9px] uppercase tracking-[0.3em] text-nx-amber border-t border-nx-border/50">Portals</div>
+                {[
+                  { label: 'Customer/Duka PWA', url: getPortalLink('pwa') },
+                  { label: 'Merchant Hub', url: getPortalLink('hub') },
+                  { label: 'Partners Portal', onClick: () => { setIsMenuOpen(false); setShowBrandPortalChoice(true); } }
+                ].map((portal) => {
+                  if ('url' in portal) {
+                    return (
+                      <a 
+                        key={portal.label} 
+                        href={portal.url} 
+                        onClick={() => setIsMenuOpen(false)}
+                        className="flex items-center justify-between px-6 py-3 text-sm text-nx-paper hover:text-nx-amber hover:bg-nx-amber/5 border-l-2 border-transparent hover:border-nx-amber transition-all"
+                      >
+                        {portal.label} <ArrowRight className="w-3 h-3 text-nx-muted" />
+                      </a>
+                    );
+                  } else {
+                    return (
+                      <button 
+                        key={portal.label} 
+                        onClick={portal.onClick}
+                        className="w-full text-left flex items-center justify-between px-6 py-3 text-sm text-nx-paper hover:text-nx-amber hover:bg-nx-amber/5 border-l-2 border-transparent hover:border-nx-amber transition-all bg-transparent focus:outline-hidden cursor-pointer"
+                      >
+                        {portal.label} <ArrowRight className="w-3 h-3 text-nx-muted" />
+                      </button>
+                    );
+                  }
+                })}
               </div>
               <div className="p-6 border-t border-nx-border">
                 <div className="p-4 bg-nx-green/5 border border-nx-green/12 rounded-xl text-center">
@@ -919,17 +977,11 @@ export default function LandingPage() {
             <p className="text-sm text-nx-muted leading-relaxed">
               By nesting detailed specifications under simple, responsive controls, the network console minimizes clutter while providing absolute clarity into our technical mechanics.
             </p>
-
-            <div className="pt-6">
-              <a href="#contact" className="px-6 py-3 border border-nx-amber/30 text-nx-amber hover:bg-nx-amber/10 transition-all text-xs font-display tracking-widest uppercase rounded-xl font-bold inline-block">
-                Request Whitepaper &amp; Technical Docs
-              </a>
-            </div>
           </div>
           
           <div className="lg:col-span-7 space-y-3">
             {/* Spec 1: Merchant Franchise Tiers */}
-            <div className="border border-nx-border rounded-xl overflow-hidden bg-nx-card">
+            <div id="merchant-tiers" className="border border-nx-border rounded-xl overflow-hidden bg-nx-card">
               <button
                 onClick={() => setOpenSpec(openSpec === 'tiers' ? null : 'tiers')}
                 className="w-full flex justify-between items-center py-5 px-6 hover:bg-[#141210] transition-colors text-left"
@@ -1041,7 +1093,7 @@ export default function LandingPage() {
             </div>
 
             {/* Spec 2: 5 Daily Essential SKUs */}
-            <div className="border border-nx-border rounded-xl overflow-hidden bg-nx-card">
+            <div id="5-core-skus" className="border border-nx-border rounded-xl overflow-hidden bg-nx-card">
               <button
                 onClick={() => setOpenSpec(openSpec === 'skus' ? null : 'skus')}
                 className="w-full flex justify-between items-center py-5 px-6 hover:bg-[#141210] transition-colors text-left"
@@ -1098,7 +1150,7 @@ export default function LandingPage() {
             </div>
 
             {/* Spec 3: Reward & Redemption Mechanics */}
-            <div className="border border-nx-border rounded-xl overflow-hidden bg-nx-card">
+            <div id="loyalty-mechanics" className="border border-nx-border rounded-xl overflow-hidden bg-nx-card">
               <button
                 onClick={() => setOpenSpec(openSpec === 'mechanics' ? null : 'mechanics')}
                 className="w-full flex justify-between items-center py-5 px-6 hover:bg-[#141210] transition-colors text-left"
@@ -1172,7 +1224,7 @@ export default function LandingPage() {
             </div>
 
             {/* Spec 4: Pool Solvency Rules */}
-            <div className="border border-nx-border rounded-xl overflow-hidden bg-nx-card">
+            <div id="pool-mechanics" className="border border-nx-border rounded-xl overflow-hidden bg-nx-card">
               <button
                 onClick={() => setOpenSpec(openSpec === 'solvency' ? null : 'solvency')}
                 className="w-full flex justify-between items-center py-5 px-6 hover:bg-[#141210] transition-colors text-left"
@@ -1338,7 +1390,7 @@ export default function LandingPage() {
             </div>
 
             {/* Spec 6: Platform Revenue Engine */}
-            <div className="border border-nx-border rounded-xl overflow-hidden bg-nx-card">
+            <div id="revenue-engine" className="border border-nx-border rounded-xl overflow-hidden bg-nx-card">
               <button
                 onClick={() => setOpenSpec(openSpec === 'revenue' ? null : 'revenue')}
                 className="w-full flex justify-between items-center py-5 px-6 hover:bg-[#141210] transition-colors text-left"
@@ -1862,19 +1914,28 @@ export default function LandingPage() {
                 </a>
               </li>
               <li>
-                <a href={getPortalLink('partners')} className="flex items-center gap-2 text-sm text-nx-muted hover:text-nx-amber transition-colors group">
+                <button 
+                  onClick={() => setShowBrandPortalChoice(true)} 
+                  className="flex items-center gap-2 text-sm text-nx-muted hover:text-nx-amber transition-colors group bg-transparent border-none p-0 cursor-pointer text-left focus:outline-hidden"
+                >
                   Partners Portal <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </a>
+                </button>
               </li>
               <li>
-                <a href={getPortalLink('partners')} className="flex items-center gap-2 text-sm text-nx-muted hover:text-nx-amber transition-colors group">
+                <button 
+                  onClick={() => setShowBrandPortalChoice(true)} 
+                  className="flex items-center gap-2 text-sm text-nx-muted hover:text-nx-amber transition-colors group bg-transparent border-none p-0 cursor-pointer text-left focus:outline-hidden"
+                >
                   Logistics & Delivery Portal <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </a>
+                </button>
               </li>
               <li>
-                <a href={getPortalLink('fmcgs')} className="flex items-center gap-2 text-sm text-nx-muted hover:text-nx-amber transition-colors group">
+                <button 
+                  onClick={() => setShowBrandPortalChoice(true)} 
+                  className="flex items-center gap-2 text-sm text-nx-muted hover:text-nx-amber transition-colors group bg-transparent border-none p-0 cursor-pointer text-left focus:outline-hidden"
+                >
                   FMCG Partner Portal <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </a>
+                </button>
               </li>
             </ul>
           </div>
@@ -2159,52 +2220,54 @@ export default function LandingPage() {
               animate={{ opacity: 1, scale: 1, y: 0 }} 
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ type: 'spring', duration: 0.4 }}
-              className="relative w-full max-w-xl bg-nx-card border border-nx-border rounded-2xl shadow-2xl flex flex-col max-h-[85vh] z-10"
+              className="relative w-full max-w-[440px] bg-[#0f0e0c]/98 border border-white/10 rounded-2xl shadow-2xl flex flex-col max-h-[85vh] z-10"
               style={{ touchAction: 'pan-y' }}
             >
               {/* Header */}
-              <div className="flex items-center justify-between px-6 py-5 border-b border-nx-border">
+              <div className="flex items-center justify-between px-6 py-5 border-b border-white/5 bg-[#0e0d0b]">
                 <div className="flex items-center gap-3">
-                  <Layers className="w-5 h-5 text-blue-400" />
+                  <div className="p-2 bg-blue-500/10 rounded-lg">
+                    <Layers className="w-5 h-5 text-blue-400" />
+                  </div>
                   <div>
-                    <h3 className="font-display text-lg text-nx-paper uppercase tracking-wider font-bold">Select Portal</h3>
-                    <div className="text-[9px] uppercase tracking-[0.2em] text-nx-muted font-mono">NX Network Kenya · Enterprise Gateway</div>
+                    <h3 className="font-display text-sm text-white uppercase tracking-wider font-extrabold">SELECT PORTAL</h3>
+                    <div className="text-[8px] uppercase tracking-[0.2em] text-[#8e8d8b] font-mono">NX Network Kenya · Enterprise Gateway</div>
                   </div>
                 </div>
                 <button 
                   onClick={() => setShowBrandPortalChoice(false)} 
-                  className="p-2 border border-nx-border hover:border-nx-amber text-nx-muted hover:text-nx-paper transition-all cursor-pointer rounded-lg bg-transparent"
+                  className="p-1.5 border border-white/10 hover:border-white/25 text-[#8e8d8b] hover:text-white transition-all cursor-pointer rounded-lg bg-[#141210]"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
               {/* Selection Content */}
-              <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4 font-sans text-sm text-nx-muted leading-relaxed select-text">
-                <p className="text-xs text-nx-muted mb-4 text-center">
+              <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4 font-sans text-sm text-[#8e8d8b] leading-relaxed select-text bg-[#0f0e0c]">
+                <p className="text-xs text-[#8e8d8b] mb-4 text-center">
                   Please select which enterprise portal interface you would like to access:
                 </p>
 
-                <div className="grid sm:grid-cols-2 gap-4">
+                <div className="space-y-4">
                   {/* FMCGs Portal */}
                   <a 
                     href={getPortalLink('fmcgs')}
                     onClick={() => setShowBrandPortalChoice(false)}
-                    className="group bg-nx-ink/50 border border-nx-border hover:border-blue-500/40 p-5 rounded-xl text-left transition-all flex flex-col justify-between h-48 hover:bg-blue-500/[0.02]"
+                    className="group bg-[#151412] border border-white/5 hover:border-blue-500/30 p-5 rounded-xl text-left transition-all duration-300 flex items-start gap-4 hover:bg-blue-500/[0.02]"
                   >
-                    <div>
-                      <div className="p-2.5 bg-blue-500/10 text-blue-400 rounded-lg w-fit mb-3 group-hover:scale-105 transition-all">
-                        <Activity className="w-5 h-5" />
-                      </div>
-                      <h4 className="font-display text-sm tracking-wider text-nx-paper uppercase font-bold group-hover:text-blue-400 transition-colors">
-                        FMCGs Portal
+                    <div className="p-3 bg-blue-500/10 text-blue-400 rounded-xl shrink-0 group-hover:scale-105 transition-all">
+                      <Activity className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-display text-xs tracking-wider text-white uppercase font-extrabold group-hover:text-blue-400 transition-colors">
+                        FMCGS PORTAL
                       </h4>
-                      <p className="text-[11px] text-nx-muted leading-relaxed mt-2">
+                      <p className="text-[11px] text-[#8e8d8b] leading-relaxed mt-1.5">
                         Access real-time duka sales dashboards, SKU-level maps, and directly inject pool promo boosts.
                       </p>
-                    </div>
-                    <div className="text-[10px] uppercase font-mono tracking-wider text-blue-400 flex items-center gap-1.5 mt-2">
-                      Access FMCGs <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                      <div className="text-[10px] uppercase font-mono tracking-wider font-bold text-blue-400 flex items-center gap-1.5 mt-3">
+                        ACCESS FMCGS <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                      </div>
                     </div>
                   </a>
 
@@ -2212,33 +2275,55 @@ export default function LandingPage() {
                   <a 
                     href={getPortalLink('partners')}
                     onClick={() => setShowBrandPortalChoice(false)}
-                    className="group bg-nx-ink/50 border border-nx-border hover:border-nx-amber/40 p-5 rounded-xl text-left transition-all flex flex-col justify-between h-48 hover:bg-nx-amber/[0.02]"
+                    className="group bg-[#151412] border border-white/5 hover:border-nx-amber/30 p-5 rounded-xl text-left transition-all duration-300 flex items-start gap-4 hover:bg-nx-amber/[0.02]"
                   >
-                    <div>
-                      <div className="p-2.5 bg-nx-amber/10 text-nx-amber rounded-lg w-fit mb-3 group-hover:scale-105 transition-all">
-                        <Users className="w-5 h-5" />
-                      </div>
-                      <h4 className="font-display text-sm tracking-wider text-nx-paper uppercase font-bold group-hover:text-nx-amber transition-colors">
-                        Logistics Portal
+                    <div className="p-3 bg-nx-amber/10 text-nx-amber rounded-xl shrink-0 group-hover:scale-105 transition-all">
+                      <Store className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-display text-xs tracking-wider text-white uppercase font-extrabold group-hover:text-nx-amber transition-colors">
+                        PARTNERS PORTAL
                       </h4>
-                      <p className="text-[11px] text-[#9ca3af] leading-relaxed mt-2">
+                      <p className="text-[11px] text-[#8e8d8b] leading-relaxed mt-1.5">
+                        Demand intelligence for registered wholesale and distribution network partners.
+                      </p>
+                      <div className="text-[10px] uppercase font-mono tracking-wider font-bold text-nx-amber flex items-center gap-1.5 mt-3">
+                        ACCESS PARTNERS <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                      </div>
+                    </div>
+                  </a>
+
+                  {/* Logistics Portal */}
+                  <a 
+                    href={getPortalLink('partners') + '?view=logistics'}
+                    onClick={() => setShowBrandPortalChoice(false)}
+                    className="group bg-[#151412] border border-white/5 hover:border-emerald-500/30 p-5 rounded-xl text-left transition-all duration-300 flex items-start gap-4 hover:bg-emerald-500/[0.02]"
+                  >
+                    <div className="p-3 bg-emerald-500/10 text-emerald-500 rounded-xl shrink-0 group-hover:scale-105 transition-all">
+                      <Truck className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-display text-xs tracking-wider text-white uppercase font-extrabold group-hover:text-emerald-500 transition-colors">
+                        LOGISTICS & DELIVERY
+                      </h4>
+                      <p className="text-[11px] text-[#8e8d8b] leading-relaxed mt-1.5">
                         Manage distributor networks, coordinate runs and localized delivery hubs, and provision API credentials.
                       </p>
-                    </div>
-                    <div className="text-[10px] uppercase font-mono tracking-wider text-nx-amber flex items-center gap-1.5 mt-2">
-                      Access Logistics <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                      <div className="text-[10px] uppercase font-mono tracking-wider font-bold text-emerald-500 flex items-center gap-1.5 mt-3">
+                        ACCESS LOGISTICS <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                      </div>
                     </div>
                   </a>
                 </div>
               </div>
 
               {/* Close Action */}
-              <div className="px-6 py-4 bg-black/40 border-t border-nx-border flex justify-end">
+              <div className="px-6 py-4 bg-[#0a0908] border-t border-white/5 flex justify-end">
                 <button 
                   onClick={() => setShowBrandPortalChoice(false)}
-                  className="px-5 py-2.5 border border-nx-border text-nx-muted hover:text-nx-paper font-display text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer rounded-xl"
+                  className="px-5 py-2 border border-white/10 hover:border-white/20 text-[#8e8d8b] hover:text-white font-display text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer rounded-lg bg-[#141210]"
                 >
-                  Cancel
+                  CANCEL
                 </button>
               </div>
 
