@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Smartphone, Wifi, Signal } from 'lucide-react';
+import { Smartphone, Wifi, Signal, AlertCircle } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
+import { motion } from 'motion/react';
 
 export default function UssdDemo() {
   const [phoneNumber, setPhoneNumber] = useState('254712345678');
@@ -75,8 +76,9 @@ export default function UssdDemo() {
   };
 
   return (
-    <div className="ussd-simulator-dark w-[280px] bg-[#0a0a0a] border-4 border-[#1a1a1a] rounded-[3rem] p-4 shadow-2xl relative">
-      <style>{`
+    <div className="flex flex-col xl:flex-row items-center justify-center gap-8">
+      <div className="ussd-simulator-dark w-[280px] shrink-0 bg-[#0a0a0a] border-4 border-[#1a1a1a] rounded-[3rem] p-4 shadow-2xl relative">
+        <style>{`
         /* Keep simulator strictly dark across theme switches */
         .ussd-simulator-dark,
         .ussd-simulator-dark * {
@@ -170,7 +172,7 @@ export default function UssdDemo() {
 
         {/* Screen Content */}
         <div className="flex-1 min-h-0 p-8 flex flex-col overflow-hidden">
-          <div className="text-[10px] text-nx-amber/30 text-center uppercase tracking-[0.4em] mb-10 font-mono">NX Ecosystem</div>
+          <div className="text-[10px] text-nx-amber/30 text-center uppercase tracking-[0.4em] mb-4 font-mono">NX Ecosystem</div>
           
           <div className="flex-1 font-mono text-sm leading-relaxed text-[#c8e6c8] whitespace-pre-wrap overflow-y-auto pr-1 custom-scrollbar">
             {screen}
@@ -221,6 +223,35 @@ export default function UssdDemo() {
       
       {/* Home Button */}
       <div className="w-16 h-1.5 bg-[#1a1a1a] rounded-full mx-auto mt-8" />
+      </div>
+
+      {/* Animated Mockup Notice */}
+      <div className="flex flex-col gap-4 shrink-0 w-[280px]">
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.8, ease: "easeOut" }}
+          className="text-[9px] text-[#ffb547]/90 border border-[#ffb547]/20 bg-[#ffb547]/5 rounded-lg py-1.5 px-3 text-center font-mono flex items-center justify-center gap-1.5 select-none"
+        >
+          <span className="w-1.5 h-1.5 bg-[#ffb547] rounded-full animate-pulse" />
+          SIMULATED SANDBOX
+        </motion.div>
+        
+        <motion.div 
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.8, ease: "easeOut" }}
+          className="bg-[#ffb547]/5 border border-[#ffb547]/20 rounded-2xl p-4 text-center shadow-lg hover:border-[#ffb547]/30 transition-all group"
+        >
+          <div className="flex items-center justify-center gap-1.5 text-[#ffb547] font-display text-[10px] tracking-widest uppercase mb-1.5 font-bold">
+            <AlertCircle className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" /> 
+            MOCKUP ACCOUNT NOTICE
+          </div>
+          <p className="text-[11px] text-[#b5b3aa] leading-relaxed">
+            The registration flow and accounts created inside this simulator are **fully virtual mockups**. No real user records, national IDs, or cellular accounts are affected.
+          </p>
+        </motion.div>
+      </div>
     </div>
   );
 }

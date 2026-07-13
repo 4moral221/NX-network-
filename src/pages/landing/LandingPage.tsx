@@ -7,6 +7,7 @@ import { supabase } from '@/src/lib/supabase';
 import { getPortalLink, PORTAL_URLS } from '@/src/lib/constants';
 import { QRCodeSVG } from 'qrcode.react';
 import NXLogo from '../../components/NXLogo';
+import { LazyLoadSection } from '../../components/LazyLoadSection';
 
 import dukaMerchantImg from '@/src/assets/images/duka_merchant_1783441965415.jpg';
 import nxCustomerImg from '@/src/assets/images/nx_customer_1783441980207.jpg';
@@ -342,14 +343,8 @@ export default function LandingPage() {
       </div>
 
       {/* Strategic Brand Statement Section */}
-      <section className="py-24 px-6 md:px-10 max-w-5xl mx-auto text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="space-y-8"
-        >
+      <LazyLoadSection className="py-24 px-6 md:px-10 max-w-5xl mx-auto text-center">
+        <div className="space-y-8">
           <div className="flex justify-center items-center gap-3 text-[9px] uppercase tracking-[0.4em] text-nx-amber">
             <div className="w-8 h-[1px] bg-nx-amber" /> OUR NORTH STAR <div className="w-8 h-[1px] bg-nx-amber" />
           </div>
@@ -360,11 +355,11 @@ export default function LandingPage() {
           <p className="font-serif text-[clamp(18px,2.5vw,26px)] text-[#b5b3aa]/90 max-w-3xl mx-auto leading-relaxed italic">
             "A USSD loyalty and supply chain network that helps dukas earn more, restock smarter, and give customers instant savings — on any phone."
           </p>
-        </motion.div>
-      </section>
+        </div>
+      </LazyLoadSection>
 
       {/* Who NX Is For Section */}
-      <section id="who-nx-is-for" className="py-24 px-6 md:px-10 max-w-6xl mx-auto border-t border-nx-border scroll-mt-16">
+      <LazyLoadSection id="who-nx-is-for" className="py-24 px-6 md:px-10 max-w-6xl mx-auto border-t border-nx-border scroll-mt-16">
         <div className="flex items-center gap-4 text-[9px] uppercase tracking-[0.4em] text-nx-amber mb-6">
           <div className="w-8 h-[1px] bg-nx-amber" /> WHO WE SERVE
         </div>
@@ -432,16 +427,11 @@ export default function LandingPage() {
           </div>
 
         </div>
-      </section>
+      </LazyLoadSection>
 
       {/* How It Works */}
-      <section id="how-it-works" className="py-24 px-6 md:px-10 max-w-6xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-        >
+      <LazyLoadSection id="how-it-works" className="py-24 px-6 md:px-10 max-w-6xl mx-auto border-t border-nx-border scroll-mt-16">
+        <div>
           <div className="flex items-center gap-4 text-[9px] uppercase tracking-[0.4em] text-nx-amber mb-6">
             <div className="w-8 h-[1px] bg-nx-amber" /> How It Works
           </div>
@@ -474,17 +464,12 @@ export default function LandingPage() {
               Dial *384*6180# to start earning on your next bread or milk purchase
             </button>
           </div>
-        </motion.div>
-      </section>
+        </div>
+      </LazyLoadSection>
 
       {/* Demand Aggregation Section */}
-      <section id="demand-aggregation" className="py-24 px-6 md:px-10 max-w-6xl mx-auto border-t border-nx-border">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-        >
+      <LazyLoadSection id="demand-aggregation" className="py-24 px-6 md:px-10 max-w-6xl mx-auto border-t border-nx-border">
+        <div>
           <div className="flex items-center gap-4 text-[9px] uppercase tracking-[0.4em] text-nx-amber mb-6">
             <div className="w-8 h-[1px] bg-nx-amber" /> Demand Aggregation
           </div>
@@ -599,11 +584,11 @@ export default function LandingPage() {
               </blockquote>
             </div>
           </div>
-        </motion.div>
-      </section>
+        </div>
+      </LazyLoadSection>
 
       {/* Registration Details */}
-      <section id="registration" className="py-24 px-6 md:px-10 max-w-6xl mx-auto border-t border-nx-border">
+      <LazyLoadSection id="registration" className="py-24 px-6 md:px-10 max-w-6xl mx-auto border-t border-nx-border">
         <div className="flex items-center gap-4 text-[9px] uppercase tracking-[0.4em] text-nx-amber mb-6">
           <div className="w-8 h-[1px] bg-nx-amber" /> Registration
         </div>
@@ -698,10 +683,10 @@ export default function LandingPage() {
             </div>
           </div>
         </div>
-      </section>
+      </LazyLoadSection>
 
       {/* Network in Action (Visual Stories & Simulations) */}
-      <section id="network-in-action" className="py-24 px-6 md:px-10 max-w-6xl mx-auto border-t border-nx-border">
+      <LazyLoadSection id="network-in-action" className="py-24 px-6 md:px-10 max-w-6xl mx-auto border-t border-nx-border">
         <div className="flex items-center gap-4 text-[9px] uppercase tracking-[0.4em] text-nx-amber mb-6">
           <div className="w-8 h-[1px] bg-nx-amber" /> Network in Action
         </div>
@@ -810,10 +795,10 @@ export default function LandingPage() {
             </div>
           </div>
         </div>
-      </section>
+      </LazyLoadSection>
 
       {/* Franchise Tiers */}
-      <section id="merchant-tiers" className="py-24 px-6 md:px-10 max-w-6xl mx-auto border-t border-nx-border">
+      <LazyLoadSection id="merchant-tiers" className="py-24 px-6 md:px-10 max-w-6xl mx-auto border-t border-nx-border">
         <div className="flex items-center gap-4 text-[9px] uppercase tracking-[0.4em] text-nx-amber mb-6">
           <div className="w-8 h-[1px] bg-nx-amber" /> Merchant Franchise
         </div>
@@ -923,10 +908,10 @@ export default function LandingPage() {
             Call 0781550151 to upgrade to CERTIFIED or HUB this week
           </a>
         </div>
-      </section>
+      </LazyLoadSection>
 
       {/* SKUs */}
-      <section id="5-core-skus" className="py-24 px-6 md:px-10 max-w-6xl mx-auto border-t border-nx-border">
+      <LazyLoadSection id="5-core-skus" className="py-24 px-6 md:px-10 max-w-6xl mx-auto border-t border-nx-border">
         <div className="flex items-center gap-4 text-[9px] uppercase tracking-[0.4em] text-nx-amber mb-6">
           <div className="w-8 h-[1px] bg-nx-amber" /> What We Cover
         </div>
@@ -956,10 +941,10 @@ export default function LandingPage() {
             Dukas can type <span className="text-nx-amber">Pembe 2kg, Brookside 500ml, mafuta 1L</span> or any custom item description, and NX’s smart matching engine finds the right product SKU automatically. Inventory is tracked simply per item.
           </p>
         </div>
-      </section>
+      </LazyLoadSection>
 
       {/* Loyalty Mechanics */}
-      <section id="loyalty-mechanics" className="py-24 px-6 md:px-10 max-w-6xl mx-auto border-t border-nx-border">
+      <LazyLoadSection id="loyalty-mechanics" className="py-24 px-6 md:px-10 max-w-6xl mx-auto border-t border-nx-border">
         <div className="flex items-center gap-4 text-[9px] uppercase tracking-[0.4em] text-nx-amber mb-6">
           <div className="w-8 h-[1px] bg-nx-amber" /> The Mechanics
         </div>
@@ -1026,10 +1011,10 @@ export default function LandingPage() {
             </div>
           ))}
         </div>
-      </section>
+      </LazyLoadSection>
 
       {/* Pool Mechanics */}
-      <section id="pool-mechanics" className="py-24 px-6 md:px-10 max-w-6xl mx-auto border-t border-nx-border">
+      <LazyLoadSection id="pool-mechanics" className="py-24 px-6 md:px-10 max-w-6xl mx-auto border-t border-nx-border">
         <div className="flex items-center gap-4 text-[9px] uppercase tracking-[0.4em] text-nx-amber mb-6">
           <div className="w-8 h-[1px] bg-nx-amber" /> Pool Solvency
         </div>
@@ -1114,10 +1099,10 @@ export default function LandingPage() {
             Request Whitepaper &amp; Technical Docs
           </a>
         </div>
-      </section>
+      </LazyLoadSection>
 
       {/* Savings Calculator Section */}
-      <section id="calculator" className="py-24 px-6 md:px-10 max-w-6xl mx-auto border-t border-nx-border">
+      <LazyLoadSection id="calculator" className="py-24 px-6 md:px-10 max-w-6xl mx-auto border-t border-nx-border">
         <div className="flex items-center gap-4 text-[9px] uppercase tracking-[0.4em] text-nx-amber mb-6">
           <div className="w-8 h-[1px] bg-nx-amber" /> Profitability Tool
         </div>
@@ -1176,10 +1161,10 @@ export default function LandingPage() {
             </div>
           </div>
         </div>
-      </section>
+      </LazyLoadSection>
 
       {/* USSD Demos */}
-      <section id="ussd-demos" className="py-24 px-6 md:px-10 max-w-6xl mx-auto border-t border-nx-border">
+      <LazyLoadSection id="ussd-demos" className="py-24 px-6 md:px-10 max-w-6xl mx-auto border-t border-nx-border">
         <div className="flex items-center gap-4 text-[9px] uppercase tracking-[0.4em] text-nx-amber mb-6">
           <div className="w-8 h-[1px] bg-nx-amber" /> See It In Action
         </div>
@@ -1225,10 +1210,10 @@ export default function LandingPage() {
             </div>
           </div>
         </div>
-      </section>
+      </LazyLoadSection>
 
       {/* Business Model */}
-      <section id="business-model" className="py-24 px-6 md:px-10 max-w-6xl mx-auto border-t border-nx-border">
+      <LazyLoadSection id="business-model" className="py-24 px-6 md:px-10 max-w-6xl mx-auto border-t border-nx-border">
         <div className="flex items-center gap-4 text-[9px] uppercase tracking-[0.4em] text-nx-amber mb-6">
           <div className="w-8 h-[1px] bg-nx-amber" /> Business Model
         </div>
@@ -1251,10 +1236,10 @@ export default function LandingPage() {
             </div>
           ))}
         </div>
-      </section>
+      </LazyLoadSection>
 
       {/* Partners */}
-      <section id="partners" className="py-24 px-6 md:px-10 max-w-6xl mx-auto border-t border-nx-border">
+      <LazyLoadSection id="partners" className="py-24 px-6 md:px-10 max-w-6xl mx-auto border-t border-nx-border">
         <div className="flex items-center gap-4 text-[9px] uppercase tracking-[0.4em] text-nx-amber mb-6">
           <div className="w-8 h-[1px] bg-nx-amber" /> For Producers
         </div>
@@ -1293,16 +1278,11 @@ export default function LandingPage() {
             Email partners@nx-network.com to see kiosk‑level data from Mombasa
           </a>
         </div>
-      </section>
+      </LazyLoadSection>
 
       {/* Always Solvent, Always Secure */}
-      <section id="features" className="py-24 px-6 md:px-10 max-w-6xl mx-auto border-t border-nx-border scroll-mt-20">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-        >
+      <LazyLoadSection id="features" className="py-24 px-6 md:px-10 max-w-6xl mx-auto border-t border-nx-border scroll-mt-20">
+        <div>
           <div className="flex items-center gap-4 text-[9px] uppercase tracking-[0.4em] text-nx-amber mb-6">
             <div className="w-8 h-[1px] bg-nx-amber" /> System Security & Stability
           </div>
@@ -1344,9 +1324,9 @@ export default function LandingPage() {
               },
               {
                 icon: <Truck className="w-6 h-6 text-[#ff5e00]" />,
-                title: "AI Demand Compilation",
+                title: "Smart Demand Compilation",
                 plain: "Understands natural orders like '20 pembe 2kg' correctly, resolving them into exact SKUs instantly.",
-                tech: "Algorithms automatically group disparate merchant restock orders by spatial proximity and SKU velocity, using Jina AI Vector Embeddings to resolve natural language orders into exact SKU matches across thousands of product variants with 98% accuracy."
+                tech: "Algorithms automatically group disparate merchant restock orders by spatial proximity and SKU velocity, using smart semantic matching to resolve natural language orders into exact SKU matches across thousands of product variants with 98% accuracy."
               }
             ].map((feat, i) => (
               <div key={i} className="bg-nx-card p-8 border border-nx-border hover:border-nx-amber/40 transition-all rounded-2xl group flex flex-col justify-between">
@@ -1373,11 +1353,11 @@ export default function LandingPage() {
           </div>
 
 
-        </motion.div>
-      </section>
+        </div>
+      </LazyLoadSection>
 
       {/* CTA Section */}
-      <section id="cta-section" className="relative py-24 px-6 md:px-10 text-center overflow-hidden border-y border-nx-border bg-linear-to-br from-[#0f0e0b] to-[#141210]">
+      <LazyLoadSection id="cta-section" className="relative py-24 px-6 md:px-10 text-center overflow-hidden border-y border-nx-border bg-linear-to-br from-[#0f0e0b] to-[#141210]">
         <div className="absolute inset-0 bg-[linear-gradient(rgba(232,160,32,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(232,160,32,0.04)_1px,transparent_1px)] bg-[size:48px_48px] pointer-events-none" />
         <div className="relative z-10">
           <div className="text-[10px] uppercase tracking-[0.5em] text-nx-amber mb-5">Start Today — No Smartphone Needed</div>
@@ -1399,7 +1379,7 @@ export default function LandingPage() {
           </div>
           <div className="mt-4 text-[10px] uppercase tracking-widest text-nx-muted">Works on Safaricom · Airtel · Telkom · Any Kenyan network</div>
         </div>
-      </section>
+      </LazyLoadSection>
 
       {/* Platform FAQ / Deep Dive (Accordions below the fold) */}
       <section id="faq" className="py-24 px-6 md:px-10 max-w-6xl mx-auto border-t border-nx-border scroll-mt-20">

@@ -27,6 +27,7 @@ import {
   Users,
   Lock
 } from 'lucide-react';
+import { AnimatedNumber } from '../../components/AnimatedNumber';
 import { cn } from '../../lib/utils';
 import { TIER_CONFIG } from '../../services/ussd/config';
 import { initDB } from '../../lib/db';
@@ -549,12 +550,12 @@ export default function CustomerDashboard({ user, onLogout }: { user: any, onLog
                 </div>
               </div>
               <div className="font-display text-5xl text-nx-paper tracking-wider mb-1">
-                {balance.toFixed(2)}
+                <AnimatedNumber value={balance} decimals={2} />
               </div>
               <div className="flex items-center gap-2 text-xs text-nx-muted">
-                <span>≈ KSH {balance.toFixed(2)} value</span>
+                <span>≈ KSH <AnimatedNumber value={balance} decimals={2} /> value</span>
                 <span className="w-1 h-1 rounded-full bg-nx-border"></span>
-                <span className="text-nx-green font-medium">+{weeklySavings.toFixed(0)} saved this week</span>
+                <span className="text-nx-green font-medium">+<AnimatedNumber value={weeklySavings} decimals={0} /> saved this week</span>
               </div>
             </div>
 

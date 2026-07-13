@@ -25,6 +25,7 @@ import {
   FileText,
   Menu
 } from 'lucide-react';
+import { AnimatedNumber } from '../../components/AnimatedNumber';
 import { cn } from '../../lib/utils';
 import { toast } from 'react-hot-toast';
 
@@ -1079,13 +1080,13 @@ export default function MerchantDashboard({ user, onLogout }: { user: any, onLog
                 <div>
                   <div className="text-[10px] uppercase tracking-widest text-nx-muted mb-1">Your Earned Balance</div>
                   <div className="font-display text-4xl text-nx-paper tracking-wider">
-                    {poolBalance.toFixed(1)} <span className="text-xs text-nx-amber">NX</span>
+                    <AnimatedNumber value={poolBalance} decimals={1} /> <span className="text-xs text-nx-amber">NX</span>
                   </div>
                 </div>
                 <div className="text-right">
                   <div className="text-[9px] uppercase tracking-widest text-nx-muted mb-1">Total Pool Capacity</div>
                   <div className="font-mono text-lg text-nx-green font-bold">
-                    {pool.toFixed(1)}
+                    <AnimatedNumber value={pool} decimals={1} />
                   </div>
                 </div>
               </div>
@@ -1097,7 +1098,7 @@ export default function MerchantDashboard({ user, onLogout }: { user: any, onLog
                     "font-bold",
                     utilization > 0.9 ? "text-nx-ember" : utilization > 0.7 ? "text-nx-amber" : "text-nx-green"
                   )}>
-                    {Math.round(totalLiability)} / {pool.toFixed(0)} NX
+                    <AnimatedNumber value={totalLiability} decimals={0} /> / <AnimatedNumber value={pool} decimals={0} /> NX
                   </span>
                 </div>
                 <div className="h-1.5 bg-nx-ink/60 rounded-full overflow-hidden border border-white/5">
@@ -1488,7 +1489,7 @@ export default function MerchantDashboard({ user, onLogout }: { user: any, onLog
                     <div className="flex items-center justify-between p-3 bg-nx-paper/5 rounded-xl border border-nx-border">
                       <div>
                         <div className="text-[10px] text-nx-muted uppercase tracking-widest mb-0.5">Pay with NX</div>
-                        <div className="text-xs font-bold text-nx-green">{Math.min(poolBalance, inv.invoice_amount || 0).toFixed(1)} NX</div>
+                        <div className="text-xs font-bold text-nx-green"><AnimatedNumber value={Math.min(poolBalance, inv.invoice_amount || 0)} decimals={1} /> NX</div>
                       </div>
                       <button 
                          onClick={() => handleSettleInvoice(inv)}
@@ -1552,7 +1553,7 @@ export default function MerchantDashboard({ user, onLogout }: { user: any, onLog
               <div className="bg-nx-card border border-nx-border rounded-2xl p-5 text-center">
                 <div className="text-[10px] uppercase tracking-widest text-nx-muted mb-1">Total Commission</div>
                 <div className="text-2xl font-display text-nx-green">
-                  {commissions.reduce((sum, c) => sum + c.amount, 0).toFixed(1)} NX
+                  <AnimatedNumber value={commissions.reduce((sum, c) => sum + c.amount, 0)} decimals={1} /> NX
                 </div>
               </div>
             </div>

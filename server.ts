@@ -430,7 +430,7 @@ class BackendSupabaseMockBuilder {
         if (val === undefined && filter.column === 'company_name' && item['name'] !== undefined) {
           val = item['name'];
         }
-        if (val === undefined) return true;
+        if (val === undefined) return filter.op === 'neq';
 
         const filterVal = filter.value;
         switch (filter.op) {
@@ -497,6 +497,10 @@ const createBackendMockSupabase = (reason: string) => {
     rpc: (fn: string, args?: any) => {
       if (fn === 'get_nx_system_balance') {
         return Promise.resolve({ data: 1200, error: null });
+      }
+      if (fn === 'hash_password') {
+        const password = args?.password || "1234";
+        return Promise.resolve({ data: "mock_hash_" + password, error: null });
       }
       return Promise.resolve({ data: null, error: null });
     },

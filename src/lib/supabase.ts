@@ -267,7 +267,7 @@ class SupabaseMockBuilder {
     for (const filter of this.filters) {
       data = data.filter(item => {
         const val = item[filter.column];
-        if (val === undefined) return true;
+        if (val === undefined) return filter.op === 'neq';
         const fv = filter.value;
         switch (filter.op) {
           case 'eq':  return String(val).toLowerCase() === String(fv).toLowerCase();
@@ -332,9 +332,16 @@ class SupabaseMockBuilder {
 
 export const mockSupabase = {
   from: (table: string) => new SupabaseMockBuilder(table),
-  rpc: (fn: string) => fn === 'get_nx_system_balance'
-    ? Promise.resolve({ data: 1200, error: null })
-    : Promise.resolve({ data: null, error: null }),
+  rpc: (fn: string, args?: any) => {
+    if (fn === 'get_nx_system_balance') {
+      return Promise.resolve({ data: 1200, error: null });
+    }
+    if (fn === 'hash_password') {
+      const password = args?.password || "1234";
+      return Promise.resolve({ data: "mock_hash_" + password, error: null });
+    }
+    return Promise.resolve({ data: null, error: null });
+  },
   channel: () => ({ on: function() { return this; }, subscribe: (cb?: Function) => { if (cb) cb('SUBSCRIBED'); return { unsubscribe: () => {} }; } }),
   removeChannel: () => Promise.resolve({ error: null }),
   removeAllChannels: () => Promise.resolve({ error: null }),
