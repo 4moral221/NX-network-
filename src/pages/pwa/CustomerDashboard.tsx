@@ -1170,34 +1170,6 @@ export default function CustomerDashboard({ user, onLogout }: { user: any, onLog
                 </div>
               ) : (
                 <form onSubmit={handlePay} className="space-y-5">
-                  {/* Payment Type Tabs */}
-                  <div className="grid grid-cols-2 p-1 bg-nx-ink border border-nx-border rounded-xl">
-                    <button
-                      type="button"
-                      onClick={() => setIsFamilyPaymentMode(false)}
-                      className={cn(
-                        "py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all",
-                        !isFamilyPaymentMode
-                          ? "bg-nx-amber text-nx-ink"
-                          : "text-nx-muted hover:text-nx-paper"
-                      )}
-                    >
-                      Individual
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setIsFamilyPaymentMode(true)}
-                      className={cn(
-                        "py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all",
-                        isFamilyPaymentMode
-                          ? "bg-nx-amber text-nx-ink"
-                          : "text-nx-muted hover:text-nx-paper"
-                      )}
-                    >
-                      Family Account
-                    </button>
-                  </div>
-
                   <div>
                     <label className="block text-[10px] uppercase tracking-widest text-nx-muted mb-2">Merchant Code</label>
                     <input 
@@ -1209,20 +1181,6 @@ export default function CustomerDashboard({ user, onLogout }: { user: any, onLog
                       required
                     />
                   </div>
-
-                  {isFamilyPaymentMode && (
-                    <div className="animate-in slide-in-from-top-2 duration-300">
-                      <label className="block text-[10px] uppercase tracking-widest text-nx-muted mb-2">Family Code</label>
-                      <input 
-                        type="password" 
-                        value={familyCodePaymentInput}
-                        onChange={(e) => setFamilyCodePaymentInput(e.target.value.toUpperCase())}
-                        placeholder="e.g. FAM-XYZ"
-                        className="w-full bg-nx-ink border border-nx-border rounded-xl px-4 py-3 text-nx-paper focus:outline-none focus:border-nx-amber transition-colors font-mono uppercase"
-                        required
-                      />
-                    </div>
-                  )}
 
                   <div>
                     <label className="block text-[10px] uppercase tracking-widest text-nx-muted mb-2">Amount (KSH)</label>

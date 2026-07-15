@@ -1,8 +1,6 @@
 import { useState, useEffect, Component, ReactNode, Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
-import { Analytics } from '@vercel/analytics/react';
-import { SpeedInsights } from "@vercel/speed-insights/react";
 
 // Lazy loading to ensure the main chunk is small and app doesn't hang on 'INITIALIZING' screen for slow connections
 import ThemeSwitcher from './components/ThemeSwitcher';
@@ -139,11 +137,6 @@ export default function App() {
       ) {
         return 'main';
       }
-      
-      // If it's an ambiguous Vercel preview URL for the nx-network project, default to PWA
-      if (hostname.startsWith('nx-network')) {
-        return 'pwa';
-      }
     }
 
     return undefined;
@@ -216,8 +209,6 @@ export default function App() {
       <Router>
         <NetworkStatus />
         <ThemeSwitcher />
-        <Analytics />
-        <SpeedInsights />
         <Suspense fallback={<PageLoader />}>
           <Routes>
             {getRoutes()}
