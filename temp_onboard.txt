@@ -1,0 +1,51 @@
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session) fetchPartnerInfo(session.user.id);
+      else setLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      if (session) fetchPartnerInfo(session.user.id);
+      else {
+        setPartner(null);
+        setApiKeyData(null);
+        setRawKeyToShow(null);
+        setLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const fetchPartnerInfo = async (userId: string) => {
+    setLoading(true);
+    try {
+      const { data: partnerData, error: partnerErr } = await supabase
+        .from('partners')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+      
+      if (partnerData) {
+        setPartner(partnerData);
+        if (partnerData.status === 'active') {
+          await fetchApiKey(partnerData.id);
+        }
+      } else {
+         // Create partner profile if it doesn't exist
+         const { data: newPartner, error: createErr } = await supabase
+            .from('partners')
+            .insert([{ user_id: userId, company_name: companyName || 'My Company', status: 'pending' }])
+            .select()
+            .single();
+
+         if (createErr) throw createErr;
+         setPartner(newPartner);
+      }
+    } catch (err: any) {
+      console.error('Error fetching partner:', err);
+    }
+    setLoading(false);
+  };

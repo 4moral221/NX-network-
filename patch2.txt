@@ -1,0 +1,24 @@
+  const fetchApiKey = async (partnerId: string) => {
+    const { data, error } = await supabase
+      .from('fmcg_partners')
+      .select('api_key, created_at')
+      .eq('id', partnerId)
+      .single();
+        
+    if (data && data.api_key) {
+       const rawKey = data.api_key;
+       let prefix = 'nx_live_';
+       let last4 = '****';
+       if (rawKey.length > 4) {
+           if (rawKey.startsWith('nx_live_')) {
+               last4 = rawKey.slice(-4);
+           } else {
+               prefix = 'sys_';
+               last4 = rawKey.slice(-4);
+           }
+       }
+       setApiKeyData({ prefix, last4, created_at: data.created_at, revoked: false, id: partnerId });
+    } else {
+       setApiKeyData(null);
+    }
+  };

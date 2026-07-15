@@ -40,13 +40,13 @@ export default function FmcgOnboarding() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      if (session) fetchPartnerInfo(session.user.id);
+      if (session) fetchPartnerInfo(session.user.email || '');
       else setLoading(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
-      if (session) fetchPartnerInfo(session.user.id);
+      if (session) fetchPartnerInfo(session.user.email || '');
       else {
         setPartner(null);
         setApiKeyData(null);
@@ -58,28 +58,27 @@ export default function FmcgOnboarding() {
     return () => subscription.unsubscribe();
   }, []);
 
-  const fetchPartnerInfo = async (userId: string) => {
+  const fetchPartnerInfo = async (email: string) => {
+    if (!email) return;
     setLoading(true);
     try {
       const { data: partnerData, error: partnerErr } = await supabase
-        .from('partners')
+        .from('fmcg_partners')
         .select('*')
-        .eq('user_id', userId)
-        .single();
-      
+        .ilike('contact', email)
+        .maybeSingle();
+            
       if (partnerData) {
         setPartner(partnerData);
-        if (partnerData.status === 'active') {
+        if (partnerData.active) {
           await fetchApiKey(partnerData.id);
         }
       } else {
-         // Create partner profile if it doesn't exist
          const { data: newPartner, error: createErr } = await supabase
-            .from('partners')
-            .insert([{ user_id: userId, company_name: companyName || 'My Company', status: 'pending' }])
+            .from('fmcg_partners')
+            .insert([{ contact: email, name: companyName || email.split('@')[0], active: false }])
             .select()
             .single();
-
          if (createErr) throw createErr;
          setPartner(newPartner);
       }
@@ -90,17 +89,28 @@ export default function FmcgOnboarding() {
   };
 
   const fetchApiKey = async (partnerId: string) => {
-    const { data: keyData, error } = await supabase
-      .from('api_keys')
-      .select('*')
-      .eq('partner_id', partnerId)
-      .eq('revoked', false)
-      .order('created_at', { ascending: false })
-      .limit(1)
+    const { data, error } = await supabase
+      .from('fmcg_partners')
+      .select('api_key, created_at')
+      .eq('id', partnerId)
       .single();
-    
-    if (keyData) setApiKeyData(keyData);
-    else setApiKeyData(null);
+        
+    if (data && data.api_key) {
+       const rawKey = data.api_key;
+       let prefix = 'nx_live_';
+       let last4 = '****';
+       if (rawKey.length > 4) {
+           if (rawKey.startsWith('nx_live_')) {
+               last4 = rawKey.slice(-4);
+           } else {
+               prefix = 'sys_';
+               last4 = rawKey.slice(-4);
+           }
+       }
+       setApiKeyData({ prefix, last4, created_at: data.created_at, revoked: false, id: partnerId });
+    } else {
+       setApiKeyData(null);
+    }
   };
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -141,30 +151,21 @@ export default function FmcgOnboarding() {
   };
 
   const handleGenerateKey = async () => {
+    if (!partner) return;
+    if (!window.confirm("Generating a new API key will invalidate any previously generated keys. Continue?")) return;
     setGenerating(true);
     try {
-      if (!partner) throw new Error('Partner profile not found');
-      
-      // Revoke old key if generating a new one
-      if (apiKeyData) {
-        await supabase.from('api_keys').update({ revoked: true }).eq('id', apiKeyData.id);
-      }
-
       const rawKey = generateSecureApiKey();
-      const keyHash = await hashString(rawKey);
       const prefix = 'nx_live_';
       const last4 = rawKey.slice(-4);
 
-      const { data, error } = await supabase.from('api_keys').insert([{
-        partner_id: partner.id,
-        key_hash: keyHash,
-        prefix,
-        last4
-      }]).select().single();
+      const { data, error } = await supabase.from('fmcg_partners').update({
+        api_key: rawKey
+      }).eq('id', partner.id).select().single();
 
       if (error) throw error;
       
-      setApiKeyData(data);
+      setApiKeyData({ prefix, last4, created_at: data.created_at, revoked: false, id: partner.id });
       setRawKeyToShow(rawKey);
       setCopied(false);
     } catch (err: any) {
@@ -332,7 +333,7 @@ export default function FmcgOnboarding() {
                         <button 
                            onClick={() => {
                               if (session?.user?.id) {
-                                 fetchPartnerInfo(session.user.id);
+                                 fetchPartnerInfo(session.user.email || '');
                               }
                            }}
                            className="bg-[#111] border border-[#ffb547]/30 text-[#ffb547] hover:bg-[#ffb547]/10 px-6 py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all inline-flex items-center gap-2 cursor-pointer"

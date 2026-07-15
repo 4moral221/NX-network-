@@ -695,26 +695,8 @@ app.post('/api/fmcg/revoke-key', requirePartner, async (req, res) => {
     if (!key_id) {
       return res.status(400).json({ success: false, error: 'Key ID required' });
     }
-
-    let dbError = null;
-    try {
-      const deleteResult = await supabase.from('api_keys').delete().eq('id', key_id);
-      if (deleteResult && deleteResult.error) {
-        dbError = deleteResult.error;
-      }
-    } catch (e: any) {
-      dbError = e;
-      console.warn("DB api_keys delete timed out or failed, resorting to local fallback:", e.message || e);
-    }
-
-    try {
-      const localKeys = getLocalFallbackFile<any>('api_keys.json');
-      const filtered = localKeys.filter((k: any) => k.id !== key_id);
-      saveLocalFallbackFile('api_keys.json', filtered);
-    } catch (e) {
-      console.error("Local api_keys.json revoke error:", e);
-    }
-
+    const { error } = await supabase.from('fmcg_partners').update({ api_key: null }).eq('id', key_id);
+    if (error) throw error;
     res.json({ success: true, message: 'Key revoked successfully' });
   } catch (err: any) {
     console.error("Revoke API key error:", err);
@@ -726,62 +708,36 @@ app.get('/api/fmcg/api-keys', requirePartner, async (req, res) => {
   try {
     const { brand_name } = req.query;
     if (!brand_name) return res.status(400).json({ success: false, error: 'Brand name required' });
-
     const cleanBrand = String(brand_name).trim().toLowerCase();
-    let pRec: any = null;
+    
+    const { data: pRec } = await supabase.from('fmcg_partners').select('id, name, api_key, created_at').ilike('name', cleanBrand).maybeSingle();
 
-    try {
-      const partnersResult = await supabase.from('partners').select('id, company_name');
-      const partnersList = partnersResult?.data || null;
-      if (partnersList && partnersList.length > 0) {
-        pRec = partnersList.find((p: any) => p.company_name?.trim().toLowerCase() === cleanBrand) ||
-               partnersList.find((p: any) => p.company_name?.toLowerCase().includes(cleanBrand)) ||
-               partnersList.find((p: any) => cleanBrand.includes(p.company_name?.toLowerCase() || ''));
-      }
-    } catch (e: any) {
-      console.warn("[api-keys] Supabase partners fetch timed out or failed:", e.message || e);
+    if (!pRec || !pRec.api_key) {
+       return res.json({ success: true, keys: [] });
     }
 
-    if (!pRec) {
-      const localPartners = getLocalFallbackFile<any>('partners.json');
-      pRec = localPartners.find((p: any) => p.company_name?.trim().toLowerCase() === cleanBrand) ||
-             localPartners.find((p: any) => p.company_name?.toLowerCase().includes(cleanBrand)) ||
-             localPartners.find((p: any) => cleanBrand.includes(p.company_name?.toLowerCase() || ''));
-    }
-
-    if (!pRec) {
-      // Return empty array instead of failing, allowing user to generate key which will create a partner profile
-      return res.json({ success: true, keys: [] });
-    }
-
-    let keys: any[] = [];
-    try {
-      const keysResult = await supabase.from('api_keys').select('*').eq('partner_id', pRec.id).order('created_at', { ascending: false });
-      const error = keysResult?.error;
-      if (error && (error.code === 'PGRST205' || error.message?.includes('schema cache') || error.message?.includes('relation "api_keys" does not exist'))) {
-        throw new Error('FALLBACK');
-      }
-      if (error) throw error;
-      keys = keysResult?.data || [];
-    } catch (dbErr: any) {
-      console.warn("DB api_keys fetch failed or returned error, falling back:", dbErr.message || dbErr);
-    }
-
-    // Always merge with local fallback keys to ensure complete coverage (e.g. if partner creation failed/fell back)
-    try {
-      const localKeys = getLocalFallbackFile<any>('api_keys.json');
-      const filteredLocal = localKeys.filter((k: any) => k.partner_id === pRec.id);
-      for (const lk of filteredLocal) {
-        if (!keys.some(k => k.id === lk.id)) {
-          keys.push(lk);
+    const rawKey = pRec.api_key;
+    let prefix = 'nx_live_';
+    let last4 = '****';
+    if (rawKey.length > 4) {
+        if (rawKey.startsWith('nx_live_')) {
+            last4 = rawKey.slice(-4);
+        } else {
+            prefix = 'sys_';
+            last4 = rawKey.slice(-4);
         }
-      }
-      keys.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    } catch (localErr: any) {
-      console.error("Local api_keys fetch error:", localErr.message);
     }
 
-    res.json({ success: true, keys: keys || [] });
+    const keys = [{
+        id: pRec.id,
+        partner_id: pRec.id,
+        prefix,
+        last4,
+        created_at: pRec.created_at || new Date().toISOString(),
+        revoked: false
+    }];
+
+    res.json({ success: true, keys });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -791,265 +747,32 @@ app.post('/api/fmcg/generate-key', requirePartner, keyGenLimiter, async (req, re
   try {
     const { brand_name, brand_id, company_name } = req.body;
     let finalBrandName = brand_name || company_name;
-
-    // Resolve brand name from brand_id if it's missing but ID is available
+    
     if (!finalBrandName && brand_id) {
-       console.log(`[generate-key] Brand name is missing. Trying to resolve from brand_id: ${brand_id}`);
-       try {
-         const { data: pCheck } = await supabase.from('partners').select('company_name').eq('id', brand_id).maybeSingle();
-         if (pCheck?.company_name) finalBrandName = pCheck.company_name;
-       } catch (e) {}
-       
-       if (!finalBrandName) {
-         try {
-           const { data: pCheck } = await supabase.from('fmcg_partners').select('name').eq('id', brand_id).maybeSingle();
-           if (pCheck?.name) finalBrandName = pCheck.name;
-         } catch (e) {}
-       }
-       
-       if (!finalBrandName) {
-          const localPartners = getLocalFallbackFile<any>('partners.json');
-          const lp = localPartners.find((p: any) => p.id === brand_id);
-          if (lp?.company_name) finalBrandName = lp.company_name;
-          else if (lp?.name) finalBrandName = lp.name;
-       }
+       const { data: pCheck } = await supabase.from('fmcg_partners').select('name').eq('id', brand_id).maybeSingle();
+       if (pCheck?.name) finalBrandName = pCheck.name;
     }
-
     if (!finalBrandName) {
        return res.status(400).json({ success: false, error: 'Brand name matches could not be resolved from inputs.' });
     }
 
-    const cleanBrand = String(finalBrandName).trim().toLowerCase();
-    let pRec: any = null;
-
-    // 1. Try to fetch partner from Supabase
-    try {
-      const { data: partnersList } = await supabase.from('partners').select('id, user_id, company_name');
-      if (partnersList && partnersList.length > 0) {
-        pRec = partnersList.find((p: any) => p.company_name?.trim().toLowerCase() === cleanBrand) ||
-               partnersList.find((p: any) => p.company_name?.toLowerCase().includes(cleanBrand)) ||
-               partnersList.find((p: any) => cleanBrand.includes(p.company_name?.toLowerCase() || ''));
-      }
-    } catch (e: any) {
-      console.warn("[generate-key] Supabase partners fetch failed:", e.message);
+    const rawKey = `nx_live_${crypto.randomBytes(16).toString('hex')}`;
+    const { data: pRec, error } = await supabase.from('fmcg_partners').update({ api_key: rawKey }).ilike('name', finalBrandName).select().maybeSingle();
+    
+    if (error || !pRec) {
+       return res.status(500).json({ success: false, error: "Failed to update API key." });
     }
 
-    // 2. Try to fetch partner from Local Fallback
-    if (!pRec) {
-      const localPartners = getLocalFallbackFile<any>('partners.json');
-      pRec = localPartners.find((p: any) => p.company_name?.trim().toLowerCase() === cleanBrand) ||
-             localPartners.find((p: any) => p.company_name?.toLowerCase().includes(cleanBrand)) ||
-             localPartners.find((p: any) => cleanBrand.includes(p.company_name?.toLowerCase() || ''));
-      if (pRec) {
-        pRec.is_fallback = true;
-      }
-    }
-
-    // 3. Fallback email/user lookup verification - completely permissive to prevent blocking
-    if (pRec && pRec.user_id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(pRec.user_id)) {
-      try {
-        const { data: uData, error: uErr } = await supabase.auth.admin.getUser(pRec.user_id);
-        if (uErr) {
-          console.warn("Bypassing auth check:getUser failed:", uErr.message);
-        } else if (uData && uData.user) {
-          const isConfirmed = !!uData.user.email_confirmed_at || !!uData.user.confirmed_at;
-          if (!isConfirmed) {
-            console.log("Gentle notice: Email unconfirmed for key generation but proceeding.");
-          }
-        }
-      } catch (checkErr: any) {
-        console.warn("Gentle notice: Exception during auth verification check but proceeding:", checkErr.message);
-      }
-    }
-
-    // 4. Create partner record if neither database nor local fallback contains it
-    if (!pRec) {
-      let uidToUse = null;
-
-      try {
-        // Query some valid user_id to avoid schema foreign key constraint crashes in postgrest
-        const { data: existP } = await supabase.from('partners').select('user_id').not('user_id', 'is', null).limit(1);
-        if (existP && existP.length > 0) {
-          uidToUse = existP[0].user_id;
-        }
-      } catch (e) {}
-
-      if (!uidToUse) {
-        try {
-          const { data: adminUser } = await supabase.from('users').select('id').limit(1).single();
-          if (adminUser) uidToUse = adminUser.id;
-        } catch (e) {}
-      }
-
-      if (!uidToUse) {
-        const localUid = crypto.randomUUID();
-        uidToUse = localUid;
-      }
-
-      try {
-        const { data: newP, error: insertPError } = await supabase.from('partners').insert([{
-          user_id: uidToUse,
-          company_name: brand_name,
-          status: 'active'
-        }]).select('id').single();
-
-        if (insertPError && (insertPError.code === 'PGRST116' || insertPError.code === 'PGRST205' || insertPError.message?.includes('schema cache'))) {
-          throw new Error('FALLBACK');
-        }
-        if (insertPError) throw insertPError;
-        pRec = newP;
-      } catch (dbErr: any) {
-        pRec = {
-          id: crypto.randomUUID(),
-          company_name: brand_name,
-          user_id: uidToUse,
-          status: 'active',
-          created_at: new Date().toISOString(),
-          is_fallback: true
-        };
-        const localPartners = getLocalFallbackFile<any>('partners.json');
-        localPartners.push(pRec);
-        saveLocalFallbackFile('partners.json', localPartners);
-      }
-    }
-
-    const newKey = 'nx_live_' + crypto.randomBytes(32).toString('hex');
-    const keyHash = crypto.createHash('sha256').update(newKey).digest('hex');
-    const prefix = newKey.split('_')[0] + '_' + newKey.split('_')[1] + '_';
-    const last4 = newKey.slice(-4);
-
-    let savedToDb = false;
-    if (!pRec.is_fallback) {
-      try {
-        const { data: keyData, error: keyError } = await supabase.from('api_keys').insert([{
-          partner_id: pRec.id,
-          key_hash: keyHash,
-          prefix,
-          last4
-        }]).select().single();
-
-        if (keyError && (keyError.code === 'PGRST205' || keyError.message?.includes('schema cache') || keyError.message?.includes('relation "api_keys" does not exist'))) {
-          throw new Error('FALLBACK');
-        }
-        if (keyError) throw keyError;
-        savedToDb = true;
-      } catch (dbErr: any) {
-        console.warn("[generate-key] DB insert failed, using local fallback:", dbErr.message);
-      }
-    }
-
-    if (!savedToDb) {
-      const localKeys = getLocalFallbackFile<any>('api_keys.json');
-      localKeys.push({
-        id: crypto.randomUUID(),
-        partner_id: pRec.id,
-        key_hash: keyHash,
-        prefix,
-        last4,
-        created_at: new Date().toISOString(),
-        revoked: false
-      });
-      saveLocalFallbackFile('api_keys.json', localKeys);
-    }
-
-    res.json({ success: true, key: newKey });
+    res.json({ success: true, key: rawKey, prefix: 'nx_live_', last4: rawKey.slice(-4), id: pRec.id });
   } catch (err: any) {
     console.error("Generate API key error:", err);
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// --- Agent Management Endpoints ---
-
 async function resolvePartnersId(partnerIdInput: string): Promise<string> {
-  if (!partnerIdInput) return '';
-  const cleanInput = String(partnerIdInput).trim();
-
-  // 1. Check if the provided business ID is a UUID (prevents dynamic cast syntax crashes on UUID columns)
-  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanInput);
-  if (isUuid) {
-    try {
-      const { data: pCheck } = await supabase.from('partners').select('id').eq('id', cleanInput).maybeSingle();
-      if (pCheck) return pCheck.id;
-
-      const { data: pUserCheck } = await supabase.from('partners').select('id').eq('user_id', cleanInput).maybeSingle();
-      if (pUserCheck) return pUserCheck.id;
-    } catch (e: any) {
-      console.warn("[resolvePartnersId] UUID checks skipped or failed:", e.message);
-    }
-  }
-
-  // 2. Try searching in the legacy fmcg_partners table by integer ID or name (prevents syntax cast errors on number columns)
-  let fmcgCheck = null;
-  const isInteger = /^\d+$/.test(cleanInput);
-  if (isInteger) {
-    try {
-      const { data: fc } = await supabase.from('fmcg_partners').select('id, name').eq('id', parseInt(cleanInput, 10)).maybeSingle();
-      if (fc) fmcgCheck = fc;
-    } catch (e: any) {
-      console.warn("[resolvePartnersId] fmcg_partners direct ID match failed:", e.message);
-    }
-  }
-
-  if (!fmcgCheck) {
-    try {
-      const { data: fc } = await supabase.from('fmcg_partners').select('id, name').ilike('name', escapeLike(cleanInput)).maybeSingle();
-      if (fc) fmcgCheck = fc;
-    } catch (e: any) {
-      console.warn("[resolvePartnersId] fmcg_partners name match failed:", e.message);
-    }
-  }
-
-  // 3. Find matching partner by brand name manually from standard table (avoids PGRST116 multiple match exception)
-  try {
-    const { data: allPartners } = await supabase.from('partners').select('id, company_name');
-    const targetBrandName = fmcgCheck ? fmcgCheck.name.trim().toLowerCase() : cleanInput.toLowerCase();
-
-    if (allPartners && allPartners.length > 0) {
-      // Direct matching
-      const exactMatch = allPartners.find(p => p.company_name.trim().toLowerCase() === targetBrandName);
-      if (exactMatch) return exactMatch.id;
-
-      // Fuzzy matching
-      const fuzzyMatch = allPartners.find(p => 
-        p.company_name.toLowerCase().includes(targetBrandName) || 
-        targetBrandName.includes(p.company_name.toLowerCase())
-      );
-      if (fuzzyMatch) return fuzzyMatch.id;
-    }
-
-    // 4. If we found a record in fmcg_partners but no standard partner profile, create one
-    if (fmcgCheck) {
-      let uidToUse = null;
-      try {
-        const { data: existP } = await supabase.from('partners').select('user_id').not('user_id', 'is', null).limit(1);
-        if (existP && existP.length > 0) uidToUse = existP[0].user_id;
-      } catch (e) {}
-
-      if (!uidToUse) {
-        try {
-          const { data: adminUser } = await supabase.from('users').select('id').limit(1).single();
-          if (adminUser) uidToUse = adminUser.id;
-        } catch (e) {}
-      }
-
-      if (uidToUse) {
-        const { data: newP } = await supabase.from('partners').insert([{
-          user_id: uidToUse,
-          company_name: fmcgCheck.name,
-          status: 'active'
-        }]).select('id').single();
-        if (newP) return newP.id;
-      }
-    }
-  } catch (err: any) {
-    console.error("[resolvePartnersId] Error:", err.message);
-  }
-
   return partnerIdInput;
 }
-
-
 app.get('/api/admin/logs', requireAdmin, async (req, res) => {
   try {
     try {
@@ -2638,67 +2361,16 @@ Please output a JSON object obeying the requested schema. Ensure that you:
 
   app.post('/api/logistics/generate-key', requirePartner, async (req, res) => {
     try {
-      const { brand_name, brand_id } = req.body;
-      if (!brand_id) {
-        return res.status(400).json({ success: false, error: 'Partner ID (brand_id) is required' });
-      }
+      const { brand_name, company_name } = req.body;
+      const finalBrand = brand_name || company_name;
+      if (!finalBrand) return res.status(400).json({ success: false, error: 'Partner name required' });
+      
+      const rawKey = `nx_live_${crypto.randomBytes(16).toString('hex')}`;
+      const { data: pRec, error } = await supabase.from('fmcg_partners').update({ api_key: rawKey }).ilike('name', finalBrand).select().maybeSingle();
+      if (error || !pRec) return res.status(500).json({ success: false, error: 'Failed to generate logistics API key' });
 
-      const partnerId = brand_id;
-      const finalBrandName = brand_name || 'Logistics Partner';
-
-      // 1. Revoke all previous active keys for this partner (decoupling / regeneration revocation)
-      try {
-        await supabase.from('api_keys').delete().eq('partner_id', partnerId);
-      } catch (e) {
-        console.warn("DB api_keys deletion error (proceeding to fallback):", e);
-      }
-
-      try {
-        const localKeys = getLocalFallbackFile<any>('api_keys.json');
-        const filtered = localKeys.filter((k: any) => k.partner_id !== partnerId);
-        saveLocalFallbackFile('api_keys.json', filtered);
-      } catch (e) {
-        console.error("Local api_keys revocation error:", e);
-      }
-
-      // 2. Generate brand new nx_logistics_ API Key
-      const newKey = 'nx_logistics_' + crypto.randomBytes(32).toString('hex');
-      const keyHash = crypto.createHash('sha256').update(newKey).digest('hex');
-      const prefix = 'nx_logistics_';
-      const last4 = newKey.slice(-4);
-
-      let savedToDb = false;
-      try {
-        const { data: keyData, error: keyError } = await supabase.from('api_keys').insert([{
-          partner_id: partnerId,
-          key_hash: keyHash,
-          prefix,
-          last4
-        }]).select().single();
-
-        if (keyError) throw keyError;
-        savedToDb = true;
-      } catch (dbErr: any) {
-        console.warn("[logistics-generate-key] DB insert failed, using local fallback:", dbErr.message);
-      }
-
-      if (!savedToDb) {
-        const localKeys = getLocalFallbackFile<any>('api_keys.json');
-        localKeys.push({
-          id: crypto.randomUUID(),
-          partner_id: partnerId,
-          key_hash: keyHash,
-          prefix,
-          last4,
-          created_at: new Date().toISOString(),
-          revoked: false
-        });
-        saveLocalFallbackFile('api_keys.json', localKeys);
-      }
-
-      res.json({ success: true, key: newKey });
+      res.json({ success: true, key: rawKey, prefix: 'nx_live_', last4: rawKey.slice(-4), id: pRec.id });
     } catch (err: any) {
-      console.error("Logistics Generate Key error:", err);
       res.status(500).json({ success: false, error: err.message });
     }
   });
@@ -2707,48 +2379,20 @@ Please output a JSON object obeying the requested schema. Ensure that you:
     try {
       const { brand_name } = req.query;
       if (!brand_name) return res.status(400).json({ success: false, error: 'Partner name required' });
-
       const cleanBrand = String(brand_name).trim().toLowerCase();
-      let pRec: any = null;
+      
+      const { data: pRec } = await supabase.from('fmcg_partners').select('id, name, api_key, created_at').ilike('name', cleanBrand).maybeSingle();
+      if (!pRec || !pRec.api_key) return res.json({ success: true, keys: [] });
 
-      // Resolve partner
-      try {
-        const partnersResult = await supabase.from('partners').select('id, company_name');
-        const partnersList = partnersResult?.data || null;
-        if (partnersList && partnersList.length > 0) {
-          pRec = partnersList.find((p: any) => p.company_name?.trim().toLowerCase() === cleanBrand);
-        }
-      } catch (e) {}
-
-      if (!pRec) {
-        const localPartners = getLocalFallbackFile<any>('partners.json');
-        pRec = localPartners.find((p: any) => p.company_name?.trim().toLowerCase() === cleanBrand);
+      const rawKey = pRec.api_key;
+      let prefix = 'nx_live_';
+      let last4 = '****';
+      if (rawKey.length > 4) {
+          if (rawKey.startsWith('nx_live_')) last4 = rawKey.slice(-4);
+          else { prefix = 'sys_'; last4 = rawKey.slice(-4); }
       }
 
-      if (!pRec) {
-        return res.json({ success: true, keys: [] });
-      }
-
-      let keys: any[] = [];
-      try {
-        const { data: keysResult } = await supabase.from('api_keys').select('*').eq('partner_id', pRec.id).order('created_at', { ascending: false });
-        keys = keysResult || [];
-      } catch (dbErr: any) {
-        console.warn("DB api_keys fetch failed:", dbErr.message);
-      }
-
-      // Merge with local fallback keys
-      try {
-        const localKeys = getLocalFallbackFile<any>('api_keys.json');
-        const filteredLocal = localKeys.filter((k: any) => k.partner_id === pRec.id);
-        for (const lk of filteredLocal) {
-          if (!keys.some(k => k.id === lk.id)) {
-            keys.push(lk);
-          }
-        }
-        keys.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-      } catch (localErr) {}
-
+      const keys = [{ id: pRec.id, partner_id: pRec.id, prefix, last4, created_at: pRec.created_at || new Date().toISOString(), revoked: false }];
       res.json({ success: true, keys });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });
@@ -2759,23 +2403,12 @@ Please output a JSON object obeying the requested schema. Ensure that you:
     try {
       const { key_id } = req.body;
       if (!key_id) return res.status(400).json({ success: false, error: 'Key ID required' });
-
-      try {
-        await supabase.from('api_keys').delete().eq('id', key_id);
-      } catch (e) {}
-
-      try {
-        const localKeys = getLocalFallbackFile<any>('api_keys.json');
-        const filtered = localKeys.filter((k: any) => k.id !== key_id);
-        saveLocalFallbackFile('api_keys.json', filtered);
-      } catch (e) {}
-
+      await supabase.from('fmcg_partners').update({ api_key: null }).eq('id', key_id);
       res.json({ success: true, message: 'Key revoked successfully' });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });
     }
   });
-
   app.post('/api/auth/send-otp', authLimiter, async (req, res) => {
     try {
       const { email, type = 'admin' } = req.body;

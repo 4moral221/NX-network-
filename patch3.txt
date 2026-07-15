@@ -1,0 +1,24 @@
+  const handleGenerateKey = async () => {
+    if (!partner) return;
+    if (!window.confirm("Generating a new API key will invalidate any previously generated keys. Continue?")) return;
+    setGenerating(true);
+    try {
+      const rawKey = generateSecureApiKey();
+      const prefix = 'nx_live_';
+      const last4 = rawKey.slice(-4);
+
+      const { data, error } = await supabase.from('fmcg_partners').update({
+        api_key: rawKey
+      }).eq('id', partner.id).select().single();
+
+      if (error) throw error;
+      
+      setApiKeyData({ prefix, last4, created_at: data.created_at, revoked: false, id: partner.id });
+      setRawKeyToShow(rawKey);
+      setCopied(false);
+    } catch (err: any) {
+      alert("Failed to generate key: " + err.message);
+    } finally {
+      setGenerating(false);
+    }
+  };
