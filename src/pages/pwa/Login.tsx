@@ -252,7 +252,6 @@ export default function Login({ onLogin }: { onLogin: (user: any) => void }) {
 
         <div className="text-center mb-10">
           <h1 className="font-display text-4xl tracking-wider text-nx-paper mb-2">NX NETWORK</h1>
-          <p className="text-nx-muted text-sm uppercase tracking-widest">Mobile Live Access Link</p>
         </div>
 
         {error && (

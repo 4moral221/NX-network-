@@ -5,6 +5,7 @@ import { Loader2 } from 'lucide-react';
 // Lazy loading to ensure the main chunk is small and app doesn't hang on 'INITIALIZING' screen for slow connections
 import ThemeSwitcher from './components/ThemeSwitcher';
 import NetworkStatus from './components/NetworkStatus';
+import OnboardingScreen from './components/OnboardingScreen';
 
 const LandingPage = lazy(() => import('./pages/landing/LandingPage'));
 const MerchantPortal = lazy(() => import('./pages/merchant/MerchantPortal'));
@@ -209,12 +210,14 @@ export default function App() {
       <Router>
         <NetworkStatus />
         <ThemeSwitcher />
-        <Suspense fallback={<PageLoader />}>
-          <Routes>
-            {getRoutes()}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Suspense>
+        <OnboardingScreen>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              {getRoutes()}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Suspense>
+        </OnboardingScreen>
       </Router>
     </ErrorBoundary>
   );
