@@ -171,6 +171,13 @@ export default function Login({ onLogin }: { onLogin: (user: any) => void }) {
       return;
     }
 
+    const sha256 = async (message: string) => {
+      const msgBuffer = new TextEncoder().encode(message);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    };
+
     try {
       toast.loading('Authenticating security token...', { id: 'pwa-login' });
       
@@ -196,13 +203,39 @@ export default function Login({ onLogin }: { onLogin: (user: any) => void }) {
         localStorage.setItem('nx_pwa_session_expiry', String(Date.now() + 1 * 24 * 60 * 60 * 1000)); // 1 day
       }
       
+      // Store offline login credentials securely
+      const pinHash = await sha256(trimmedPin);
+      localStorage.setItem(`nx_offline_auth_${normalizedPhone}`, JSON.stringify({ pinHash, user: safeUser }));
+      
       const roleName = safeUser.role === 'customer' ? 'Customer' : 'Merchant';
       toast.success(`Welcome back, ${safeUser.name || roleName}!`, { id: 'pwa-login' });
       onLogin(safeUser);
       
     } catch (err: any) {
-      setError(`[Network connection error or timed out]: ${err.message || 'Failed to authenticate'}`);
-      toast.error('Network Connection Error', { id: 'pwa-login' });
+      // Attempt offline login
+      try {
+        const offlineAuthStr = localStorage.getItem(`nx_offline_auth_${normalizedPhone}`);
+        if (offlineAuthStr) {
+          const { pinHash, user } = JSON.parse(offlineAuthStr);
+          const currentHash = await sha256(trimmedPin);
+          if (pinHash === currentHash) {
+             toast.success(`Offline login successful!`, { id: 'pwa-login' });
+             setError('');
+             onLogin(user);
+             return;
+          }
+        }
+      } catch (e) {
+        // Ignore offline auth parsing errors
+      }
+
+      if (!navigator.onLine) {
+        setError(`You are currently offline. Please check your internet connection and try again.`);
+        toast.error('No Internet Connection', { id: 'pwa-login' });
+      } else {
+        setError(`Authentication Failed: ${err.message || 'Unable to connect to server'}`);
+        toast.error('Login Failed', { id: 'pwa-login' });
+      }
     } finally {
       setLoading(false);
     }

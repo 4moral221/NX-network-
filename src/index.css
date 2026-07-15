@@ -232,6 +232,10 @@ html.light .border-l {
   @apply bg-clip-text text-transparent bg-linear-to-r from-nx-amber to-nx-ember;
 }
 
+.text-nx-muted {
+  @apply font-sub;
+}
+
 .nx-subnote {
   @apply font-sub;
 }
