@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600&family=JetBrains+Mono:wght@400&family=Bebas+Neue&family=DM+Serif+Display&family=DM+Sans:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600&family=JetBrains+Mono:wght@400&family=Bebas+Neue&family=DM+Serif+Display&family=DM+Sans:wght@400;500&family=Lexend:wght@300;400;500&display=swap');
 @import "tailwindcss";
 
 :root {
@@ -28,10 +28,11 @@ html.light {
 }
 
 @theme {
-  --font-sans: "Space Grotesk", "DM Sans", "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Lexend", "Space Grotesk", "DM Sans", "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Bebas Neue", sans-serif;
   --font-serif: "DM Serif Display", serif;
   --font-mono: "JetBrains Mono", "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-sub: "Lexend", sans-serif;
 
   --color-nx-ink: var(--nx-ink);
   --color-nx-paper: var(--nx-paper);
@@ -229,6 +230,10 @@ html.light .border-l {
 
 .nx-gradient-text {
   @apply bg-clip-text text-transparent bg-linear-to-r from-nx-amber to-nx-ember;
+}
+
+.nx-subnote {
+  @apply font-sub;
 }
 
 .nx-card {
