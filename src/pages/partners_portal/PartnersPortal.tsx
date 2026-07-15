@@ -434,31 +434,20 @@ export default function PartnersPortal() {
         if (session?.user) {
           const email = session.user.email;
           if (email) {
-            const { data: partnerData } = await supabase
-              .from('fmcg_partners')
+            const { data: pData } = await supabase
+              .from('partners')
               .select('*')
-              .ilike('contact', email)
+              .eq('user_id', session.user.id)
               .maybeSingle();
-
-            if (partnerData) {
-              setBrand(partnerData);
+            if (pData) {
+              setBrand({
+                id: pData.id,
+                name: pData.company_name,
+                contact: email,
+                active: pData.status === 'active',
+                category: 'Logistics'
+              });
               setIsLoggedIn(true);
-            } else {
-              const { data: pData } = await supabase
-                .from('partners')
-                .select('*')
-                .eq('user_id', session.user.id)
-                .maybeSingle();
-              if (pData) {
-                setBrand({
-                  id: pData.id,
-                  name: pData.company_name,
-                  contact: email,
-                  active: pData.status === 'active',
-                  category: 'Partner'
-                });
-                setIsLoggedIn(true);
-              }
             }
           }
         }
@@ -1221,30 +1210,32 @@ MERCHANT_CODE: M-104 | PHONE: +254766666666 | ORDER_SPEC: Pembe 2kg*22 | ORDER_Q
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-1 bg-[#f4f5f7] p-1 rounded-xl mb-8 border border-[#e4e6ea]">
-            <button 
-              onClick={() => { setAuthMode('login'); setError(''); }}
-              className={cn("py-2 text-[9px] font-bold uppercase tracking-widest rounded-lg transition-all text-center", authMode === 'login' ? "bg-[#1a1d23] text-white" : "text-[#6b7280] hover:text-[#1a1d23]")}
-            >
-              Sign In
-            </button>
-            <button 
-              onClick={() => { setAuthMode('register'); setError(''); }}
-              className={cn("py-2 text-[9px] font-bold uppercase tracking-widest rounded-lg transition-all text-center", authMode === 'register' ? "bg-[#1a1d23] text-white" : "text-[#6b7280] hover:text-[#1a1d23]")}
-            >
-              Register
-            </button>
-          </div>
+          {authMode !== 'setup' && authMode !== 'whitelist_signup' && (
+            <div className="grid grid-cols-2 gap-1 bg-[#f4f5f7] p-1 rounded-xl mb-8 border border-[#e4e6ea]">
+              <button 
+                onClick={() => { setAuthMode('login'); setError(''); }}
+                className={cn("py-2 text-[9px] font-bold uppercase tracking-widest rounded-lg transition-all text-center", authMode === 'login' ? "bg-[#1a1d23] text-white" : "text-[#6b7280] hover:text-[#1a1d23]")}
+              >
+                Sign In
+              </button>
+              <button 
+                onClick={() => { setAuthMode('register'); setError(''); }}
+                className={cn("py-2 text-[9px] font-bold uppercase tracking-widest rounded-lg transition-all text-center", authMode === 'register' ? "bg-[#1a1d23] text-white" : "text-[#6b7280] hover:text-[#1a1d23]")}
+              >
+                Register
+              </button>
+            </div>
+          )}
 
           {authMode === 'register' ? (
             <div className="space-y-4">
               <div>
                 <label className="block text-[11px] font-bold uppercase tracking-widest text-[#6b7280] mb-2">Company / Fleet Name</label>
-                <input type="text" value={signupData.companyName} onChange={e => setSignupData({ ...signupData, companyName: e.target.value })} className="w-full border-2 border-[#e4e6ea] focus:border-[#1a1d23] rounded-xl px-4 py-2.5 text-sm outline-none transition-colors" placeholder="e.g. Nairobi Logistics Hub" />
+                <input type="text" value={signupData.companyName} onChange={e => setSignupData({ ...signupData, companyName: e.target.value })} className="w-full border-2 border-[#e4e6ea] focus:border-[#1a1d23] rounded-xl px-4 py-2.5 text-sm outline-none transition-colors text-[#1a1d23] bg-white" placeholder="e.g. Nairobi Logistics Hub" />
               </div>
               <div>
                 <label className="block text-[11px] font-bold uppercase tracking-widest text-[#6b7280] mb-2">Work Email Address</label>
-                <input type="email" value={signupData.email} onChange={e => setSignupData({ ...signupData, email: e.target.value })} className="w-full border-2 border-[#e4e6ea] focus:border-[#1a1d23] rounded-xl px-4 py-2.5 text-sm outline-none transition-colors" placeholder="partner@company.com" />
+                <input type="email" value={signupData.email} onChange={e => setSignupData({ ...signupData, email: e.target.value })} className="w-full border-2 border-[#e4e6ea] focus:border-[#1a1d23] rounded-xl px-4 py-2.5 text-sm outline-none transition-colors text-[#1a1d23] bg-white" placeholder="partner@company.com" />
               </div>
               <div>
                 <label className="block text-[11px] font-bold uppercase tracking-widest text-[#6b7280] mb-2">Password</label>
@@ -1253,7 +1244,7 @@ MERCHANT_CODE: M-104 | PHONE: +254766666666 | ORDER_SPEC: Pembe 2kg*22 | ORDER_Q
                     type={showPassword ? "text" : "password"} 
                     value={signupData.password} 
                     onChange={e => setSignupData({ ...signupData, password: e.target.value })} 
-                    className="w-full border-2 border-[#e4e6ea] focus:border-[#1a1d23] rounded-xl pl-4 pr-10 py-2.5 text-sm outline-none transition-colors" 
+                    className="w-full border-2 border-[#e4e6ea] focus:border-[#1a1d23] rounded-xl pl-4 pr-10 py-2.5 text-sm outline-none transition-colors text-[#1a1d23] bg-white" 
                   />
                   <button
                     type="button"
@@ -1267,11 +1258,159 @@ MERCHANT_CODE: M-104 | PHONE: +254766666666 | ORDER_SPEC: Pembe 2kg*22 | ORDER_Q
               {error && <div className="flex items-center gap-2 text-red-500 text-xs"><AlertCircle className="w-3 h-3" /> {error}</div>}
               <button disabled={loading} onClick={handleAuth} className="w-full bg-[#1a1d23] text-white font-bold py-3 rounded-xl hover:bg-[#2a2d35] transition-colors mt-4">{loading ? 'Creating Account...' : 'Register & Log In'}</button>
             </div>
+          ) : authMode === 'whitelist_signup' ? (
+            <div className="space-y-4">
+              <div className="text-[10px] text-[#6b7280] mb-4 p-4 bg-[#f4f5f7] border-l border-[#1a1d23] uppercase tracking-widest leading-relaxed">
+                Retrieve your designated portal API key using your whitelisted professional domain or representative email.
+              </div>
+
+              {!whitelistResult ? (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase tracking-widest text-[#6b7280] mb-2">Representative Work Email</label>
+                    <input 
+                      type="email" 
+                      value={whitelistEmail} 
+                      onChange={e => setWhitelistEmail(e.target.value)} 
+                      className="w-full border-2 border-[#e4e6ea] focus:border-[#1a1d23] rounded-xl px-4 py-2.5 text-sm outline-none transition-colors text-[#1a1d23] bg-white" 
+                      placeholder="e.g. representative@logistics.com" 
+                      required
+                    />
+                  </div>
+
+                  {whitelistError && (
+                    <div className="flex items-center gap-2 text-red-500 text-xs">
+                      <AlertCircle className="w-3 h-3 shrink-0" />
+                      <span>{whitelistError}</span>
+                    </div>
+                  )}
+
+                  <button 
+                    disabled={whitelistLoading} 
+                    onClick={async () => {
+                      if (!whitelistEmail) {
+                        setWhitelistError('Please enter your work email.');
+                        return;
+                      }
+                      setWhitelistLoading(true);
+                      setWhitelistError('');
+                      try {
+                        const res = await fetch('/api/auth/request-signup-link', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ email: whitelistEmail, portal: 'partners' })
+                        });
+                        const data = await res.json();
+                        if (!res.ok || !data.success) {
+                          throw new Error(data.error || 'Failed to dispatch magic link.');
+                        }
+                        setWhitelistResult(data);
+                      } catch (err: any) {
+                        setWhitelistError(err.message);
+                      } finally {
+                        setWhitelistLoading(false);
+                      }
+                    }} 
+                    className="w-full bg-[#1a1d23] text-white font-bold py-3.5 rounded-xl hover:bg-[#2a2d35] transition-all mt-4 tracking-widest disabled:opacity-50"
+                  >
+                    {whitelistLoading ? 'VERIFYING WHITELIST...' : 'DISPATCH SETUP LINK'}
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4 p-4 bg-[#10b981]/10 rounded-xl border border-[#10b981]/30">
+                  <h4 className="text-xs uppercase font-bold text-[#10b981] flex items-center gap-2">
+                    <Check className="w-4 h-4" /> LINK DISPATCHED SUCCESSFULLY
+                  </h4>
+                  <p className="text-[10px] text-[#6b7280] leading-relaxed uppercase tracking-wider">
+                    A secure authentication payload has been generated for <b>{whitelistResult.brand_name}</b> ({whitelistResult.email}).
+                  </p>
+                  
+                  <div className="p-3 bg-black rounded-lg border border-[#e4e6ea] font-mono text-[9px] text-[#10b981] break-all">
+                    Link: {window.location.origin + window.location.pathname + whitelistResult.magic_link}
+                  </div>
+
+                  <p className="text-[8px] text-[#6b7280] leading-relaxed uppercase">
+                    In actual production setup, representatives click this link inside their email. For developer preview verification, click the fast-track button below to instantly load the claimed API key credentials.
+                  </p>
+
+                  <a 
+                    href={whitelistResult.magic_link}
+                    className="w-full bg-[#10b981] text-black text-center block font-bold py-3.5 rounded-xl hover:bg-[#10b981]/90 transition-all tracking-widest text-[10px]"
+                  >
+                    FAST-TRACK MAGIC SETUP LINK
+                  </a>
+
+                  <button 
+                    onClick={() => setWhitelistResult(null)} 
+                    className="w-full text-center text-[10px] text-[#6b7280] hover:text-[#1a1d23] uppercase tracking-widest mt-2"
+                  >
+                    Retrieve for another email
+                  </button>
+                </div>
+              )}
+              <button onClick={() => setAuthMode('login')} className="w-full text-center text-[10px] text-[#6b7280] mt-6 hover:text-[#1a1d23] transition-colors uppercase tracking-widest">← Back to access</button>
+            </div>
+          ) : authMode === 'setup' ? (
+            <div className="space-y-4">
+              <div className="text-[10px] text-[#6b7280] mb-8 p-4 bg-[#f4f5f7] border-l border-[#1a1d23] uppercase tracking-widest leading-relaxed">Verification required. Use your assigned Logistics API Key to establish a new Access PIN.</div>
+              <div className="space-y-5">
+                {[
+                  { label: 'Company Name', key: 'brand', type: 'text', ph: 'e.g. Nairobi Logistics Hub' },
+                  { label: 'Portal API Key', key: 'apiKey', type: 'text', ph: 'nx_live_...' },
+                  { label: 'New Access PIN', key: 'newPassword', type: 'password', ph: '' },
+                  { label: 'Confirm PIN', key: 'confirmPassword', type: 'password', ph: '' },
+                ].map(f => (
+                  <div key={f.key}>
+                    <label className="block text-[11px] font-bold uppercase tracking-widest text-[#6b7280] mb-2">{f.label}</label>
+                    <div className="relative">
+                      <input 
+                        type={f.type === 'password' ? (f.key === 'newPassword' ? (showNewPassword ? 'text' : 'password') : (showConfirmPassword ? 'text' : 'password')) : f.type} 
+                        value={(setupData as any)[f.key]} 
+                        onChange={e => {
+                          let val = e.target.value;
+                          if (f.key === 'apiKey' || f.key === 'brand') val = val.trim();
+                          setSetupData({ ...setupData, [f.key]: val });
+                        }} 
+                        placeholder={f.ph} 
+                        className={cn("w-full border-2 border-[#e4e6ea] focus:border-[#1a1d23] rounded-xl py-3 text-sm outline-none transition-all text-[#1a1d23] bg-white", f.type === 'password' ? "pl-4 pr-10" : "px-4")} 
+                      />
+                      {f.type === 'password' && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (f.key === 'newPassword') {
+                              setShowNewPassword(!showNewPassword);
+                            } else {
+                              setShowConfirmPassword(!showConfirmPassword);
+                            }
+                          }}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b7280] hover:text-[#1a1d23] transition-colors cursor-pointer bg-transparent"
+                        >
+                          {f.key === 'newPassword' ? (
+                            showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />
+                          ) : (
+                            showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />
+                          )}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {setupError && <div className="flex items-center gap-2 text-red-500 text-xs"><AlertCircle className="w-3 h-3" /> {setupError}</div>}
+                <AnimatePresence>
+                  {setupSuccess && (
+                    <div className="flex items-center gap-2 text-[#10b981] text-xs font-bold"><CheckCircle2 className="w-3 h-3" /> SECURITY PIN ESTABLISHED. RETURNING TO LOGIN...</div>
+                  )}
+                </AnimatePresence>
+                <button onClick={handleSetupPassword} className="w-full bg-[#1a1d23] text-white font-bold py-3.5 rounded-xl hover:bg-[#2a2d35] transition-all mt-2 tracking-widest">SAVE SECURITY PIN</button>
+              </div>
+              <button onClick={() => setAuthMode('login')} className="w-full text-center text-[10px] text-[#6b7280] mt-6 hover:text-[#1a1d23] transition-colors uppercase tracking-widest">← Back to access</button>
+            </div>
           ) : (
             <div className="space-y-4">
               <div>
                 <label className="block text-[11px] font-bold uppercase tracking-widest text-[#6b7280] mb-2">Work Email Address</label>
-                <input type="email" value={loginData.brand} onChange={e => setLoginData({ ...loginData, brand: e.target.value })} onKeyDown={e => e.key === 'Enter' && handleAuth()} className="w-full border-2 border-[#e4e6ea] focus:border-[#1a1d23] rounded-xl px-4 py-2.5 text-sm outline-none transition-colors" placeholder="partner@company.com" />
+                <input type="email" value={loginData.brand} onChange={e => setLoginData({ ...loginData, brand: e.target.value })} onKeyDown={e => e.key === 'Enter' && handleAuth()} className="w-full border-2 border-[#e4e6ea] focus:border-[#1a1d23] rounded-xl px-4 py-2.5 text-sm outline-none transition-colors text-[#1a1d23] bg-white" placeholder="partner@company.com" />
               </div>
               <div>
                 <label className="block text-[11px] font-bold uppercase tracking-widest text-[#6b7280] mb-2">Password</label>
@@ -1281,7 +1420,7 @@ MERCHANT_CODE: M-104 | PHONE: +254766666666 | ORDER_SPEC: Pembe 2kg*22 | ORDER_Q
                     value={loginData.password} 
                     onChange={e => setLoginData({ ...loginData, password: e.target.value })} 
                     onKeyDown={e => e.key === 'Enter' && handleAuth()} 
-                    className="w-full border-2 border-[#e4e6ea] focus:border-[#1a1d23] rounded-xl pl-4 pr-10 py-2.5 text-sm outline-none transition-colors" 
+                    className="w-full border-2 border-[#e4e6ea] focus:border-[#1a1d23] rounded-xl pl-4 pr-10 py-2.5 text-sm outline-none transition-colors text-[#1a1d23] bg-white" 
                   />
                   <button
                     type="button"
@@ -1294,6 +1433,10 @@ MERCHANT_CODE: M-104 | PHONE: +254766666666 | ORDER_SPEC: Pembe 2kg*22 | ORDER_Q
               </div>
               {error && <div className="flex items-center gap-2 text-red-500 text-xs"><AlertCircle className="w-3 h-3" /> {error}</div>}
               <button disabled={loading} onClick={handleAuth} className="w-full bg-[#1a1d23] text-white font-bold py-3 rounded-xl hover:bg-[#2a2d35] transition-colors mt-2">{loading ? 'Authenticating...' : 'Sign In'}</button>
+              
+              <div className="mt-8 space-y-4">
+                <button onClick={() => setAuthMode('setup')} className="w-full text-center text-[10px] text-[#6b7280] hover:text-[#1a1d23] transition-colors uppercase tracking-widest">Already have a key? Set up PIN →</button>
+              </div>
             </div>
           )}
         </motion.div>

@@ -924,7 +924,8 @@ export default function CustomerDashboard({ user, onLogout }: { user: any, onLog
                       toast.success("Family account created successfully!");
                       await fetchFamilyAccount();
                     } else {
-                      toast.error("Failed to register family account.");
+                      console.error("Family account creation error:", error);
+                      toast.error("Failed to register family account: " + error.message);
                     }
                     setIsCreatingFamily(false);
                   }}

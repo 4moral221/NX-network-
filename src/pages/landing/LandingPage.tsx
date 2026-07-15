@@ -8,6 +8,7 @@ import { getPortalLink, PORTAL_URLS } from '@/src/lib/constants';
 import { QRCodeSVG } from 'qrcode.react';
 import NXLogo from '../../components/NXLogo';
 import { LazyLoadSection } from '../../components/LazyLoadSection';
+const UssdSimulator = lazy(() => import('@/src/pages/simulator/UssdSimulator'));
 
 import dukaMerchantImg from '@/src/assets/images/duka_merchant_1783441965415.jpg';
 import nxCustomerImg from '@/src/assets/images/nx_customer_1783441980207.jpg';
@@ -958,6 +959,13 @@ export default function LandingPage() {
             </div>
           </div>
         </div>
+      </LazyLoadSection>
+
+      <LazyLoadSection id="ussd-simulator" className="py-24 px-6 md:px-10 max-w-6xl mx-auto border-t border-nx-border scroll-mt-16">
+        <h2 className="text-3xl font-display text-white mb-8">USSD Network Simulator</h2>
+        <Suspense fallback={<UssdDemoPlaceholder />}>
+          <UssdDemo />
+        </Suspense>
       </LazyLoadSection>
 
       {/* Core Blueprints & System Mechanics Accordion Section */}

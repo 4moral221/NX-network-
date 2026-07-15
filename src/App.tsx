@@ -106,7 +106,7 @@ export default function App() {
   const getTarget = () => {
     const envTarget = import.meta.env.VITE_APP_TARGET;
     if (envTarget) {
-      if (envTarget === 'landing' || envTarget === 'partners' || envTarget === 'fmcg' || envTarget === 'merchant') {
+      if (envTarget === 'landing') {
         return 'main';
       }
       return envTarget;
@@ -140,14 +140,16 @@ export default function App() {
       if (hostname.includes('pwa') || hostname.includes('app')) {
         return 'pwa';
       }
-      if (
-        hostname.includes('landing') || 
-        hostname.includes('main') || 
-        hostname.includes('partners') || 
-        hostname.includes('fmcg') || 
-        hostname.includes('merchant') || 
-        hostname.includes('hub')
-      ) {
+      if (hostname.includes('partners')) {
+        return 'partners';
+      }
+      if (hostname.includes('fmcg')) {
+        return 'fmcg';
+      }
+      if (hostname.includes('merchant') || hostname.includes('hub')) {
+        return 'merchant';
+      }
+      if (hostname.includes('landing') || hostname.includes('main')) {
         return 'main';
       }
     }
@@ -182,6 +184,30 @@ export default function App() {
           <Route path="/hub/*" element={<MerchantPortal />} />
           <Route path="/app/*" element={<PwaApp />} />
           <Route path="/" element={<Navigate to="/app" replace />} />
+        </>
+      );
+    }
+    if (target === 'partners') {
+      return (
+        <>
+          <Route path="/partners/*" element={<PartnersPortal />} />
+          <Route path="/" element={<Navigate to="/partners" replace />} />
+        </>
+      );
+    }
+    if (target === 'fmcg') {
+      return (
+        <>
+          <Route path="/fmcgs/*" element={<FmcgsPortal />} />
+          <Route path="/" element={<Navigate to="/fmcgs" replace />} />
+        </>
+      );
+    }
+    if (target === 'merchant') {
+      return (
+        <>
+          <Route path="/hub/*" element={<MerchantPortal />} />
+          <Route path="/" element={<Navigate to="/hub" replace />} />
         </>
       );
     }

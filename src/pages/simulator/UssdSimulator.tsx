@@ -92,35 +92,38 @@ export default function UssdSimulator() {
     setLoading(true);
     setErrorBanner(null);
 
-    const params = new URLSearchParams({
+    const params = {
       sessionId,
       phoneNumber: phone,
-      serviceCode: '*384*6180#',
       text: text,
-    });
+      ussdMode: 'local'
+    };
 
     // Auto-proxy any direct Supabase calls to avoid browser CORS errors and handle nx-ussd mapping
     let finalUrl = fnUrl;
     if (fnUrl.includes('supabase.co') || fnUrl.includes('supabase.com')) {
-      params.set('ussdMode', 'edge');
+      params.ussdMode = 'edge';
       finalUrl = '/api/ussd';
     }
-    const body = params.toString();
 
     const headers: Record<string, string> = {
-      'Content-Type': 'application/x-www-form-urlencoded'
+      'Content-Type': 'application/json'
     };
 
     if (secret) {
       try {
-        headers['X-AT-Signature'] = await computeHMAC(secret, body);
+        headers['X-AT-Signature'] = await computeHMAC(secret, JSON.stringify(params));
       } catch (e: any) {
         addLog('ERR', 'HMAC signature verification failed: ' + e.message);
       }
     }
 
     try {
-      const res = await fetch(finalUrl, { method: 'POST', headers, body });
+      const res = await fetch(finalUrl, { 
+        method: 'POST', 
+        headers, 
+        body: JSON.stringify(params) 
+      });
       const txt = await res.text();
       setLoading(false);
       if (!res.ok && !txt.startsWith('CON') && !txt.startsWith('END')) {

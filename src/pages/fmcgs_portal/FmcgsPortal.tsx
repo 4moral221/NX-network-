@@ -170,22 +170,6 @@ export default function FmcgsPortal() {
             if (partnerData) {
               setBrand(partnerData);
               setIsLoggedIn(true);
-            } else {
-              const { data: pData } = await supabase
-                .from('partners')
-                .select('*')
-                .eq('user_id', session.user.id)
-                .maybeSingle();
-              if (pData) {
-                setBrand({
-                  id: pData.id,
-                  name: pData.company_name,
-                  contact: email,
-                  active: pData.status === 'active',
-                  category: 'Partner'
-                });
-                setIsLoggedIn(true);
-              }
             }
           }
         }
