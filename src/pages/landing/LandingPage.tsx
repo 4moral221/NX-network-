@@ -8,12 +8,10 @@ import { getPortalLink, PORTAL_URLS } from '@/src/lib/constants';
 import { QRCodeSVG } from 'qrcode.react';
 import NXLogo from '../../components/NXLogo';
 import { LazyLoadSection } from '../../components/LazyLoadSection';
-const UssdSimulator = lazy(() => import('@/src/pages/simulator/UssdSimulator'));
+const UssdDemo = lazy(() => import('@/src/components/UssdDemo'));
 
 import dukaMerchantImg from '@/src/assets/images/duka_merchant_1783441965415.jpg';
 import nxCustomerImg from '@/src/assets/images/nx_customer_1783441980207.jpg';
-
-const UssdDemo = lazy(() => import('@/src/components/UssdDemo'));
 
 const UssdDemoPlaceholder = () => (
   <div className="w-full max-w-[320px] aspect-[9/16] bg-[#0c0f1d] border border-white/5 rounded-3xl p-6 flex flex-col justify-between items-center animate-pulse">
@@ -1929,22 +1927,6 @@ export default function LandingPage() {
                   Partners Portal <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </button>
               </li>
-              <li>
-                <button 
-                  onClick={() => setShowBrandPortalChoice(true)} 
-                  className="flex items-center gap-2 text-sm text-nx-muted hover:text-nx-amber transition-colors group bg-transparent border-none p-0 cursor-pointer text-left focus:outline-hidden"
-                >
-                  Logistics & Delivery Portal <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </button>
-              </li>
-              <li>
-                <button 
-                  onClick={() => setShowBrandPortalChoice(true)} 
-                  className="flex items-center gap-2 text-sm text-nx-muted hover:text-nx-amber transition-colors group bg-transparent border-none p-0 cursor-pointer text-left focus:outline-hidden"
-                >
-                  FMCG Partner Portal <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </button>
-              </li>
             </ul>
           </div>
         </div>
@@ -2293,7 +2275,7 @@ export default function LandingPage() {
                         PARTNERS PORTAL
                       </h4>
                       <p className="text-[11px] text-[#8e8d8b] leading-relaxed mt-1.5">
-                        Demand intelligence for registered wholesale and distribution network partners.
+                        Accessed by wholesalers bidding for restocking merchants, and delivery partners fulfilling goods logistics.
                       </p>
                       <div className="text-[10px] uppercase font-mono tracking-wider font-bold text-nx-amber flex items-center gap-1.5 mt-3">
                         ACCESS PARTNERS <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />

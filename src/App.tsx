@@ -13,7 +13,6 @@ const PartnersPortal = lazy(() => import('./pages/partners_portal/PartnersPortal
 const FmcgsPortal = lazy(() => import('./pages/fmcgs_portal/FmcgsPortal'));
 const AdminPortal = lazy(() => import('./pages/admin/AdminPortal'));
 const ControlCenter = lazy(() => import('./pages/control/ControlCenter'));
-const UssdSimulator = lazy(() => import('./pages/simulator/UssdSimulator'));
 const PwaApp = lazy(() => import('./pages/pwa/PwaApp'));
 const FmcgOnboarding = lazy(() => import('./pages/fmcg_onboarding/OnboardingApp'));
 const LogisticsApiDocs = lazy(() => import('./pages/docs/LogisticsApiDocs'));
@@ -220,7 +219,6 @@ export default function App() {
           <Route path="/partners/*" element={<PartnersPortal />} />
           <Route path="/fmcgs/*" element={<FmcgsPortal />} />
           <Route path="/app/*" element={<PwaApp />} />
-          <Route path="/sim" element={<UssdSimulator />} />
           <Route path="/docs/logistics-partners" element={<LogisticsApiDocs />} />
         </>
       );
@@ -236,7 +234,6 @@ export default function App() {
         <Route path="/fmcgs/*" element={<FmcgsPortal />} />
         <Route path="/admin/*" element={<AdminPortal />} />
         <Route path="/app/*" element={<PwaApp />} />
-        <Route path="/sim" element={<UssdSimulator />} />
         <Route path="/control" element={<ControlCenter />} />
         <Route path="/docs/logistics-partners" element={<LogisticsApiDocs />} />
       </>
