@@ -14,7 +14,15 @@ export default function PwaApp() {
   const navigate = useNavigate();
   
   // Base path for PWA (either /app or / depending on deployment)
-  const isTargeted = !!import.meta.env.VITE_APP_TARGET || (typeof window !== 'undefined' && window.location && (window.location.hostname.includes('pwa') || window.location.hostname.includes('merchant') || window.location.hostname.includes('app')));
+  const isTargeted = (!!import.meta.env.VITE_APP_TARGET && import.meta.env.VITE_APP_TARGET === 'pwa') || 
+    (typeof window !== 'undefined' && window.location && 
+     !window.location.hostname.includes('localhost') && 
+     !window.location.hostname.includes('127.0.0.1') && 
+     !window.location.hostname.includes('.run.app') && 
+     !window.location.hostname.includes('aistudio') && 
+     !window.location.hostname.includes('webcontainer') &&
+     (window.location.hostname.includes('pwa') || window.location.hostname.includes('app') || window.location.hostname.includes('merchant'))
+    );
   const basePath = isTargeted ? '' : '/app';
 
   useEffect(() => {

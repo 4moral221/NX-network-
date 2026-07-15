@@ -115,6 +115,18 @@ export default function App() {
     if (typeof window !== 'undefined' && window.location) {
       let hostname = window.location.hostname.toLowerCase();
       
+      // If we are on local development or AI Studio preview environments (e.g. Cloud Run, localhost, WebContainers, etc.),
+      // always default to the unified build so that all portal views are fully accessible.
+      if (
+        hostname.includes('localhost') || 
+        hostname.includes('127.0.0.1') || 
+        hostname.includes('.run.app') || 
+        hostname.includes('aistudio') ||
+        hostname.includes('webcontainer')
+      ) {
+        return undefined;
+      }
+      
       // Remove Vercel / APP domain suffixes to prevent '.vercel.app' from matching 'app' target
       if (hostname.endsWith('.vercel.app')) {
         hostname = hostname.slice(0, -11);

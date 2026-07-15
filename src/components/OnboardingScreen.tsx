@@ -236,122 +236,169 @@ export default function OnboardingScreen({ children }: OnboardingScreenProps) {
   };
 
   return (
-    <div className="min-h-[100dvh] w-full bg-[#0d0f14] text-nx-paper flex items-center justify-center p-0 sm:p-6 md:p-12 font-sans select-none overflow-hidden relative">
+    <div className="h-[100dvh] w-screen bg-nx-ink text-nx-paper flex items-center justify-center p-0 font-sans select-none overflow-hidden relative">
       {/* Soft, minimal grid overlay */}
       <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.012)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.012)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none"></div>
       
       {/* Warm ambient light */}
       <div className="absolute top-1/4 left-1/4 w-[450px] h-[450px] bg-nx-amber/5 rounded-full blur-[110px] pointer-events-none"></div>
 
-      {/* Mockup card with elegant, minimalist design */}
+      {/* Main Full-Screen Layout */}
       <motion.div
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
-        className="w-full h-[100dvh] sm:h-[800px] sm:max-w-[380px] bg-nx-card sm:rounded-[32px] sm:shadow-[0_24px_60px_rgba(0,0,0,0.6)] border-0 sm:border sm:border-nx-border relative flex flex-col justify-between overflow-hidden"
+        className="w-full h-full bg-nx-card relative flex flex-col md:grid md:grid-cols-2 overflow-hidden"
       >
-        {/* Top bar with simple, human portal label */}
-        <div className="px-6 pt-4 pb-2 flex justify-between items-center text-nx-muted text-[11px] tracking-wide font-medium z-10 border-b border-nx-border/20 bg-nx-ink/20">
-          <span className="text-nx-amber font-semibold">{config.name}</span>
-          <span className="text-[10px] opacity-60">Introduction</span>
-        </div>
-
-        {/* Page progress and Skip action */}
-        <div className="px-6 pt-6 flex justify-between items-center z-10">
-          <div className="flex items-center gap-1.5">
-            {config.steps.map((_, idx) => {
-              const isActive = idx === currentStep;
-              return (
-                <motion.div
-                  key={idx}
-                  layoutId={`onboarding-dot-clean-${idx}`}
-                  animate={{
-                    width: isActive ? 16 : 6,
-                    backgroundColor: isActive ? "var(--color-nx-amber)" : "rgba(255, 255, 255, 0.15)",
-                  }}
-                  transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                  className="h-1.5 rounded-full"
-                />
-              );
-            })}
+        {/* Left column (Desktop only) - Image & Branding */}
+        <div className="hidden md:flex flex-col justify-between p-12 bg-[#090b0f] border-r border-nx-border/40 relative overflow-hidden h-full">
+          {/* Subtle grid pattern for texture */}
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.008)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.008)_1px,transparent_1px)] bg-[size:30px_30px] pointer-events-none"></div>
+          {/* Internal ambient glow */}
+          <div className="absolute -bottom-20 -left-20 w-[300px] h-[300px] bg-nx-amber/5 rounded-full blur-[80px] pointer-events-none"></div>
+          
+          {/* Branding */}
+          <div className="flex items-center gap-3 z-10">
+            <span className="font-display text-2xl tracking-[0.1em] text-nx-amber font-bold">{config.name}</span>
+            <span className="text-[10px] uppercase tracking-widest text-nx-muted bg-nx-ink/40 px-2 py-0.5 border border-nx-border/30 rounded">Intro</span>
           </div>
 
-          <button
-            onClick={handleDismiss}
-            className="text-xs font-semibold tracking-wide text-nx-muted hover:text-nx-amber active:scale-95 transition-colors cursor-pointer px-3 py-1 rounded bg-nx-ink/30 border border-nx-border/40"
-          >
-            Skip
-          </button>
-        </div>
-
-        {/* Core Content Body */}
-        <div className="flex-1 flex flex-col justify-center px-6 py-2 relative z-10">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentStep}
-              initial={{ opacity: 0, x: 12 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -12 }}
-              transition={{ duration: 0.22, ease: "easeInOut" }}
-              className="flex flex-col items-center text-center space-y-6"
-            >
-              {/* Premium image panel wrapper with smooth rounding */}
-              <div className="w-full max-w-[260px] aspect-square rounded-2xl overflow-hidden bg-nx-ink border border-nx-border/60 p-2 relative shadow-[0_8px_24px_rgba(0,0,0,0.3)]">
-                <div className="w-full h-full rounded-xl overflow-hidden">
-                  <img
-                    src={onboardingImg}
-                    alt={step.highlight}
-                    className="w-full h-full object-cover transition-all duration-500"
-                    referrerPolicy="no-referrer"
-                  />
-                </div>
-                
-                {/* Float-badge icon matching step theme */}
-                <div 
-                  className="absolute bottom-4 right-4 p-2 rounded-xl text-nx-ink border border-white/10 shadow-lg flex items-center justify-center"
-                  style={{ backgroundColor: step.color }}
-                >
-                  <step.icon className="w-4 h-4" />
-                </div>
+          {/* Premium centered image panel */}
+          <div className="flex-1 flex items-center justify-center p-8 z-10">
+            <div className="w-full max-w-[420px] aspect-square rounded-3xl overflow-hidden bg-nx-ink border border-nx-border p-3 relative shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+              <div className="w-full h-full rounded-2xl overflow-hidden">
+                <img
+                  src={onboardingImg}
+                  alt={step.highlight}
+                  className="w-full h-full object-cover transition-all duration-500 hover:scale-105"
+                  referrerPolicy="no-referrer"
+                />
               </div>
-
-              {/* Headings and narrative body */}
-              <div className="space-y-3 w-full px-1 text-left">
-                <div className="space-y-0.5">
-                  <span className="text-xs font-semibold tracking-wide text-nx-muted uppercase block">
-                    {step.title}
-                  </span>
-                  <span className="font-display text-3xl tracking-wide text-nx-paper uppercase block">
-                    {step.highlight}
-                  </span>
-                </div>
-                
-                <div className="w-10 h-[2px] bg-nx-amber rounded-full"></div>
-
-                <p className="text-nx-muted text-[13.5px] leading-relaxed tracking-wide font-light">
-                  {step.subtitle}
-                </p>
+              
+              {/* Float-badge icon matching step theme */}
+              <div 
+                className="absolute bottom-6 right-6 p-3.5 rounded-2xl text-nx-ink border border-white/10 shadow-2xl flex items-center justify-center transition-transform hover:scale-110"
+                style={{ backgroundColor: step.color }}
+              >
+                <step.icon className="w-6 h-6" />
               </div>
-            </motion.div>
-          </AnimatePresence>
-        </div>
+            </div>
+          </div>
 
-        {/* Footer and Navigation Action Button */}
-        <div className="px-6 pb-8 pt-4 z-10 border-t border-nx-border/20 bg-nx-ink/10">
-          <motion.button
-            whileTap={{ scale: 0.98 }}
-            onClick={handleNext}
-            className="w-full py-3.5 px-6 bg-nx-amber hover:bg-opacity-90 text-nx-ink font-semibold text-xs uppercase tracking-widest transition-all rounded-xl flex items-center justify-center gap-2"
-          >
-            <span>{isLastStep ? "Get Started" : "Continue"}</span>
-            <ChevronRight className="w-4 h-4 text-nx-ink stroke-[2.5px]" />
-          </motion.button>
-
-          {/* Humble, non-technical safety line */}
-          <div className="flex items-center justify-center gap-1 mt-4 text-[10px] text-nx-muted/60 tracking-wider uppercase font-medium">
-            <ShieldCheck className="w-3.5 h-3.5 text-nx-green" />
+          {/* Humble digital safety footer */}
+          <div className="flex items-center gap-2 z-10 text-[10px] text-nx-muted/60 tracking-wider uppercase font-medium">
+            <ShieldCheck className="w-4 h-4 text-nx-green" />
             <span>Secure Digital Restocking Network</span>
           </div>
+        </div>
+
+        {/* Right column (or full screen on mobile) - Step interactive content */}
+        <div className="flex-1 flex flex-col justify-between h-full overflow-y-auto bg-nx-card relative">
+          
+          {/* Top navigation (Header) */}
+          <div className="px-6 pt-5 pb-3 flex justify-between items-center border-b border-nx-border/10 md:border-b-0 bg-nx-ink/10 md:bg-transparent">
+            {/* Show brand name on mobile only in header, since desktop has left column */}
+            <span className="text-nx-amber font-semibold text-sm md:hidden">{config.name}</span>
+            <span className="hidden md:inline text-[11px] text-nx-muted font-medium">Step {currentStep + 1} of {config.steps.length}</span>
+            
+            <button
+              onClick={handleDismiss}
+              className="text-xs font-semibold tracking-wide text-nx-muted hover:text-nx-amber active:scale-95 transition-colors cursor-pointer px-3 py-1.5 rounded bg-nx-ink/30 border border-nx-border/40 z-20"
+            >
+              Skip
+            </button>
+          </div>
+
+          {/* Central Interactive area */}
+          <div className="flex-1 flex flex-col justify-center px-6 py-8 md:px-12 max-w-[500px] mx-auto w-full">
+            
+            {/* Step Indicators above content */}
+            <div className="flex items-center gap-1.5 mb-8 justify-start">
+              {config.steps.map((_, idx) => {
+                const isActive = idx === currentStep;
+                return (
+                  <motion.div
+                    key={idx}
+                    layoutId={`onboarding-dot-clean-${idx}`}
+                    animate={{
+                      width: isActive ? 24 : 8,
+                      backgroundColor: isActive ? "var(--color-nx-amber)" : "rgba(255, 255, 255, 0.15)",
+                    }}
+                    transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                    className="h-1.5 rounded-full"
+                  />
+                );
+              })}
+            </div>
+
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentStep}
+                initial={{ opacity: 0, x: 15 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -15 }}
+                transition={{ duration: 0.22, ease: "easeInOut" }}
+                className="flex flex-col space-y-6 md:space-y-8"
+              >
+                {/* On mobile, show the image inside the card */}
+                <div className="md:hidden w-full flex justify-center">
+                  <div className="w-full max-w-[240px] aspect-square rounded-2xl overflow-hidden bg-nx-ink border border-nx-border/60 p-2 relative shadow-[0_8px_24px_rgba(0,0,0,0.3)]">
+                    <div className="w-full h-full rounded-xl overflow-hidden">
+                      <img
+                        src={onboardingImg}
+                        alt={step.highlight}
+                        className="w-full h-full object-cover"
+                        referrerPolicy="no-referrer"
+                      />
+                    </div>
+                    <div 
+                      className="absolute bottom-4 right-4 p-2 rounded-xl text-nx-ink border border-white/10 shadow-lg flex items-center justify-center"
+                      style={{ backgroundColor: step.color }}
+                    >
+                      <step.icon className="w-4 h-4" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Narrative text block */}
+                <div className="space-y-4 md:space-y-5 text-left">
+                  <div className="space-y-1">
+                    <span className="text-xs font-semibold tracking-widest text-nx-muted uppercase block">
+                      {step.title}
+                    </span>
+                    <span className="font-display text-4xl md:text-5xl tracking-wide text-nx-paper uppercase block leading-tight">
+                      {step.highlight}
+                    </span>
+                  </div>
+                  
+                  <div className="w-12 h-[3px] bg-nx-amber rounded-full"></div>
+
+                  <p className="text-[#b5b3aa] text-[15px] md:text-[16px] leading-relaxed tracking-wide font-light">
+                    {step.subtitle}
+                  </p>
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          {/* Bottom Controls Footer */}
+          <div className="px-6 pb-8 pt-6 md:px-12 border-t border-nx-border/20 bg-nx-ink/10 md:bg-transparent max-w-[500px] mx-auto w-full flex flex-col gap-4">
+            <motion.button
+              whileTap={{ scale: 0.98 }}
+              onClick={handleNext}
+              className="w-full py-4 px-6 bg-nx-amber hover:bg-opacity-90 text-nx-ink font-semibold text-xs uppercase tracking-widest transition-all rounded-xl flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(255,181,71,0.15)]"
+            >
+              <span>{isLastStep ? "Get Started" : "Continue"}</span>
+              <ChevronRight className="w-4 h-4 text-nx-ink stroke-[2.5px]" />
+            </motion.button>
+
+            {/* Mobile-only safety line inside bottom container */}
+            <div className="md:hidden flex items-center justify-center gap-1 text-[10px] text-nx-muted/60 tracking-wider uppercase font-medium">
+              <ShieldCheck className="w-3.5 h-3.5 text-nx-green" />
+              <span>Secure Digital Restocking Network</span>
+            </div>
+          </div>
+
         </div>
       </motion.div>
     </div>
