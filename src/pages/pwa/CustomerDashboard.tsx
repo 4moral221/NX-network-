@@ -53,8 +53,6 @@ export default function CustomerDashboard({ user, onLogout }: { user: any, onLog
   const [familyTxns, setFamilyTxns] = useState<any[]>([]);
   const [familyCodeInput, setFamilyCodeInput] = useState('');
   const [isCreatingFamily, setIsCreatingFamily] = useState(false);
-  const [isFamilyPaymentMode, setIsFamilyPaymentMode] = useState(false); // individual vs family payment tab
-  const [familyCodePaymentInput, setFamilyCodePaymentInput] = useState('');
   
   // Payment Modal State
   const [isPayModalOpen, setIsPayModalOpen] = useState(false);
@@ -186,50 +184,6 @@ export default function CustomerDashboard({ user, onLogout }: { user: any, onLog
       }
 
       let targetBalance = balance;
-      let parentPhone = '';
-
-      if (isFamilyPaymentMode) {
-        if (!familyCodePaymentInput) {
-          setPayError('Family Code is required.');
-          setPayStatus('error');
-          return;
-        }
-
-        const { data: family, error: famErr } = await supabase
-          .from('family_accounts')
-          .select('*')
-          .eq('family_code', familyCodePaymentInput.toUpperCase().trim())
-          .maybeSingle();
-
-        if (famErr || !family) {
-          setPayError('Family account not found. Check the code.');
-          setPayStatus('error');
-          return;
-        }
-
-        if (!family.allow_spending || family.status !== 'active') {
-          setPayError('Family spending is deactivated by the parent.');
-          setPayStatus('error');
-          return;
-        }
-
-        parentPhone = family.parent_phone;
-
-        // Fetch parent's balance
-        const { data: parentUser, error: parentErr } = await supabase
-          .from('users')
-          .select('nx_balance')
-          .eq('phone', parentPhone)
-          .maybeSingle();
-
-        if (parentErr || !parentUser) {
-          setPayError('Could not retrieve parent balance.');
-          setPayStatus('error');
-          return;
-        }
-
-        targetBalance = Number(parentUser.nx_balance || 0);
-      }
 
       // 1. Find merchant
       const { data: merchant, error: merchantErr } = await supabase
@@ -300,7 +254,7 @@ export default function CustomerDashboard({ user, onLogout }: { user: any, onLog
       const maxNxAllowed = Math.floor(numAmount * dynamicCeiling);
       const nxRedeemed = floorToFive(Math.min(targetBalance, maxNxAllowed, remainingPool));
       const cashPaid = numAmount - nxRedeemed;
-      const nxEarned = isFamilyPaymentMode ? 0 : Math.floor(cashPaid * earnRate * earnMultiplier); // child earns 0 if parent pays to avoid double-dipping, or they can earn. Let's make child earn 0 passively on family pay.
+      const nxEarned = Math.floor(cashPaid * earnRate * earnMultiplier);
       const nxFee = targetBalance > 0 ? 2 : 0; 
       
       const transactionCode = 'NX' + Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -319,10 +273,6 @@ export default function CustomerDashboard({ user, onLogout }: { user: any, onLog
           nx_fee: nxFee,
           status: 'awaiting_merchant'
         };
-
-        if (isFamilyPaymentMode) {
-          txnPayload.family_code = familyCodePaymentInput.toUpperCase().trim();
-        }
 
         const { error: txnErr } = await supabase.from('transactions').insert([txnPayload]);
 
@@ -1205,10 +1155,10 @@ export default function CustomerDashboard({ user, onLogout }: { user: any, onLog
                       <div className="flex justify-between items-center">
                         <span className="text-[10px] uppercase tracking-widest text-nx-amber">NX Discount</span>
                         <span className="text-xs font-mono text-nx-amber">
-                          {isFamilyPaymentMode ? "Calculated on submit" : `-${liveNxRedeem.toFixed(2)} NX`}
+                          -{liveNxRedeem.toFixed(2)} NX
                         </span>
                       </div>
-                      {!isFamilyPaymentMode && liveNxFee > 0 && (
+                      {liveNxFee > 0 && (
                         <div className="flex justify-between items-center text-nx-amber/80">
                           <span className="text-[10px] uppercase tracking-widest flex items-center gap-1">Network Fee <Info size={10} /></span>
                           <span className="text-[10px] font-mono">-{liveNxFee.toFixed(2)} NX</span>
@@ -1218,7 +1168,7 @@ export default function CustomerDashboard({ user, onLogout }: { user: any, onLog
                       <div className="flex justify-between items-center">
                         <span className="text-[10px] uppercase tracking-widest text-nx-green font-bold">Cash to Pay</span>
                         <span className="text-sm font-mono text-nx-green font-bold">
-                          {isFamilyPaymentMode ? "Calculated on submit" : `KSH ${liveCash.toFixed(2)}`}
+                          KSH {liveCash.toFixed(2)}
                         </span>
                       </div>
                       
