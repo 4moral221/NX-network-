@@ -105,6 +105,14 @@ export default function App() {
   // Resolve target prioritizing the browser's hostname to bypass any environmental/cache propagation quirks on Vercel.
   // Falls back to build-time VITE_APP_TARGET when hostname is non-specific (like localhost or AI Studio Cloud Run preview).
   const getTarget = () => {
+    const envTarget = import.meta.env.VITE_APP_TARGET;
+    if (envTarget) {
+      if (envTarget === 'landing' || envTarget === 'partners' || envTarget === 'fmcg' || envTarget === 'merchant') {
+        return 'main';
+      }
+      return envTarget;
+    }
+
     if (typeof window !== 'undefined' && window.location) {
       let hostname = window.location.hostname.toLowerCase();
       
@@ -131,14 +139,11 @@ export default function App() {
       ) {
         return 'main';
       }
-    }
-
-    const envTarget = import.meta.env.VITE_APP_TARGET;
-    if (envTarget) {
-      if (envTarget === 'landing' || envTarget === 'partners' || envTarget === 'fmcg' || envTarget === 'merchant') {
-        return 'main';
+      
+      // If it's an ambiguous Vercel preview URL for the nx-network project, default to PWA
+      if (hostname.startsWith('nx-network')) {
+        return 'pwa';
       }
-      return envTarget;
     }
 
     return undefined;
