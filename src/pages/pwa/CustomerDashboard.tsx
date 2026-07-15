@@ -921,7 +921,7 @@ export default function CustomerDashboard({ user, onLogout }: { user: any, onLog
                       });
                     
                     if (!error) {
-                      toast.success("Family account created successfully!");
+                      toast.success("Family account created successfully! Welcome to the family! For help, call 0781550151.");
                       await fetchFamilyAccount();
                     } else {
                       console.error("Family account creation error:", error);

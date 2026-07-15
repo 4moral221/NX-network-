@@ -143,7 +143,7 @@ async function handleMerchantRegistration(phoneNumber: string, lang: string, par
       });
 
       if (error) return `END ${t(lang, "app_failed")}`;
-      return `END ${t(lang, "app_submitted", { phone: "+254700000000" })}`;
+      return `END ${t(lang, "app_submitted", { phone: "0781550151" })}`;
     }
   }
   return `END ${t(lang, "invalid_option")}`;

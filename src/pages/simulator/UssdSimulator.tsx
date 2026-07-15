@@ -237,7 +237,7 @@ export default function UssdSimulator() {
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#1e1e1e] pb-6">
           <div>
             <h1 className="font-display text-3xl font-bold tracking-tight text-[#00e676]">USSD Interface</h1>
-            <p className="text-xs text-[#666] uppercase tracking-[0.2em] mt-1">Sandbox Environment v5.0</p>
+            <p className="text-xs text-[#666] uppercase tracking-[0.2em] mt-1">Sandbox Environment v5.0 | Help: 0781550151</p>
           </div>
           <div className="flex items-center gap-4">
             <div className={cn(
