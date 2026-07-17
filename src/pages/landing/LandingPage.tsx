@@ -306,7 +306,7 @@ export default function LandingPage() {
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
           className="font-serif text-[clamp(16px,2vw,22px)] text-nx-paper/70 max-w-2xl leading-relaxed mb-6"
         >
-          NX aggregates duka orders, delivers stock, and settles on delivery – while customers earn rewards on every purchase.
+          NX maximizes FMCG sales through real-time granular data, predictive demand intelligence, and streamlined bulk purchase aggregation for informal kiosks and dukas.
         </motion.p>
         
         <motion.div 
@@ -608,7 +608,7 @@ export default function LandingPage() {
                 <div className="text-nx-amber mb-4 font-display text-4xl">02</div>
                 <h4 className="font-serif text-lg text-nx-paper mb-2">Orders are Pooled</h4>
                 <p className="text-xs text-nx-muted leading-relaxed">
-                  Orders are pooled by area and supplier, so wholesalers and FMCGs see a single consolidated demand signal instead of scattered calls and texts.
+                  Orders are pooled by area and supplier, so suppliers and FMCGs see a single consolidated demand signal instead of scattered calls and texts.
                 </p>
               </div>
 
@@ -640,110 +640,6 @@ export default function LandingPage() {
               <blockquote className="font-serif text-sm text-nx-paper/85 italic leading-relaxed">
                 "Over 70% of everyday essentials in Africa move through informal retail – NX makes that demand visible, consolidated, and bankable for the first time."
               </blockquote>
-            </div>
-          </div>
-        </div>
-      </LazyLoadSection>
-
-      {/* Logistics & Delivery Partners Section */}
-      <LazyLoadSection id="logistics-partners" className="py-24 px-6 md:px-10 max-w-6xl mx-auto border-t border-nx-border">
-        <div>
-          <div className="flex items-center gap-4 text-[9px] uppercase tracking-[0.4em] text-nx-amber mb-6">
-            <div className="w-8 h-[1px] bg-nx-amber" /> Last Mile Logistics
-          </div>
-          
-          <div className="grid lg:grid-cols-12 gap-12 mb-16">
-            <div className="lg:col-span-5 space-y-6">
-              <h2 className="font-display text-[clamp(36px,5vw,64px)] leading-[1.1] tracking-tight text-nx-paper uppercase">
-                LOGISTICS &amp;<br/>DELIVERY<br/><span className="text-nx-amber italic">PARTNERS.</span>
-              </h2>
-              <p className="font-serif text-lg text-nx-paper/70 leading-relaxed">
-                We own demand, software, and settlement, while partners handle last-mile fulfillment. NX aggregates thousands of small duka orders into bulk demand streams, then routes them to trusted logistics and distributor partners via API.
-              </p>
-              <p className="text-sm text-nx-muted leading-relaxed">
-                Our role is to orchestrate who needs what, where, and when — not to run trucks. Partners plug into the NX demand graph, receive consolidated delivery requests, and get paid on confirmed, traceable orders.
-              </p>
-
-              <div className="p-6 bg-nx-card border border-nx-amber/25 rounded-2xl border-l-4 border-l-nx-amber shadow-xl">
-                <blockquote className="font-serif text-sm text-nx-paper/90 italic leading-relaxed">
-                  "Own the wheels, not the demand. Plug your fleet or warehouse into NX and turn informal retail into predictable, API-driven delivery flows."
-                </blockquote>
-              </div>
-            </div>
-            
-            <div className="lg:col-span-7 space-y-8">
-              {/* Why partners work with us */}
-              <div className="space-y-4">
-                <h3 className="font-display text-lg text-nx-paper uppercase tracking-wider">Why delivery partners work with NX</h3>
-                <div className="grid gap-4">
-                  <div className="bg-nx-card p-5 rounded-xl border border-nx-border hover:border-nx-amber/20 transition-all flex gap-4">
-                    <div className="p-3 bg-nx-amber/10 text-nx-amber rounded-lg h-fit shrink-0">
-                      <Zap className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h4 className="font-sans font-bold text-sm text-nx-paper mb-1">Guaranteed demand streams</h4>
-                      <p className="text-xs text-nx-muted leading-relaxed">
-                        Access pooled, pre-validated orders from dukas and hubs instead of chasing one-off calls and texts.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="bg-nx-card p-5 rounded-xl border border-nx-border hover:border-nx-amber/20 transition-all flex gap-4">
-                    <div className="p-3 bg-nx-amber/10 text-nx-amber rounded-lg h-fit shrink-0">
-                      <Cpu className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h4 className="font-sans font-bold text-sm text-nx-paper mb-1">API-first workflows</h4>
-                      <p className="text-xs text-nx-muted leading-relaxed">
-                        Receive structured delivery tasks, status updates, and settlement events directly from NX systems.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="bg-nx-card p-5 rounded-xl border border-nx-border hover:border-nx-amber/20 transition-all flex gap-4">
-                    <div className="p-3 bg-nx-amber/10 text-nx-amber rounded-lg h-fit shrink-0">
-                      <Smartphone className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h4 className="font-sans font-bold text-sm text-nx-paper mb-1">No consumer app required</h4>
-                      <p className="text-xs text-nx-muted leading-relaxed">
-                        We handle USSD, PWA, and loyalty; you focus purely on moving goods safely and on time.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* How it works */}
-              <div className="space-y-4 pt-6 border-t border-nx-border/50">
-                <h3 className="font-display text-lg text-nx-paper uppercase tracking-wider">How it works for partners</h3>
-                <div className="space-y-3 font-mono text-xs text-[#b5b3aa]">
-                  <div className="flex gap-3 items-start">
-                    <span className="text-nx-amber font-bold">1.</span>
-                    <p><strong className="text-nx-paper">Integrate once:</strong> Connect your dispatch, routing, or warehouse system to NX via our Delivery Partner API.</p>
-                  </div>
-                  <div className="flex gap-3 items-start">
-                    <span className="text-nx-amber font-bold">2.</span>
-                    <p><strong className="text-nx-paper">Receive jobs:</strong> NX sends clustered delivery tasks (locations, SKUs, quantities, time windows) based on aggregated duka demand.</p>
-                  </div>
-                  <div className="flex gap-3 items-start">
-                    <span className="text-nx-amber font-bold">3.</span>
-                    <p><strong className="text-nx-paper">Fulfill &amp; confirm:</strong> You deliver, mark orders as completed, and NX settles invoices and commissions automatically on confirmed deliveries.</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Button to API docs */}
-              <div className="pt-4">
-                <Link 
-                  to="/docs/logistics-partners"
-                  className="nx-btn-primary text-xs px-6 py-3 inline-flex items-center gap-2 group font-bold tracking-wider uppercase bg-nx-amber text-nx-ink rounded-lg hover:bg-nx-amber/90 transition-all"
-                >
-                  <FileText className="w-4 h-4 text-nx-ink shrink-0" />
-                  View Delivery Partner API Docs
-                  <ArrowRight className="w-4 h-4 text-nx-ink group-hover:translate-x-1 transition-transform" />
-                </Link>
-              </div>
             </div>
           </div>
         </div>
@@ -1843,7 +1739,7 @@ export default function LandingPage() {
               </div>
               <h3 className="font-display text-2xl text-nx-paper mb-2">Partners Portal</h3>
               <p className="text-sm text-nx-muted leading-relaxed">
-                The unified portal for transporters, logistics providers, and regional wholesalers to manage restocking, bid on fulfillment, and coordinate last-mile runs.
+                The unified portal for transporters, logistics providers, and regional partners to manage restocking, bid on fulfillment, and coordinate last-mile runs.
               </p>
             </a>
           </div>
@@ -1859,9 +1755,11 @@ export default function LandingPage() {
             <Link to="/" className="flex items-center gap-3 mb-6">
               <NXLogo title="Network" size="sm" />
             </Link>
-            <p className="text-sm text-nx-muted max-w-sm leading-relaxed mb-8">
-              Kenya's first USSD-native loyalty infrastructure for the informal retail economy. Empowering dukas and customers through digital rewards.
-            </p>
+            <div className="border-l-2 border-nx-amber/40 pl-4 py-1.5 bg-nx-card/10 rounded-r-xl border-y border-r border-nx-border/50 p-4 mb-8">
+              <p className="text-sm text-nx-muted max-w-sm leading-relaxed">
+                Kenya's premier B2B informal retail network, maximizing <span className="text-nx-paper font-semibold border-b border-nx-amber/30">sales through data</span>, driving <span className="text-nx-paper font-semibold border-b border-nx-amber/30">predictive demand intelligence</span>, and streamlining <span className="text-nx-paper font-semibold border-b border-nx-amber/30">bulk purchase aggregation</span> for local dukas and FMCG brands.
+              </p>
+            </div>
           </div>
           
           <div>
@@ -2259,7 +2157,7 @@ export default function LandingPage() {
                         PARTNERS PORTAL
                       </h4>
                       <p className="text-[11px] text-[#8e8d8b] leading-relaxed mt-1.5">
-                        Accessed by wholesalers bidding for restocking merchants, and delivery partners fulfilling goods logistics.
+                        The unified portal for transporters, logistics providers, and regional partners to coordinate restocking and last-mile runs.
                       </p>
                       <div className="text-[10px] uppercase font-mono tracking-wider font-bold text-nx-amber flex items-center gap-1.5 mt-3">
                         ACCESS PARTNERS <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />

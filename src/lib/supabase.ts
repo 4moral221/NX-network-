@@ -201,7 +201,23 @@ const getStoredMockTable = (table: string): any[] => {
   if (typeof window === 'undefined') return [];
   const stored = localStorage.getItem(`nx_mock_table_${table}`);
   if (stored) {
-    try { return JSON.parse(stored); } catch (e) { console.warn(`Failed to parse mock table ${table}`, e); }
+    try {
+      let parsed = JSON.parse(stored);
+      let migrated = false;
+      if (Array.isArray(parsed)) {
+        parsed = parsed.map((item: any) => {
+          if (item.merchant_code === 'M703267') {
+            item.merchant_code = 'M798253';
+            migrated = true;
+          }
+          return item;
+        });
+        if (migrated) {
+          localStorage.setItem(`nx_mock_table_${table}`, JSON.stringify(parsed));
+        }
+      }
+      return parsed;
+    } catch (e) { console.warn(`Failed to parse mock table ${table}`, e); }
   }
 
   let defaults: any[] = [];
@@ -209,13 +225,13 @@ const getStoredMockTable = (table: string): any[] => {
     defaults = [
       { id: '1', email: 'formidablefoe254@gmail.com', phone: '254700000000', role: 'admin', is_admin: true, admin_role: 'super_admin', name: 'Admin', status: 'active' },
       { id: '2', phone: '254700000005', role: 'customer', name: 'Alex jaka', status: 'active', nx_balance: 1000, recovery_pin: '7e68c9d6a4c9bd2ab4ca38833b9503644657cb2c7e108939579d310ea18bcc27' },
-      { id: 'merchant-3267', phone: '254703267919', role: 'merchant', merchant_code: 'M703267', location: 'Nairobi', national_id: '12345678', recovery_pin: '4b3cb899df0279bb36ffb821cbe00f97844ef14283be5cd1c022dcc9624a7773', status: 'active', name: 'Corner Shop', franchise_tier: 'BASIC', nx_balance: 0 }
+      { id: 'merchant-3267', phone: '254703267919', role: 'merchant', merchant_code: 'M798253', location: 'Nairobi', national_id: '12345678', recovery_pin: '4b3cb899df0279bb36ffb821cbe00f97844ef14283be5cd1c022dcc9624a7773', status: 'active', name: 'Corner Shop', franchise_tier: 'BASIC', nx_balance: 0 }
     ];
   } else if (table === 'transactions') {
     defaults = [];
   } else if (table === 'merchant_margins') {
     defaults = [
-      { id: 'margin-3267', merchant_code: 'M703267', gross_margin: 10000 }
+      { id: 'margin-3267', merchant_code: 'M798253', gross_margin: 10000 }
     ];
   } else if (table === 'fmcg_margin_contributions') {
     defaults = [];

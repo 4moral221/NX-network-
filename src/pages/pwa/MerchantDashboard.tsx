@@ -23,7 +23,9 @@ import {
   Sparkles,
   RefreshCw,
   FileText,
-  Menu
+  Menu,
+  Users,
+  ShieldAlert
 } from 'lucide-react';
 import { AnimatedNumber } from '../../components/AnimatedNumber';
 import { cn } from '../../lib/utils';
@@ -37,7 +39,11 @@ export default function MerchantDashboard({ user, onLogout }: { user: any, onLog
   const [totalLiability, setTotalLiability] = useState(0);
   const [poolBalance, setPoolBalance] = useState(0);
   const [pendingTxns, setPendingTxns] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState<'home' | 'restock' | 'tiers' | 'referral' | 'network'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'restock' | 'tiers' | 'referral' | 'network' | 'family'>('home');
+  const [familyAccount, setFamilyAccount] = useState<any>(null);
+  const [familyTxns, setFamilyTxns] = useState<any[]>([]);
+  const [isCreatingFamily, setIsCreatingFamily] = useState(false);
+  const [confirmModal, setConfirmModal] = useState<{title: string, message: string, onConfirm: () => void} | null>(null);
   const [isRestockModalOpen, setIsRestockModalOpen] = useState(false);
   const [restockOrder, setRestockOrder] = useState('');
   const [restockStatus, setRestockStatus] = useState<'idle' | 'loading' | 'predicting' | 'success' | 'error'>('idle');
@@ -54,6 +60,13 @@ export default function MerchantDashboard({ user, onLogout }: { user: any, onLog
   const [unpaidInvoices, setUnpaidInvoices] = useState<any[]>([]);
   const [hasPendingRequest, setHasPendingRequest] = useState(false);
   const [chartData, setChartData] = useState<any[]>([]);
+
+  // Merchant-initiated family code payment states
+  const [familyCodeInput, setFamilyCodeInput] = useState('');
+  const [familyAmountInput, setFamilyAmountInput] = useState('');
+  const [familyPayStatus, setFamilyPayStatus] = useState<'idle' | 'verifying' | 'preview' | 'success' | 'error'>('idle');
+  const [familyPayError, setFamilyPayError] = useState('');
+  const [familyPreviewData, setFamilyPreviewData] = useState<any>(null);
 
   // Hub Enrollment States
   const [enrollPhone, setEnrollPhone] = useState('');
@@ -121,6 +134,244 @@ export default function MerchantDashboard({ user, onLogout }: { user: any, onLog
       toast.error(`Enrollment failed: ${err.message}`);
     } finally {
       setEnrollLoading(false);
+    }
+  };
+
+  const handleFamilyCodePaymentVerify = async () => {
+    if (!familyCodeInput.trim()) {
+      toast.error("Please enter a family code.");
+      return;
+    }
+    const amt = Number(familyAmountInput);
+    if (isNaN(amt) || amt <= 0) {
+      toast.error("Please enter a valid amount.");
+      return;
+    }
+
+    setFamilyPayStatus('verifying');
+    setFamilyPayError('');
+
+    try {
+      // 1. Fetch family account
+      const { data: family, error: famErr } = await supabase
+        .from('family_accounts')
+        .select('*')
+        .eq('family_code', familyCodeInput.trim().toUpperCase())
+        .maybeSingle();
+
+      if (famErr || !family) {
+        throw new Error("Family Code not found. Please verify with the customer.");
+      }
+
+      if (family.status !== 'active') {
+        throw new Error("This Family Account is currently inactive.");
+      }
+
+      // 2. Fetch parent user
+      const { data: parentUser, error: parentErr } = await supabase
+        .from('users')
+        .select('name, phone, nx_balance')
+        .eq('phone', family.parent_phone)
+        .maybeSingle();
+
+      if (parentErr || !parentUser) {
+        throw new Error("Associated parent account not found or inactive.");
+      }
+
+      const parentBal = Number(parentUser.nx_balance || 0);
+
+      // 3. Perform calculations
+      const currentTier = user.franchise_tier || user.tier || 'BASIC';
+      const acceptCeilingMap: Record<string, number> = {
+        BASIC: 0.20,
+        CERTIFIED: 0.30,
+        HUB: 0.40
+      };
+      const baseCeiling = acceptCeilingMap[currentTier] || 0.20;
+
+      // Dynamic Throttling Logic based on current merchant pool utilization
+      let dynamicCeiling = baseCeiling;
+      if (utilization >= 0.90) dynamicCeiling = 0;
+      else if (utilization >= 0.70) dynamicCeiling = Math.min(0.10, baseCeiling);
+      else if (utilization >= 0.40) dynamicCeiling = Math.min(0.20, baseCeiling);
+
+      let earnMultiplier = 1.0;
+      if (utilization >= 0.90) earnMultiplier = 0;
+      else if (utilization >= 0.70) earnMultiplier = 0.25;
+      else if (utilization >= 0.40) earnMultiplier = 0.50;
+
+      const remainingPool = Math.max(0, pool - totalLiability);
+      const earnRate = 0.05; // 5% standard
+
+      let nxRedeem = 0;
+      let cashPaid = amt;
+      let nxEarned = 0;
+      let nxFee = 0;
+
+      if (family.allow_spending) {
+        // Earn & Spend Mode
+        const maxNxAllowed = Math.floor(amt * dynamicCeiling);
+        nxRedeem = Math.min(parentBal, maxNxAllowed, remainingPool);
+        nxRedeem = Math.floor(nxRedeem / 5) * 5; // floor to nearest 5
+        cashPaid = amt - nxRedeem;
+        nxEarned = Math.floor(cashPaid * earnRate * earnMultiplier);
+
+        // Enforce total impact limit on remaining pool
+        if (nxRedeem + nxEarned > remainingPool) {
+          nxEarned = Math.max(0, remainingPool - nxRedeem);
+        }
+        nxFee = parentBal > 0 ? 2 : 0;
+      } else {
+        // Earn Only Mode
+        nxRedeem = 0;
+        cashPaid = amt;
+        nxEarned = Math.floor(cashPaid * earnRate * earnMultiplier);
+        nxEarned = Math.min(nxEarned, remainingPool);
+        nxFee = 0;
+      }
+
+      setFamilyPreviewData({
+        familyCode: family.family_code,
+        parentName: parentUser.name || "Family Representative",
+        parentPhone: parentUser.phone,
+        parentBal,
+        allowSpending: family.allow_spending,
+        amount: amt,
+        nxRedeem,
+        cashPaid,
+        nxEarned,
+        nxFee,
+        utilization,
+        remainingPool
+      });
+      setFamilyPayStatus('preview');
+    } catch (err: any) {
+      setFamilyPayError(err.message || "An error occurred during verification.");
+      setFamilyPayStatus('error');
+    }
+  };
+
+  const handleFamilyCodePaymentSubmit = async () => {
+    if (!familyPreviewData) return;
+    setFamilyPayStatus('verifying'); // reuse state for loading
+
+    try {
+      const {
+        familyCode,
+        parentPhone,
+        amount,
+        nxRedeem,
+        cashPaid,
+        nxEarned,
+        nxFee
+      } = familyPreviewData;
+
+      const transactionCode = 'NX' + Math.random().toString(36).substring(2, 8).toUpperCase();
+
+      // 1. Insert Transaction into Database
+      const { data: txn, error: txnErr } = await supabase
+        .from('transactions')
+        .insert({
+          transaction_code: transactionCode,
+          customer_phone: parentPhone,
+          merchant_code: user.merchant_code,
+          merchant_phone: user.phone,
+          amount,
+          nx_redeemed: nxRedeem,
+          nx_earned: nxEarned,
+          cash_paid: cashPaid,
+          nx_fee: nxFee,
+          family_code: familyCode,
+          status: 'confirmed' // terminal state bypassing broken trigger
+        })
+        .select()
+        .single();
+
+      if (txnErr) throw txnErr;
+
+      // 2. Insert Ledger Entries
+      const entries = [];
+      if (nxEarned > 0) {
+        entries.push({
+          account_phone: parentPhone,
+          entry_type: 'credit',
+          amount: nxEarned,
+          reference: transactionCode,
+          expires_at: new Date(Date.now() + 60 * 24 * 3600 * 1000).toISOString()
+        });
+      }
+      if (nxRedeem > 0) {
+        entries.push({
+          account_phone: parentPhone,
+          entry_type: 'debit',
+          amount: -nxRedeem,
+          reference: transactionCode,
+          expires_at: new Date(Date.now() + 60 * 24 * 3600 * 1000).toISOString()
+        });
+        // Credit merchant for customer redemption
+        entries.push({
+          account_phone: user.phone,
+          entry_type: 'credit',
+          amount: nxRedeem,
+          reference: transactionCode,
+          expires_at: new Date(Date.now() + 99 * 365 * 24 * 3600 * 1000).toISOString()
+        });
+      }
+
+      if (entries.length) {
+        const { error: ledErr } = await supabase.from("ledger_entries").insert(entries);
+        if (ledErr) throw ledErr;
+      }
+
+      // 3. Update Parent's User Balance
+      const { data: parentAccount } = await supabase
+        .from('users')
+        .select('nx_balance')
+        .eq('phone', parentPhone)
+        .maybeSingle();
+
+      const currentParentBal = Number(parentAccount?.nx_balance || 0);
+      const parentNewBal = currentParentBal + nxEarned - nxRedeem;
+
+      const { error: parentUpdateErr } = await supabase
+        .from('users')
+        .update({
+          nx_balance: parentNewBal,
+          is_first_purchase_used: true,
+          cancellation_count: 0
+        })
+        .eq('phone', parentPhone);
+
+      if (parentUpdateErr) throw parentUpdateErr;
+
+      // 4. Update Merchant's User Balance
+      if (nxRedeem > 0) {
+        const { data: merchantAccount } = await supabase
+          .from('users')
+          .select('nx_balance')
+          .eq('phone', user.phone)
+          .maybeSingle();
+
+        const currentMerchantBal = Number(merchantAccount?.nx_balance || 0);
+        const newMerchantBal = currentMerchantBal + nxRedeem;
+
+        const { error: merchUpdateErr } = await supabase
+          .from('users')
+          .update({
+            nx_balance: newMerchantBal
+          })
+          .eq('phone', user.phone);
+
+        if (merchUpdateErr) throw merchUpdateErr;
+      }
+
+      toast.success("Family Code transaction processed successfully!");
+      setFamilyPayStatus('success');
+      fetchMerchantData();
+    } catch (err: any) {
+      console.error(err);
+      setFamilyPayError(err.message || "Failed to process transaction.");
+      setFamilyPayStatus('error');
     }
   };
 
@@ -276,8 +527,36 @@ export default function MerchantDashboard({ user, onLogout }: { user: any, onLog
       setChartData([]);
     }
 
+    await fetchFamilyAccount();
     setLoading(false);
     fetchPendingInvoices();
+  };
+
+  const fetchFamilyAccount = async () => {
+    try {
+      const { data: fam } = await supabase
+        .from('family_accounts')
+        .select('*')
+        .eq('parent_phone', user.phone)
+        .maybeSingle();
+
+      if (fam) {
+        setFamilyAccount(fam);
+        const { data: fTxns } = await supabase
+          .from('transactions')
+          .select('*')
+          .eq('family_code', fam.family_code)
+          .order('created_at', { ascending: false });
+        if (fTxns) {
+          setFamilyTxns(fTxns);
+        }
+      } else {
+        setFamilyAccount(null);
+        setFamilyTxns([]);
+      }
+    } catch (e) {
+      console.error("Error fetching family account:", e);
+    }
   };
 
   const fetchPendingInvoices = async () => {
@@ -928,7 +1207,7 @@ export default function MerchantDashboard({ user, onLogout }: { user: any, onLog
                   )}
                 >
                   <Store className="w-4 h-4" />
-                  <span>Portal</span>
+                  <span>Home</span>
                 </button>
 
                 <button
@@ -996,6 +1275,22 @@ export default function MerchantDashboard({ user, onLogout }: { user: any, onLog
                   <Share2 className="w-4 h-4" />
                   <span>Refer</span>
                 </button>
+
+                <button
+                  onClick={() => {
+                    setActiveTab('family');
+                    setIsSidebarOpen(false);
+                  }}
+                  className={cn(
+                    "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all",
+                    activeTab === 'family'
+                      ? "bg-nx-amber/10 text-nx-amber border border-nx-amber/20"
+                      : "text-nx-muted hover:text-nx-paper hover:bg-nx-border/10"
+                  )}
+                >
+                  <Users className="w-4 h-4" />
+                  <span>Family Code Payments</span>
+                </button>
               </div>
 
               <div className="pt-4 border-t border-nx-border flex items-center justify-between">
@@ -1048,6 +1343,26 @@ export default function MerchantDashboard({ user, onLogout }: { user: any, onLog
                 ))}
               </div>
             )}
+
+            {/* Merchant Info & Prominent Code Card */}
+            <div className="bg-nx-card border border-nx-border rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <span className="text-[10px] text-nx-muted uppercase tracking-widest font-bold">Active Merchant Portal</span>
+                <h3 className="font-display text-xl text-nx-paper font-bold tracking-wide mt-1">{user.name}</h3>
+                <p className="text-[11px] text-nx-muted font-mono">{user.phone}</p>
+                <div className="mt-2 flex items-center gap-2">
+                  <span className="bg-nx-amber/10 text-nx-amber border border-nx-amber/20 px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider">
+                    {user.franchise_tier || user.tier || 'BASIC'} Franchise
+                  </span>
+                </div>
+              </div>
+              <div className="w-full sm:w-auto text-left sm:text-right shrink-0 border-t sm:border-t-0 pt-4 sm:pt-0 border-nx-border">
+                <div className="text-[8px] uppercase tracking-[0.2em] text-nx-muted mb-1 font-bold">Your Merchant Code</div>
+                <div className="bg-nx-ink border border-nx-border/50 px-4 py-2.5 rounded-xl text-center font-mono text-base font-extrabold text-nx-amber tracking-wider select-none shadow-inner border-l-2 border-l-nx-amber">
+                  {user.merchant_code}
+                </div>
+              </div>
+            </div>
 
             {/* USSD Reference */}
             <div className="bg-nx-amber/10 border border-nx-amber/30 rounded-xl p-4 flex items-center justify-between">
@@ -1706,6 +2021,236 @@ export default function MerchantDashboard({ user, onLogout }: { user: any, onLog
             </div>
           </div>
         )}
+
+        {activeTab === 'family' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs uppercase tracking-widest text-nx-paper font-bold">Family Code Payments</h3>
+              <span className="text-[10px] bg-nx-amber/10 border border-nx-amber/20 text-nx-amber px-2 py-0.5 rounded font-bold uppercase tracking-wider">
+                Merchant Initiated
+              </span>
+            </div>
+
+            {familyPayStatus === 'verifying' && (
+              <div className="bg-nx-card border border-nx-border rounded-2xl p-8 text-center space-y-4">
+                <div className="w-12 h-12 border-2 border-nx-amber border-t-transparent rounded-full animate-spin mx-auto" />
+                <p className="text-xs text-nx-muted uppercase tracking-widest">Validating family code and calculating rewards...</p>
+              </div>
+            )}
+
+            {familyPayStatus === 'preview' && familyPreviewData && (
+              <div className="space-y-6">
+                <div className="bg-nx-card border border-nx-border rounded-2xl p-5 space-y-4">
+                  <div>
+                    <span className="text-[10px] text-nx-muted uppercase tracking-widest font-bold">Customer Profile</span>
+                    <h4 className="font-display text-base text-nx-paper font-bold tracking-wide mt-0.5">
+                      Parent: {familyPreviewData.parentName}
+                    </h4>
+                    <p className="text-[11px] text-nx-muted font-mono">
+                      Phone: {familyPreviewData.parentPhone.substring(0, 6)}****{familyPreviewData.parentPhone.substring(familyPreviewData.parentPhone.length - 3)}
+                    </p>
+                    <p className="text-[11px] text-nx-amber font-mono mt-1">
+                      Family Code: <span className="font-bold">{familyPreviewData.familyCode}</span>
+                    </p>
+                  </div>
+
+                  {/* Mode Banner */}
+                  {!familyPreviewData.allowSpending ? (
+                    <div className="p-4 bg-nx-amber/5 border border-nx-amber/30 rounded-xl space-y-1">
+                      <div className="flex items-center gap-2 text-nx-amber font-bold text-xs uppercase tracking-wider">
+                        <AlertCircle className="w-4 h-4 shrink-0" />
+                        Earn Only Mode (Spending Offline)
+                      </div>
+                      <p className="text-[10px] text-nx-muted uppercase tracking-tight leading-normal">
+                        Spending privileges are currently offline for this family code, customer pays full cash amount but will earn NX units
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="p-4 bg-nx-green/5 border border-nx-green/30 rounded-xl space-y-1">
+                      <div className="flex items-center gap-2 text-nx-green font-bold text-xs uppercase tracking-wider">
+                        <CheckCircle2 className="w-4 h-4 shrink-0" />
+                        Earn & Spend Mode (Spending Allowed)
+                      </div>
+                      <p className="text-[10px] text-nx-muted uppercase tracking-tight leading-normal">
+                        Spending is allowed! The parent's balance can be used to cover a portion of this transaction up to the merchant's dynamic acceptance ceiling.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Breakdown details */}
+                  <div className="bg-nx-ink/40 border border-nx-border/50 rounded-xl p-4 space-y-3 font-mono text-xs">
+                    <div className="flex justify-between items-center text-nx-muted">
+                      <span>Total Amount:</span>
+                      <span className="text-nx-paper font-bold text-sm">KSH {familyPreviewData.amount.toFixed(2)}</span>
+                    </div>
+
+                    {familyPreviewData.allowSpending ? (
+                      <>
+                        <div className="flex justify-between items-center text-nx-muted">
+                          <span>Paid via parent's NX balance:</span>
+                          <span className="text-nx-amber font-bold">-{familyPreviewData.nxRedeem.toFixed(1)} NX (KSH {familyPreviewData.nxRedeem})</span>
+                        </div>
+                        <div className="flex justify-between items-center text-nx-muted">
+                          <span>Remaining Cash Due:</span>
+                          <span className="text-nx-green font-bold text-sm">KSH {familyPreviewData.cashPaid.toFixed(2)}</span>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="flex justify-between items-center text-nx-muted">
+                        <span>Paid via cash/mobile money:</span>
+                        <span className="text-nx-paper font-bold">KSH {familyPreviewData.cashPaid.toFixed(2)}</span>
+                      </div>
+                    )}
+
+                    <div className="h-px bg-nx-border/50 my-2" />
+
+                    <div className="flex justify-between items-center text-nx-muted">
+                      <span>Passive NX Rewards Earned:</span>
+                      <span className="text-nx-green font-bold">+{familyPreviewData.nxEarned.toFixed(1)} NX</span>
+                    </div>
+
+                    {familyPreviewData.allowSpending && familyPreviewData.nxFee > 0 && (
+                      <div className="flex justify-between items-center text-[10px] text-nx-muted italic">
+                        <span>Parent Security Fee:</span>
+                        <span>{familyPreviewData.nxFee} NX</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      onClick={() => setFamilyPayStatus('idle')}
+                      className="flex-1 py-3 border border-nx-border text-nx-paper text-xs uppercase font-bold tracking-widest rounded-xl hover:bg-white/5 transition-all bg-transparent"
+                    >
+                      Back
+                    </button>
+                    <button
+                      onClick={handleFamilyCodePaymentSubmit}
+                      className="flex-1 py-3 bg-nx-amber text-nx-ink text-xs uppercase font-bold tracking-widest rounded-xl hover:bg-nx-paper transition-all"
+                    >
+                      Confirm Payment
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {familyPayStatus === 'success' && (
+              <div className="bg-nx-card border border-nx-border rounded-2xl p-6 text-center space-y-6">
+                <div className="w-16 h-16 bg-nx-green/10 rounded-full flex items-center justify-center mx-auto animate-pulse">
+                  <CheckCircle2 className="w-10 h-10 text-nx-green mx-auto mt-3" />
+                </div>
+                <div>
+                  <h4 className="font-display text-xl text-nx-paper font-bold mb-1">Transaction Completed!</h4>
+                  <p className="text-xs text-nx-muted uppercase tracking-wider">
+                    The family payment was successfully processed.
+                  </p>
+                </div>
+
+                <div className="bg-nx-ink/40 border border-nx-border/50 rounded-xl p-4 text-left space-y-2.5 font-mono text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-nx-muted">Family Code:</span>
+                    <span className="text-nx-paper font-bold">{familyPreviewData?.familyCode}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-nx-muted">Total Amount:</span>
+                    <span className="text-nx-paper font-bold">KSH {familyPreviewData?.amount.toFixed(2)}</span>
+                  </div>
+                  {familyPreviewData?.nxRedeem > 0 ? (
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-nx-muted">Paid via NX:</span>
+                        <span className="text-nx-amber font-bold">{familyPreviewData?.nxRedeem} NX</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-nx-muted">Cash Received:</span>
+                        <span className="text-nx-green font-bold">KSH {familyPreviewData?.cashPaid.toFixed(2)}</span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex justify-between">
+                      <span className="text-nx-muted">Cash Received:</span>
+                      <span className="text-nx-paper font-bold">KSH {familyPreviewData?.cashPaid.toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-nx-green">
+                    <span>Rewards Added:</span>
+                    <span className="font-bold">+{familyPreviewData?.nxEarned} NX</span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => {
+                    setFamilyCodeInput('');
+                    setFamilyAmountInput('');
+                    setFamilyPayStatus('idle');
+                    setFamilyPreviewData(null);
+                  }}
+                  className="w-full py-3 bg-nx-amber text-nx-ink text-xs uppercase font-bold tracking-widest rounded-xl hover:bg-nx-paper transition-all"
+                >
+                  New Transaction
+                </button>
+              </div>
+            )}
+
+            {(familyPayStatus === 'idle' || familyPayStatus === 'error') && (
+              <div className="space-y-6">
+                {/* Intro Card */}
+                <div className="bg-gradient-to-br from-nx-card to-[#12110e] border border-nx-border rounded-2xl p-5 space-y-1">
+                  <span className="text-[10px] text-nx-amber uppercase tracking-widest font-bold">Duka Family Terminal</span>
+                  <h4 className="font-display text-sm text-nx-paper uppercase tracking-wider font-bold">Process Family Payments</h4>
+                  <p className="text-[11px] text-nx-muted leading-relaxed">
+                    Parents can distribute unique Family Codes to children. Enter the code here to process the payment and reward passive earnings to the family pool.
+                  </p>
+                </div>
+
+                {/* Main Form */}
+                <div className="bg-nx-card border border-nx-border rounded-2xl p-5 space-y-4">
+                  {familyPayError && (
+                    <div className="p-3 bg-nx-ember/15 border border-nx-ember/30 rounded-xl flex items-start gap-2 text-[11px] text-nx-ember font-mono uppercase">
+                      <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                      <span>{familyPayError}</span>
+                    </div>
+                  )}
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase tracking-widest text-nx-muted font-bold block">
+                      Family Code
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. FAM12345"
+                      value={familyCodeInput}
+                      onChange={(e) => setFamilyCodeInput(e.target.value)}
+                      className="w-full bg-nx-bg border border-nx-border rounded-xl px-4 py-3 text-nx-paper text-sm font-mono tracking-widest placeholder-white/10 uppercase focus:outline-none focus:ring-1 focus:ring-nx-amber/50"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase tracking-widest text-nx-muted font-bold block">
+                      Total Purchase Amount (KSH)
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="Enter amount in KSH"
+                      value={familyAmountInput}
+                      onChange={(e) => setFamilyAmountInput(e.target.value)}
+                      className="w-full bg-nx-bg border border-nx-border rounded-xl px-4 py-3 text-nx-paper text-sm font-mono placeholder-white/10 focus:outline-none focus:ring-1 focus:ring-nx-amber/50"
+                    />
+                  </div>
+
+                  <button
+                    onClick={handleFamilyCodePaymentVerify}
+                    className="w-full py-3.5 bg-nx-amber text-nx-ink text-xs uppercase font-bold tracking-widest rounded-xl hover:bg-nx-paper transition-all shadow-lg shadow-nx-amber/10 mt-2"
+                  >
+                    Verify & Calculate
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Bottom navigation removed in favor of sidebar */}
@@ -1853,6 +2398,36 @@ export default function MerchantDashboard({ user, onLogout }: { user: any, onLog
               </button>
             </div>
           </motion.div>
+        </div>
+      )}
+
+      {/* Confirm Modal */}
+      {confirmModal && (
+        <div className="absolute inset-0 z-[70] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="bg-nx-card border border-nx-border w-full max-w-sm rounded-2xl overflow-hidden p-6 shadow-2xl">
+            <h3 className="text-lg font-bold text-nx-paper mb-2">{confirmModal.title}</h3>
+            <p className="text-xs text-nx-muted mb-6">{confirmModal.message}</p>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setConfirmModal(null)}
+                className="flex-1 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider text-nx-paper bg-nx-border/20 hover:bg-nx-border/40 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  confirmModal.onConfirm();
+                  setConfirmModal(null);
+                }}
+                className={cn(
+                  "flex-1 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer",
+                  confirmModal.title.includes('Revoke') ? "bg-nx-ember text-white hover:opacity-90" : "bg-nx-amber text-nx-ink hover:opacity-90"
+                )}
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

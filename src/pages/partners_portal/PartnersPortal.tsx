@@ -1202,11 +1202,11 @@ MERCHANT_CODE: M-104 | PHONE: +254766666666 | ORDER_SPEC: Pembe 2kg*22 | ORDER_Q
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="relative z-10 w-full max-w-sm mx-auto">
           <div className="flex items-center justify-between gap-3 mb-8">
             <div className="scale-[0.8] origin-left">
-              <NXLogo title="Logistics" />
+              <NXLogo title="Partners" />
             </div>
             <div className="text-right border-l border-[#e4e6ea] pl-4">
-              <div className="font-bold text-lg text-[#1a1d23]">Logistics Portal</div>
-              <div className="text-[10px] text-[#6b7280] uppercase tracking-widest">Fleet & Route Orchestration</div>
+              <div className="font-bold text-lg text-[#1a1d23]">Partners Portal</div>
+              <div className="text-[10px] text-[#6b7280] uppercase tracking-widest">Collaborative Network Access</div>
             </div>
           </div>
 
@@ -1231,7 +1231,7 @@ MERCHANT_CODE: M-104 | PHONE: +254766666666 | ORDER_SPEC: Pembe 2kg*22 | ORDER_Q
             <div className="space-y-4">
               <div>
                 <label className="block text-[11px] font-bold uppercase tracking-widest text-[#6b7280] mb-2">Company / Fleet Name</label>
-                <input type="text" value={signupData.companyName} onChange={e => setSignupData({ ...signupData, companyName: e.target.value })} className="w-full border-2 border-[#e4e6ea] focus:border-[#1a1d23] rounded-xl px-4 py-2.5 text-sm outline-none transition-colors text-[#1a1d23] bg-white" placeholder="e.g. Nairobi Logistics Hub" />
+                <input type="text" value={signupData.companyName} onChange={e => setSignupData({ ...signupData, companyName: e.target.value })} className="w-full border-2 border-[#e4e6ea] focus:border-[#1a1d23] rounded-xl px-4 py-2.5 text-sm outline-none transition-colors text-[#1a1d23] bg-white" placeholder="e.g. Nairobi Hub" />
               </div>
               <div>
                 <label className="block text-[11px] font-bold uppercase tracking-widest text-[#6b7280] mb-2">Work Email Address</label>
@@ -1273,7 +1273,7 @@ MERCHANT_CODE: M-104 | PHONE: +254766666666 | ORDER_SPEC: Pembe 2kg*22 | ORDER_Q
                       value={whitelistEmail} 
                       onChange={e => setWhitelistEmail(e.target.value)} 
                       className="w-full border-2 border-[#e4e6ea] focus:border-[#1a1d23] rounded-xl px-4 py-2.5 text-sm outline-none transition-colors text-[#1a1d23] bg-white" 
-                      placeholder="e.g. representative@logistics.com" 
+                      placeholder="e.g. representative@partner.com" 
                       required
                     />
                   </div>
@@ -1352,10 +1352,10 @@ MERCHANT_CODE: M-104 | PHONE: +254766666666 | ORDER_SPEC: Pembe 2kg*22 | ORDER_Q
             </div>
           ) : authMode === 'setup' ? (
             <div className="space-y-4">
-              <div className="text-[10px] text-[#6b7280] mb-8 p-4 bg-[#f4f5f7] border-l border-[#1a1d23] uppercase tracking-widest leading-relaxed">Verification required. Use your assigned Logistics API Key to establish a new Access PIN.</div>
+              <div className="text-[10px] text-[#6b7280] mb-8 p-4 bg-[#f4f5f7] border-l border-[#1a1d23] uppercase tracking-widest leading-relaxed">Verification required. Use your assigned Partner API Key to establish a new Access PIN.</div>
               <div className="space-y-5">
                 {[
-                  { label: 'Company Name', key: 'brand', type: 'text', ph: 'e.g. Nairobi Logistics Hub' },
+                  { label: 'Company Name', key: 'brand', type: 'text', ph: 'e.g. Nairobi Hub' },
                   { label: 'Portal API Key', key: 'apiKey', type: 'text', ph: 'nx_live_...' },
                   { label: 'New Access PIN', key: 'newPassword', type: 'password', ph: '' },
                   { label: 'Confirm PIN', key: 'confirmPassword', type: 'password', ph: '' },
