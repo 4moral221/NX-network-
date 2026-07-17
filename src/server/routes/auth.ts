@@ -704,7 +704,7 @@ router.post('/api/auth/pwa-login', authLimiter, async (req, res) => {
 
       const { data: users, error: dbError } = await supabase
         .from('users')
-        .select('id, phone, name, role, status, recovery_pin')
+        .select('*')
         .or(`phone.eq.${normalizedPhone},phone.eq.+${normalizedPhone}`)
         .limit(1);
 

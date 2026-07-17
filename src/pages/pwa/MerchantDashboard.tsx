@@ -25,7 +25,8 @@ import {
   FileText,
   Menu,
   Users,
-  ShieldAlert
+  ShieldAlert,
+  Mail
 } from 'lucide-react';
 import { AnimatedNumber } from '../../components/AnimatedNumber';
 import { cn } from '../../lib/utils';
@@ -386,7 +387,7 @@ export default function MerchantDashboard({ user, onLogout }: { user: any, onLog
     const { data: rdRes } = await supabase.from('transactions')
       .select('nx_redeemed, nx_earned')
       .eq('merchant_code', user.merchant_code)
-      .in('status', ['completed', 'awaiting_merchant', 'pending_customer']);
+      .in('status', ['completed', 'confirmed', 'awaiting_merchant', 'pending_customer']);
     
     const totalRedeemedRaw = rdRes?.reduce((s, x) => s + (x.nx_redeemed || 0), 0) || 0;
     const totalLiabilityRaw = rdRes?.reduce((s, x) => s + (x.nx_redeemed || 0) + (x.nx_earned || 0), 0) || 0;
@@ -444,7 +445,7 @@ export default function MerchantDashboard({ user, onLogout }: { user: any, onLog
     if (currentTier === 'HUB') {
       const { data: subs } = await supabase
         .from('users')
-        .select('name, phone, created_at')
+        .select('name, phone, created_at, merchant_code, location, tier, franchise_tier')
         .eq('hub_merchant_code', user.merchant_code)
         .eq('role', 'merchant');
       if (subs) setSubMerchants(subs);
@@ -1135,13 +1136,18 @@ export default function MerchantDashboard({ user, onLogout }: { user: any, onLog
           >
             <Menu className="w-5 h-5" />
           </button>
-          <div className="relative">
-            <NXLogo title={user.name} />
-            {notifications.length > 0 && (
-              <span className="absolute -top-1 right-0 translate-x-1/2 w-4 h-4 bg-nx-ember text-white text-[8px] flex items-center justify-center rounded-full font-bold animate-pulse z-30">
-                {notifications.length}
-              </span>
-            )}
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <NXLogo title={user.name} />
+              {notifications.length > 0 && (
+                <span className="absolute -top-1 right-0 translate-x-1/2 w-4 h-4 bg-nx-ember text-white text-[8px] flex items-center justify-center rounded-full font-bold animate-pulse z-30">
+                  {notifications.length}
+                </span>
+              )}
+            </div>
+            <div className="bg-[#1a1d23] border border-[#2a2d35] rounded-md px-2 py-1 shadow-inner">
+              <span className="font-mono text-[10px] font-bold text-[#e8a020] tracking-widest select-none">{user.merchant_code}</span>
+            </div>
           </div>
         </div>
         <button onClick={onLogout} className="p-2 text-nx-muted hover:text-nx-ember transition-colors">
@@ -1356,9 +1362,9 @@ export default function MerchantDashboard({ user, onLogout }: { user: any, onLog
                   </span>
                 </div>
               </div>
-              <div className="w-full sm:w-auto text-left sm:text-right shrink-0 border-t sm:border-t-0 pt-4 sm:pt-0 border-nx-border">
-                <div className="text-[8px] uppercase tracking-[0.2em] text-nx-muted mb-1 font-bold">Your Merchant Code</div>
-                <div className="bg-nx-ink border border-nx-border/50 px-4 py-2.5 rounded-xl text-center font-mono text-base font-extrabold text-nx-amber tracking-wider select-none shadow-inner border-l-2 border-l-nx-amber">
+              <div className="w-full sm:w-auto text-center sm:text-right shrink-0 border-t sm:border-t-0 pt-4 sm:pt-0 border-nx-border">
+                <div className="text-[10px] uppercase tracking-[0.2em] text-nx-muted mb-2 font-bold">Your Merchant Code</div>
+                <div className="bg-nx-ink border-2 border-nx-amber/40 px-6 py-4 rounded-2xl text-center font-mono text-4xl font-black text-nx-amber tracking-widest select-none shadow-lg shadow-nx-amber/10 border-b-4">
                   {user.merchant_code}
                 </div>
               </div>
@@ -1675,9 +1681,9 @@ export default function MerchantDashboard({ user, onLogout }: { user: any, onLog
 
             <div className="space-y-4">
               {[
-                { name: 'BASIC', color: 'text-nx-muted', icon: <Store className="w-5 h-5" />, active: (user.franchise_tier || user.tier || 'BASIC') === 'BASIC', perks: ['Standard loyalty pool', 'USSD restock access', 'Daily summaries'] },
-                { name: 'CERTIFIED', color: 'text-nx-amber', icon: <Award className="w-5 h-5" />, active: (user.franchise_tier || user.tier) === 'CERTIFIED', perks: ['15% Higher pool earn rate', 'Priority restock delivery', 'Custom brand alerts'] },
-                { name: 'HUB', color: 'text-nx-green', icon: <Zap className="w-5 h-5" />, active: (user.franchise_tier || user.tier) === 'HUB', perks: ['Max pool earn rate (70%)', 'Zero-fee restock delivery', 'FMCG direct insights'] },
+                { name: 'BASIC', color: 'text-nx-muted', icon: <Store className="w-5 h-5" />, active: (user.franchise_tier || user.tier || 'BASIC') === 'BASIC', perks: ['60% standard loyalty pool rate', '20% max NX acceptance per txn', 'USSD restock access'] },
+                { name: 'CERTIFIED', color: 'text-nx-amber', icon: <Award className="w-5 h-5" />, active: (user.franchise_tier || user.tier) === 'CERTIFIED', perks: ['65% higher pool earn rate', '30% max NX acceptance per txn', 'Priority restock delivery'] },
+                { name: 'HUB', color: 'text-nx-green', icon: <Zap className="w-5 h-5" />, active: (user.franchise_tier || user.tier) === 'HUB', perks: ['70% max pool earn rate', '40% max NX acceptance per txn', '0.2 NX sub-merchant commission'] },
               ].map((tier, i) => (
                 <div key={i} className={cn(
                   "bg-nx-card border rounded-2xl p-5 relative overflow-hidden transition-all",
@@ -1884,7 +1890,7 @@ export default function MerchantDashboard({ user, onLogout }: { user: any, onLog
               <div className="flex gap-2">
                 <input
                   type="tel"
-                  placeholder="e.g. 2547XXXXXXXX or 07XXXXXXXX"
+                  placeholder={`e.g. ${user.phone || '2547XXXXXXXX'}`}
                   value={enrollPhone}
                   onChange={(e) => setEnrollPhone(e.target.value)}
                   className="bg-nx-bg border border-nx-border rounded-lg px-4 py-3 text-nx-paper text-xs font-mono focus:outline-none focus:ring-1 focus:ring-nx-amber/50 flex-1 placeholder-white/20"
@@ -1913,7 +1919,7 @@ export default function MerchantDashboard({ user, onLogout }: { user: any, onLog
                       <div>
                         <div className="text-xs text-nx-paper font-bold">{sub.name || "Unnamed Shop"}</div>
                         <div className="text-[9px] text-nx-muted uppercase tracking-tighter">
-                          Code: {sub.merchant_code} | {sub.location || 'Unknown location'}
+                          Code: {sub.merchant_code} | {sub.location || 'AWAITING LOCATION'}
                         </div>
                       </div>
                       <div className="text-xs font-mono text-nx-amber font-bold">{sub.tier || 'BASIC'}</div>
@@ -2010,7 +2016,7 @@ export default function MerchantDashboard({ user, onLogout }: { user: any, onLog
                   onClick={() => handleShare('email')}
                   className="w-full py-4 bg-nx-paper text-nx-ink rounded-xl font-bold uppercase tracking-widest flex items-center justify-center gap-3 hover:opacity-90 transition-opacity"
                 >
-                  <Phone className="w-5 h-5" /> Share via Email
+                  <Mail className="w-5 h-5" /> Share via Email
                 </button>
               </div>
 

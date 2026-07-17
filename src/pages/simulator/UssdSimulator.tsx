@@ -306,7 +306,7 @@ export default function UssdSimulator() {
                       type="text" 
                       value={phone}
                       onChange={(e) => handlePhoneChange(e.target.value)}
-                      placeholder="e.g. 2547XXXXXXXX"
+                      placeholder="e.g. 254712345678"
                       className="w-full bg-[#0a0a0a] border border-[#2a2a2a] text-xs pl-9 pr-4 py-2.5 rounded focus:outline-none focus:border-[#00e676] font-mono text-neutral-300"
                     />
                   </div>

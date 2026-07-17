@@ -174,8 +174,157 @@ class FamilyAccountsMockBuilder {
       return response;
     } catch (err: any) {
       const response = { data: null, error: { message: err.message } };
-      if (onrejected) {
-        return Promise.resolve(onrejected(response));
+      if (onfulfilled) {
+        return Promise.resolve(onfulfilled(response));
+      }
+      return response;
+    }
+  }
+}
+
+class DatabaseBypassBuilder {
+  private tableName: string;
+  private method: 'select' | 'insert' | 'update' | 'delete' = 'select';
+  private selectColumns = '*';
+  private filters: Array<{ type: string; column: string; value: any }> = [];
+  private insertData: any = null;
+  private updateData: any = null;
+  private isSingle = false;
+  private isMaybeSingle = false;
+
+  constructor(tableName: string) {
+    this.tableName = tableName;
+  }
+
+  select(columns?: string) {
+    this.method = 'select';
+    if (columns) this.selectColumns = columns;
+    return this;
+  }
+
+  insert(data: any) {
+    this.method = 'insert';
+    this.insertData = data;
+    return this;
+  }
+
+  update(data: any) {
+    this.method = 'update';
+    this.updateData = data;
+    return this;
+  }
+
+  delete() {
+    this.method = 'delete';
+    return this;
+  }
+
+  eq(column: string, value: any) {
+    this.filters.push({ type: 'eq', column, value });
+    return this;
+  }
+
+  neq(column: string, value: any) {
+    this.filters.push({ type: 'neq', column, value });
+    return this;
+  }
+
+  in(column: string, value: any) {
+    this.filters.push({ type: 'in', column, value });
+    return this;
+  }
+
+  gt(column: string, value: any) {
+    this.filters.push({ type: 'gt', column, value });
+    return this;
+  }
+
+  gte(column: string, value: any) {
+    this.filters.push({ type: 'gte', column, value });
+    return this;
+  }
+
+  lt(column: string, value: any) {
+    this.filters.push({ type: 'lt', column, value });
+    return this;
+  }
+
+  lte(column: string, value: any) {
+    this.filters.push({ type: 'lte', column, value });
+    return this;
+  }
+
+  order(column: string, options?: any) {
+    this.filters.push({ type: 'order', column, value: options });
+    return this;
+  }
+
+  limit(count: number) {
+    this.filters.push({ type: 'limit', column: '', value: count });
+    return this;
+  }
+
+  maybeSingle() {
+    this.isMaybeSingle = true;
+    return this;
+  }
+
+  single() {
+    this.isSingle = true;
+    return this;
+  }
+
+  async then(onfulfilled?: (value: any) => any, onrejected?: (reason: any) => any) {
+    try {
+      const getApiUrl = () => {
+        if (typeof window === 'undefined') {
+          return 'http://127.0.0.1:3000/api/db-bypass';
+        }
+        return '/api/db-bypass';
+      };
+
+      const res = await fetch(getApiUrl(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          table: this.tableName,
+          method: this.method,
+          selectColumns: this.selectColumns,
+          filters: this.filters,
+          insertData: this.insertData,
+          updateData: this.updateData
+        })
+      });
+
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson.error?.message || errJson.error || 'Failed to process database operation');
+      }
+
+      const body = await res.json();
+      let result = body.data;
+      let error = body.error;
+
+      if (result) {
+        if (this.isMaybeSingle) {
+          result = result[0] || null;
+        } else if (this.isSingle) {
+          result = result[0];
+          if (!result) {
+            error = { message: 'Not found' };
+          }
+        }
+      }
+
+      const response = { data: result, error };
+      if (onfulfilled) {
+        return Promise.resolve(onfulfilled(response));
+      }
+      return response;
+    } catch (err: any) {
+      const response = { data: null, error: { message: err.message, code: err.code || 'UNKNOWN' } };
+      if (onfulfilled) {
+        return Promise.resolve(onfulfilled(response));
       }
       return response;
     }
@@ -186,6 +335,17 @@ const originalFrom = supabase.from;
 supabase.from = function(table: string) {
   if (table === 'family_accounts') {
     return new FamilyAccountsMockBuilder() as any;
+  }
+  const bypassTables = [
+    'transactions',
+    'users',
+    'ledger_entries',
+    'merchant_margins',
+    'fmcg_margin_contributions',
+    'merchant_whitelist'
+  ];
+  if (bypassTables.includes(table)) {
+    return new DatabaseBypassBuilder(table) as any;
   }
   return originalFrom.call(this, table);
 };

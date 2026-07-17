@@ -70,7 +70,7 @@ export default function CustomerDashboard({ user, onLogout }: { user: any, onLog
       .from('transactions')
       .select('nx_earned, nx_redeemed, nx_fee')
       .eq('customer_phone', user.phone)
-      .eq('status', 'completed');
+      .in('status', ['completed', 'confirmed']);
       
     if (txns) {
       const earned = txns.reduce((sum, t) => sum + (Number(t.nx_earned) || 0), 0);
@@ -111,20 +111,73 @@ export default function CustomerDashboard({ user, onLogout }: { user: any, onLog
     
     // Fetch "Nearby" Merchants
     const fetchMerchants = async () => {
-      const { data: merchants } = await supabase
-        .from('users')
-        .select('name, merchant_code, location')
-        .eq('role', 'merchant')
-        .limit(10);
+      let merchants: any[] = [];
+      try {
+        const response = await fetch('/api/merchant/list');
+        const data = await response.json();
+        if (data.success && data.merchants) {
+          merchants = data.merchants;
+        }
+      } catch (err) {
+        console.error("Error fetching merchants from backend:", err);
+      }
       
-      if (merchants) {
-        const withDistance = merchants.map(m => ({
+      if (!merchants || merchants.length === 0) {
+        setIsLoading(false);
+        return;
+      }
+
+      const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+        const R = 6371e3; // metres
+        const φ1 = lat1 * Math.PI/180;
+        const φ2 = lat2 * Math.PI/180;
+        const Δφ = (lat2-lat1) * Math.PI/180;
+        const Δλ = (lon2-lon1) * Math.PI/180;
+
+        const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                  Math.cos(φ1) * Math.cos(φ2) *
+                  Math.sin(Δλ/2) * Math.sin(Δλ/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+        return Math.floor(R * c); // in metres
+      };
+
+      if ('geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const userLat = position.coords.latitude;
+            const userLng = position.coords.longitude;
+            
+            const withDistance = merchants.map(m => {
+              let dist = Math.floor(Math.random() * 800 + 50); // fallback
+              if (m.latitude && m.longitude) {
+                dist = calculateDistance(userLat, userLng, Number(m.latitude), Number(m.longitude));
+              }
+              return { ...m, distance: dist };
+            }).sort((a, b) => a.distance - b.distance);
+
+            setNearbyMerchants(withDistance);
+            setIsLoading(false);
+          },
+          (error) => {
+            console.warn('Geolocation error:', error);
+            const withFallback = merchants.map(m => ({
+              ...m,
+              distance: Math.floor(Math.random() * 800 + 50) 
+            })).sort((a, b) => a.distance - b.distance);
+            setNearbyMerchants(withFallback);
+            setIsLoading(false);
+          },
+          { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+        );
+      } else {
+        const withFallback = merchants.map(m => ({
           ...m,
           distance: Math.floor(Math.random() * 800 + 50) 
         })).sort((a, b) => a.distance - b.distance);
-        setNearbyMerchants(withDistance);
+        setNearbyMerchants(withFallback);
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
     fetchMerchants();
   };
@@ -185,38 +238,57 @@ export default function CustomerDashboard({ user, onLogout }: { user: any, onLog
 
       let targetBalance = balance;
 
-      // 1. Find merchant
-      const { data: merchant, error: merchantErr } = await supabase
-        .from('users')
-        .select('*')
-        .eq('merchant_code', merchantCode.toUpperCase())
-        .eq('role', 'merchant')
-        .maybeSingle();
+      // 1. Find merchant via server-side API proxy to bypass client-side RLS recursion
+      let merchant = null;
+      try {
+        const response = await fetch('/api/merchant/find-by-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ merchantCode: merchantCode.toUpperCase() })
+        });
+        const data = await response.json();
+        if (data.success && data.merchant) {
+          merchant = data.merchant;
+        }
+      } catch (err) {
+        console.error("Error finding merchant by code:", err);
+      }
 
-      if (merchantErr || !merchant) {
+      if (!merchant) {
         setPayError('Merchant not found. Check the code.');
         setPayStatus('error');
         return;
       }
 
-      // Check merchant pool/activation
-      const [{ data: marginRes }, { data: fmcgRes }] = await Promise.all([
-        supabase
-          .from('merchant_margins')
-          .select('gross_margin')
-          .eq('merchant_code', merchant.merchant_code)
-          .maybeSingle(),
-        supabase
-          .from('fmcg_margin_contributions')
-          .select('contribution_amount')
-          .eq('merchant_code', merchant.merchant_code)
-          .eq('status', 'active')
-      ]);
-      
-      const fmcgBoost = fmcgRes?.reduce((s, r) => s + Number(r.contribution_amount || 0), 0) || 0;
-      const baseMargin = marginRes?.gross_margin || 0;
+      // Check merchant pool/activation via backend API proxy to avoid RLS recursion issues
+      let poolInfo = null;
+      try {
+        const response = await fetch('/api/merchant/pool-info', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            merchantCode: merchant.merchant_code,
+            franchiseTier: merchant.franchise_tier,
+            tier: merchant.tier
+          })
+        });
+        const data = await response.json();
+        if (data.success) {
+          poolInfo = data;
+        }
+      } catch (err) {
+        console.error("Error fetching merchant pool info:", err);
+      }
+
+      if (!poolInfo) {
+        setPayError('Failed to fetch merchant pool details. Please try again.');
+        setPayStatus('error');
+        return;
+      }
+
+      const { baseMargin, fmcgBoost, poolAmount, remainingPool, utilization } = poolInfo;
+      const totalPool = poolAmount;
       const merchantCfg = TIER_CONFIG[merchant.franchise_tier || merchant.tier || 'BASIC'] || TIER_CONFIG.BASIC;
-      const totalPool = (baseMargin * merchantCfg.poolRate) + fmcgBoost;
       
       if (totalPool <= 0) {
         setPayError(`Merchant ${merchant.merchant_code} is not yet active. (Pool: ${totalPool.toFixed(1)} NX). Must restock or receive a boost.`);
@@ -227,17 +299,6 @@ export default function CustomerDashboard({ user, onLogout }: { user: any, onLog
       // 2. Calculate transaction
       const isFirst = !user.is_first_purchase_used;
       const earnRate = isFirst ? 0.10 : 0.05;
-
-      // Pool utilization math for dynamic capping
-      const poolAmount = (baseMargin * merchantCfg.poolRate) + fmcgBoost;
-      const { data: rdRes } = await supabase.from('transactions')
-        .select('nx_redeemed, nx_earned')
-        .eq('merchant_code', merchant.merchant_code)
-        .in('status', ['completed', 'awaiting_merchant', 'pending_customer']);
-      
-      const totalLiability = rdRes?.reduce((s, x) => s + (x.nx_redeemed || 0) + (x.nx_earned || 0), 0) || 0;
-      const remainingPool = Math.max(0, poolAmount - totalLiability); 
-      const utilization = poolAmount > 0 ? (totalLiability / poolAmount) : 1;
 
       // Dynamic Acceptance Rate
       let dynamicCeiling = merchantCfg.acceptCeiling;
@@ -313,7 +374,7 @@ export default function CustomerDashboard({ user, onLogout }: { user: any, onLog
           table: 'transactions',
           filter: `transaction_code=eq.${transactionCode}`
         }, (payload) => {
-          if (payload.new.status === 'completed') {
+          if (payload.new.status === 'completed' || payload.new.status === 'confirmed') {
             setPayStatus('completed');
             supabase.removeChannel(channel);
           } else if (payload.new.status === 'cancelled' || payload.new.status === 'rejected_by_merchant') {
@@ -512,6 +573,31 @@ export default function CustomerDashboard({ user, onLogout }: { user: any, onLog
               </div>
             </div>
 
+            {/* Loyalty Progress Card */}
+            <div className="bg-nx-card border border-nx-border rounded-xl p-5 space-y-4">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <Award className="w-4 h-4 text-nx-amber" />
+                  <span className="text-[10px] uppercase tracking-widest text-nx-paper font-bold">Loyalty Progress</span>
+                </div>
+                <span className="text-[9px] text-nx-muted uppercase font-bold">{loyaltyStats.level}</span>
+              </div>
+              
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-[10px] text-nx-muted">
+                  <span>Progress to {loyaltyStats.nextLevel}</span>
+                  <span className="font-mono text-nx-amber">{Math.floor(loyaltyStats.progress)}%</span>
+                </div>
+                <div className="h-2 bg-nx-ink rounded-full overflow-hidden border border-nx-border">
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: `${loyaltyStats.progress}%` }}
+                    className="h-full bg-nx-amber"
+                  />
+                </div>
+              </div>
+            </div>
+
             {/* Action Buttons */}
             <div className="grid grid-cols-1">
               <button 
@@ -575,25 +661,7 @@ export default function CustomerDashboard({ user, onLogout }: { user: any, onLog
               )}
             </div>
 
-            {/* Loyalty Progress */}
-            <div className="bg-nx-card border border-nx-border rounded-xl p-5">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <Award className="w-4 h-4 text-nx-amber" />
-                  <span className="text-[10px] uppercase tracking-widest text-nx-paper font-bold">Loyalty Level</span>
-                </div>
-                <span className="text-[10px] text-nx-muted uppercase tracking-widest">Next: {loyaltyStats.nextLevel}</span>
-              </div>
-              <div className="h-2 bg-nx-ink rounded-full overflow-hidden mb-2">
-                <div 
-                  className="h-full bg-gradient-to-r from-nx-amber to-nx-ember transition-all duration-1000" 
-                  style={{ width: `${loyaltyStats.progress}%` }}
-                ></div>
-              </div>
-              <p className="text-[10px] text-nx-muted leading-relaxed">
-                You've supported <span className="text-nx-paper font-bold">{txns.length}</span> local businesses. Earn {Math.max(0, 100 - loyaltyStats.progress).toFixed(0)}% more to reach {loyaltyStats.nextLevel}.
-              </p>
-            </div>
+
 
             {/* Referral Section */}
             <div className="bg-nx-card border border-nx-border rounded-xl p-5 space-y-6">

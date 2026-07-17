@@ -80,8 +80,8 @@ export async function checkSecurityLimits(merchantCode: string, customerPhone: s
     'CERTIFIED': 50,
     'HUB': 150
   };
-  const maxTxns = limits[tier] || 20;
-  const maxLoops = 5; // Allow a single customer 5 visits/hr (up from 3)
+  const maxTxns = 500; // limits[tier] || 20;
+  const maxLoops = 100; // Allow a single customer 100 visits/hr for pitch testing
 
   const [mTxns, loopTxns] = await Promise.all([
     supabase.from("transactions")

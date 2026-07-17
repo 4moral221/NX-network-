@@ -269,7 +269,7 @@ export default function Login({ onLogin }: { onLogin: (user: any) => void }) {
               type="tel" 
               value={phone}
               onChange={(e) => handlePhoneChange(e.target.value)}
-              placeholder="e.g. 2547XXXXXXXX or 07XXXXXXXX"
+              placeholder="e.g. 254712345678 or 0712345678"
               className="w-full bg-nx-ink border border-nx-border rounded-lg px-4 py-4 text-nx-paper focus:outline-none focus:ring-2 focus:ring-nx-amber/50 focus:border-nx-amber transition-all font-mono text-sm placeholder-white/20"
               required
             />
@@ -377,7 +377,7 @@ export default function Login({ onLogin }: { onLogin: (user: any) => void }) {
                       if (cleanVal.startsWith('0')) cleanVal = '254' + cleanVal.substring(1);
                       setForgotPhone(cleanVal);
                     }}
-                    placeholder="e.g. 2547XXXXXXXX"
+                    placeholder="e.g. 254712345678"
                     className="w-full bg-nx-bg border border-nx-border rounded-lg px-4 py-3 text-nx-paper text-sm focus:outline-none focus:ring-1 focus:ring-nx-amber/50 font-mono"
                     required
                   />
