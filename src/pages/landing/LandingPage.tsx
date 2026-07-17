@@ -450,7 +450,7 @@ export default function LandingPage() {
           <div className="bg-nx-card p-8 border border-nx-border rounded-2xl flex flex-col justify-between hover:border-nx-amber/30 transition-all">
             <div>
               <div className="text-[10px] uppercase tracking-[0.3em] text-nx-green font-mono font-semibold mb-4">For Distributors</div>
-              <h3 className="font-serif text-2xl text-nx-paper mb-4">Hubs &amp; Wholesalers</h3>
+              <h3 className="font-serif text-2xl text-nx-paper mb-4">Hubs</h3>
               <p className="text-sm text-nx-muted leading-relaxed mb-6">
                 Manage high-velocity bulk delivery requests, aggregate nearby duka orders, and earn commissions on network transactions.
               </p>
@@ -1807,7 +1807,7 @@ export default function LandingPage() {
       <section className="py-20 px-6 md:px-10 border-t border-nx-border bg-nx-card/30">
         <div className="max-w-7xl mx-auto">
           <div className="text-[10px] uppercase tracking-[0.5em] text-nx-amber mb-10 text-center">Professional Portals</div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid md:grid-cols-3 gap-6">
             <a href={getPortalLink('hub')} className="group bg-nx-ink border border-nx-border p-8 hover:border-nx-amber transition-all">
               <div className="flex justify-between items-start mb-4">
                 <div className="p-3 bg-nx-amber/10 rounded-lg text-nx-amber">
@@ -1821,19 +1821,6 @@ export default function LandingPage() {
               </p>
             </a>
 
-            <a href={getPortalLink('partners')} className="group bg-nx-ink border border-nx-border p-8 hover:border-nx-amber transition-all">
-              <div className="flex justify-between items-start mb-4">
-                <div className="p-3 bg-nx-amber/10 rounded-lg text-nx-amber">
-                  <ShieldCheck className="w-6 h-6" />
-                </div>
-                <ArrowUpRight className="w-5 h-5 text-nx-muted group-hover:text-nx-amber transition-colors" />
-              </div>
-              <h3 className="font-display text-2xl text-nx-paper mb-2">Logistics & Delivery Portal</h3>
-              <p className="text-sm text-nx-muted leading-relaxed">
-                Integrated portal for certified transport and fleet partners to orchestrate runs, dispatch tasks, and manage credentials.
-              </p>
-            </a>
-            
             <a href={getPortalLink('fmcgs')} className="group bg-nx-ink border border-nx-border p-8 hover:border-nx-amber transition-all">
               <div className="flex justify-between items-start mb-4">
                 <div className="p-3 bg-nx-green/10 rounded-lg text-nx-green">
@@ -1841,29 +1828,24 @@ export default function LandingPage() {
                 </div>
                 <ArrowUpRight className="w-5 h-5 text-nx-muted group-hover:text-nx-green transition-colors" />
               </div>
-              <h3 className="font-display text-2xl text-nx-paper mb-2">FMCG Partner Portal</h3>
+              <h3 className="font-display text-2xl text-nx-paper mb-2">FMCG Partners Portal</h3>
               <p className="text-sm text-nx-muted leading-relaxed">
                 Monitor SKU velocity, manage pool injections, and access last-mile market intelligence.
               </p>
             </a>
 
-            <Link to="/docs/logistics-partners" className="group bg-nx-ink border border-nx-border p-8 hover:border-nx-amber transition-all flex flex-col justify-between">
-              <div>
-                <div className="flex justify-between items-start mb-4">
-                  <div className="p-3 bg-nx-amber/10 rounded-lg text-nx-amber">
-                    <Truck className="w-6 h-6" />
-                  </div>
-                  <ArrowUpRight className="w-5 h-5 text-nx-muted group-hover:text-nx-amber transition-colors" />
+            <a href={getPortalLink('partners')} className="group bg-nx-ink border border-nx-border p-8 hover:border-nx-amber transition-all">
+              <div className="flex justify-between items-start mb-4">
+                <div className="p-3 bg-nx-amber/10 rounded-lg text-nx-amber">
+                  <Truck className="w-6 h-6" />
                 </div>
-                <h3 className="font-display text-2xl text-nx-paper mb-2">Delivery &amp; Logistics</h3>
-                <p className="text-sm text-nx-muted leading-relaxed mb-4">
-                  Connect your fleet or warehouse routing systems via our custom delivery-partners API.
-                </p>
+                <ArrowUpRight className="w-5 h-5 text-nx-muted group-hover:text-nx-amber transition-colors" />
               </div>
-              <div className="text-[10px] uppercase font-mono tracking-wider text-nx-amber group-hover:underline">
-                View Partner API Docs →
-              </div>
-            </Link>
+              <h3 className="font-display text-2xl text-nx-paper mb-2">Partners Portal</h3>
+              <p className="text-sm text-nx-muted leading-relaxed">
+                The unified portal for transporters, logistics providers, and regional wholesalers to manage restocking, bid on fulfillment, and coordinate last-mile runs.
+              </p>
+            </a>
           </div>
         </div>
       </section>
@@ -1920,12 +1902,14 @@ export default function LandingPage() {
                 </a>
               </li>
               <li>
-                <button 
-                  onClick={() => setShowBrandPortalChoice(true)} 
-                  className="flex items-center gap-2 text-sm text-nx-muted hover:text-nx-amber transition-colors group bg-transparent border-none p-0 cursor-pointer text-left focus:outline-hidden"
-                >
+                <a href={getPortalLink('fmcgs')} className="flex items-center gap-2 text-sm text-nx-muted hover:text-nx-amber transition-colors group">
+                  FMCG Partners Portal <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </a>
+              </li>
+              <li>
+                <a href={getPortalLink('partners')} className="flex items-center gap-2 text-sm text-nx-muted hover:text-nx-amber transition-colors group">
                   Partners Portal <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </button>
+                </a>
               </li>
             </ul>
           </div>
@@ -2279,28 +2263,6 @@ export default function LandingPage() {
                       </p>
                       <div className="text-[10px] uppercase font-mono tracking-wider font-bold text-nx-amber flex items-center gap-1.5 mt-3">
                         ACCESS PARTNERS <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
-                      </div>
-                    </div>
-                  </a>
-
-                  {/* Logistics Portal */}
-                  <a 
-                    href={getPortalLink('partners') + '?view=logistics'}
-                    onClick={() => setShowBrandPortalChoice(false)}
-                    className="group bg-[#151412] border border-white/5 hover:border-emerald-500/30 p-5 rounded-xl text-left transition-all duration-300 flex items-start gap-4 hover:bg-emerald-500/[0.02]"
-                  >
-                    <div className="p-3 bg-emerald-500/10 text-emerald-500 rounded-xl shrink-0 group-hover:scale-105 transition-all">
-                      <Truck className="w-5 h-5" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-display text-xs tracking-wider text-white uppercase font-extrabold group-hover:text-emerald-500 transition-colors">
-                        LOGISTICS & DELIVERY
-                      </h4>
-                      <p className="text-[11px] text-[#8e8d8b] leading-relaxed mt-1.5">
-                        Manage distributor networks, coordinate runs and localized delivery hubs, and provision API credentials.
-                      </p>
-                      <div className="text-[10px] uppercase font-mono tracking-wider font-bold text-emerald-500 flex items-center gap-1.5 mt-3">
-                        ACCESS LOGISTICS <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
                       </div>
                     </div>
                   </a>

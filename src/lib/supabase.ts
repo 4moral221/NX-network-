@@ -208,12 +208,15 @@ const getStoredMockTable = (table: string): any[] => {
   if (table === 'users') {
     defaults = [
       { id: '1', email: 'formidablefoe254@gmail.com', phone: '254700000000', role: 'admin', is_admin: true, admin_role: 'super_admin', name: 'Admin', status: 'active' },
-      { id: '2', phone: '254700000005', role: 'customer', name: 'Alex jaka', status: 'active', nx_balance: 350, recovery_pin: '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4' },
+      { id: '2', phone: '254700000005', role: 'customer', name: 'Alex jaka', status: 'active', nx_balance: 1000, recovery_pin: '7e68c9d6a4c9bd2ab4ca38833b9503644657cb2c7e108939579d310ea18bcc27' },
+      { id: 'merchant-3267', phone: '254703267919', role: 'merchant', merchant_code: 'M703267', location: 'Nairobi', national_id: '12345678', recovery_pin: '4b3cb899df0279bb36ffb821cbe00f97844ef14283be5cd1c022dcc9624a7773', status: 'active', name: 'Corner Shop', franchise_tier: 'BASIC', nx_balance: 0 }
     ];
   } else if (table === 'transactions') {
     defaults = [];
   } else if (table === 'merchant_margins') {
-    defaults = [];
+    defaults = [
+      { id: 'margin-3267', merchant_code: 'M703267', gross_margin: 10000 }
+    ];
   } else if (table === 'fmcg_margin_contributions') {
     defaults = [];
   } else if (table === 'fmcg_partners') {

@@ -1,4 +1,5 @@
-import { supabase as libSupabase, mockSupabase } from "../../lib/supabase";
+import { mockSupabase } from "../../lib/supabase";
+import { supabase as serverSupabase } from "../../server/core";
 import { AsyncLocalStorage } from 'async_hooks';
 
 export const ussdContext = new AsyncLocalStorage<{ isDemo: boolean }>();
@@ -6,7 +7,7 @@ export const ussdContext = new AsyncLocalStorage<{ isDemo: boolean }>();
 export const supabase = new Proxy({}, {
   get(target, prop, receiver) {
     const context = ussdContext.getStore();
-    const client = (context && context.isDemo) ? mockSupabase : libSupabase;
+    const client = (context && context.isDemo) ? mockSupabase : serverSupabase;
     const value = Reflect.get(client, prop);
     if (typeof value === 'function') {
       return value.bind(client);

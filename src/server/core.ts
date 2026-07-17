@@ -436,6 +436,22 @@ export const createBackendMockSupabase = (reason: string) => {
         }
       };
     };
+
+if (supabaseUrl && supabaseKey) {
+  try {
+    supabase = createClient(supabaseUrl, supabaseKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false
+      }
+    });
+  } catch (err) {
+    console.error("[System] Failed to initialize real Supabase client:", err);
+    supabase = createBackendMockSupabase(String(err));
+  }
+} else {
+  supabase = createBackendMockSupabase("Supabase keys are missing in env");
+}
 export const RATE_LIMIT_MAX = 10;
 export const RATE_LIMIT_WINDOW = 60;
 export const RESTOCK_PHONE = process.env.RESTOCK_PHONE || "0781550151";
@@ -493,29 +509,180 @@ export interface E2ERun {
 
 export class BackendSupabaseMockBuilder {
   private table: string;
-  private filters: { column: string; value: any; op: 'eq' | 'neq' | 'gt' | 'lt' | 'gte' | 'lte' | 'like' | 'ilike' | 'in' }[] = [];
+  private filters: { column: string; value: any; op: string }[] = [];
   private orderCol: string | null = null;
   private orderAsc: boolean = true;
   private limitCount: number | null = null;
+  private isInsertCall = false;
+  private isUpdateCall = false;
+  private valuesToSave: any = null;
+
   constructor(table: string) {
     this.table = table;
   }
+
   select(columns?: string, options?: any) { return this; }
-  insert(values: any, options?: any) { return Promise.resolve({ data: null, error: null }); }
-  update(values: any, options?: any) { return this; }
-  upsert(values: any, options?: any) { return Promise.resolve({ data: null, error: null }); }
+  insert(values: any, options?: any) { this.isInsertCall = true; this.valuesToSave = values; return this; }
+  update(values: any, options?: any) { this.isUpdateCall = true; this.valuesToSave = values; return this; }
+  upsert(values: any, options?: any) { this.isInsertCall = true; this.valuesToSave = values; return this; }
   delete(options?: any) { return this; }
+
   eq(column: string, value: any) { this.filters.push({ column, value, op: 'eq' }); return this; }
   neq(column: string, value: any) { this.filters.push({ column, value, op: 'neq' }); return this; }
   gt(column: string, value: any) { this.filters.push({ column, value, op: 'gt' }); return this; }
   lt(column: string, value: any) { this.filters.push({ column, value, op: 'lt' }); return this; }
   gte(column: string, value: any) { this.filters.push({ column, value, op: 'gte' }); return this; }
   lte(column: string, value: any) { this.filters.push({ column, value, op: 'lte' }); return this; }
-  getMockData() { return []; }
-  single() { return Promise.resolve({ data: null, error: { message: 'Not found' } }); }
-  maybeSingle() { return Promise.resolve({ data: null, error: null }); }
-  then(onfulfilled?: (value: any) => any, onrejected?: (reason: any) => any) {
-    return Promise.resolve({ data: [], error: null, count: 0 }).then(onfulfilled, onrejected);
+  like(column: string, value: any) { this.filters.push({ column, value, op: 'like' }); return this; }
+  ilike(column: string, value: any) { this.filters.push({ column, value, op: 'ilike' }); return this; }
+  in(column: string, values: any[]) { this.filters.push({ column, value: values, op: 'in' }); return this; }
+  or(filtersString: string) {
+    const clauses = filtersString.split(',');
+    const orFilters = clauses.map(c => {
+      const parts = c.split('.');
+      if (parts.length >= 3) {
+        return { column: parts[0], op: parts[1], value: parts[2] };
+      }
+      return null;
+    }).filter(Boolean) as { column: string; op: string; value: any }[];
+    this.filters.push({ column: '_or', value: orFilters, op: 'or' });
+    return this;
+  }
+  limit(count: number) { this.limitCount = count; return this; }
+  order(column: string, options?: any) { this.orderCol = column; this.orderAsc = options?.ascending !== false; return this; }
+
+  private getFilePath() {
+    return path.join(DATA_DIR, `nx_mock_table_${this.table}.json`);
+  }
+
+  private loadData(): any[] {
+    const filePath = this.getFilePath();
+    if (fs.existsSync(filePath)) {
+      try {
+        return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      } catch (e) {
+        console.error(`[BackendMock] Error reading mock file ${this.table}:`, e);
+      }
+    }
+    
+    // Load Defaults
+    let defaults: any[] = [];
+    if (this.table === 'users') {
+      defaults = [
+        { id: '1', email: 'formidablefoe254@gmail.com', phone: '254700000000', role: 'admin', is_admin: true, admin_role: 'super_admin', name: 'Admin', status: 'active' },
+        { id: '2', phone: '254700000005', role: 'customer', name: 'Alex jaka', status: 'active', nx_balance: 1000, recovery_pin: '7e68c9d6a4c9bd2ab4ca38833b9503644657cb2c7e108939579d310ea18bcc27' },
+        { id: 'merchant-3267', phone: '254703267919', role: 'merchant', merchant_code: 'M703267', location: 'Nairobi', national_id: '12345678', recovery_pin: '4b3cb899df0279bb36ffb821cbe00f97844ef14283be5cd1c022dcc9624a7773', status: 'active', name: 'Corner Shop', franchise_tier: 'BASIC', nx_balance: 0 }
+      ];
+    } else if (this.table === 'merchant_margins') {
+      defaults = [
+        { id: 'margin-3267', merchant_code: 'M703267', gross_margin: 10000 }
+      ];
+    } else if (this.table === 'merchant_whitelist') {
+      defaults = [
+        { id: 'white-3267', phone: '254703267919', tier: 'BASIC', added_at: new Date().toISOString() }
+      ];
+    }
+    
+    this.saveData(defaults);
+    return defaults;
+  }
+
+  private saveData(data: any[]) {
+    try {
+      const filePath = this.getFilePath();
+      const parentDir = path.dirname(filePath);
+      if (!fs.existsSync(parentDir)) {
+        fs.mkdirSync(parentDir, { recursive: true });
+      }
+      fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
+    } catch (err) {
+      console.error(`[BackendMock] Error writing mock file ${this.table}:`, err);
+    }
+  }
+
+  private getFilteredData(dataList: any[]): any[] {
+    let data = [...dataList];
+    for (const filter of this.filters) {
+      data = data.filter(item => {
+        if (filter.op === 'or') {
+          const orClauses = filter.value as { column: string; op: string; value: any }[];
+          return orClauses.some(clause => {
+            const val = item[clause.column];
+            if (val === undefined) return false;
+            return String(val).toLowerCase() === String(clause.value).toLowerCase();
+          });
+        }
+        const val = item[filter.column];
+        if (val === undefined) return filter.op === 'neq';
+        const fv = filter.value;
+        switch (filter.op) {
+          case 'eq':  return String(val).toLowerCase() === String(fv).toLowerCase();
+          case 'neq': return String(val).toLowerCase() !== String(fv).toLowerCase();
+          case 'gt':  return val > fv;
+          case 'lt':  return val < fv;
+          case 'gte': return val >= fv;
+          case 'lte': return val <= fv;
+          case 'like': case 'ilike': return String(val).toLowerCase().includes(String(fv).toLowerCase());
+          case 'in':  return Array.isArray(fv) && fv.some(x => String(x).toLowerCase() === String(val).toLowerCase());
+          default: return true;
+        }
+      });
+    }
+    if (this.orderCol) {
+      data.sort((a, b) => {
+        const vA = a[this.orderCol!], vB = b[this.orderCol!];
+        if (vA < vB) return this.orderAsc ? -1 : 1;
+        if (vA > vB) return this.orderAsc ? 1 : -1;
+        return 0;
+      });
+    }
+    if (this.limitCount !== null) data = data.slice(0, this.limitCount);
+    return data;
+  }
+
+  private executeWrite() {
+    let list = this.loadData();
+    if (this.isInsertCall && this.valuesToSave) {
+      const items = Array.isArray(this.valuesToSave) ? this.valuesToSave : [this.valuesToSave];
+      const withId = items.map((x: any) => ({ 
+        id: x.id || `mock-${Math.random().toString(36).slice(2)}`, 
+        created_at: x.created_at || new Date().toISOString(), 
+        ...x 
+      }));
+      list = [...list, ...withId];
+      this.saveData(list);
+      return Array.isArray(this.valuesToSave) ? withId : withId[0];
+    }
+    if (this.isUpdateCall && this.valuesToSave) {
+      const filtered = this.getFilteredData(list);
+      const ids = filtered.map(x => x.id);
+      list = list.map(item => ids.includes(item.id) ? { ...item, ...this.valuesToSave } : item);
+      this.saveData(list);
+      return filtered.map(x => ({ ...x, ...this.valuesToSave }))[0] || this.valuesToSave;
+    }
+    return null;
+  }
+
+  async single() {
+    if (this.isInsertCall || this.isUpdateCall) return { data: this.executeWrite(), error: null };
+    const data = this.getFilteredData(this.loadData());
+    return { data: data[0] || null, error: data[0] ? null : { message: 'Not found' } };
+  }
+
+  async maybeSingle() {
+    if (this.isInsertCall || this.isUpdateCall) return { data: this.executeWrite(), error: null };
+    const data = this.getFilteredData(this.loadData());
+    return { data: data[0] || null, error: null };
+  }
+
+  async then(onfulfilled?: any, onrejected?: any) {
+    if (this.isInsertCall || this.isUpdateCall) return Promise.resolve({ data: this.executeWrite(), error: null }).then(onfulfilled, onrejected);
+    const data = this.getFilteredData(this.loadData());
+    const response = { data, error: null, count: data.length };
+    if (onfulfilled) {
+      return Promise.resolve(onfulfilled(response));
+    }
+    return response;
   }
 }
 

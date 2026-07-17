@@ -1,5 +1,6 @@
 import { TIER_CONFIG, MIN_DENOMINATION, SKU_VARIANTS, T, SKU } from "./config";
 import { supabase } from "./db";
+import crypto from "crypto";
 
 export function tierConfig(user: any) {
   return TIER_CONFIG[user?.franchise_tier ?? "BASIC"] ?? TIER_CONFIG["BASIC"];
@@ -67,9 +68,7 @@ export function isValidPin(pin: string): boolean {
 }
 
 export async function hashPin(pin: string, phone: string): Promise<string> {
-  const { data, error } = await supabase.rpc("hash_password", { password: pin });
-  if (error || !data) throw error || new Error("Failed to hash pin");
-  return data;
+  return crypto.createHash("sha256").update(pin + phone).digest("hex");
 }
 
 export function merchantMenuStr(user: any, lang: string): string {
