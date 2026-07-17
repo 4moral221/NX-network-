@@ -186,7 +186,7 @@ router.post('/api/db-bypass', async (req, res) => {
 
     if (error) {
       console.error(`Backend bypass query error for table ${table}:`, error);
-      return res.status(500).json({ data: null, error: { message: error.message, code: error.code } });
+      return res.status(200).json({ data: null, error: { message: error.message, code: error.code } });
     }
 
     return res.json({ data, error: null });

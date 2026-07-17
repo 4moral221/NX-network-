@@ -107,7 +107,7 @@ class FamilyAccountsMockBuilder {
     return this;
   }
 
-  async then(onfulfilled?: (value: any) => any, onrejected?: (reason: any) => any) {
+  async execute() {
     try {
       const getApiUrl = () => {
         if (typeof window === 'undefined') {
@@ -167,18 +167,14 @@ class FamilyAccountsMockBuilder {
         result = await res.json();
       }
 
-      const response = { data: result, error };
-      if (onfulfilled) {
-        return Promise.resolve(onfulfilled(response));
-      }
-      return response;
+      return { data: result, error };
     } catch (err: any) {
-      const response = { data: null, error: { message: err.message } };
-      if (onfulfilled) {
-        return Promise.resolve(onfulfilled(response));
-      }
-      return response;
+      return { data: null, error: { message: err.message } };
     }
+  }
+
+  then(onfulfilled?: (value: any) => any, onrejected?: (reason: any) => any) {
+    return this.execute().then(onfulfilled, onrejected);
   }
 }
 
@@ -274,7 +270,7 @@ class DatabaseBypassBuilder {
     return this;
   }
 
-  async then(onfulfilled?: (value: any) => any, onrejected?: (reason: any) => any) {
+  async execute() {
     try {
       const getApiUrl = () => {
         if (typeof window === 'undefined') {
@@ -298,7 +294,13 @@ class DatabaseBypassBuilder {
 
       if (!res.ok) {
         const errJson = await res.json().catch(() => ({}));
-        throw new Error(errJson.error?.message || errJson.error || 'Failed to process database operation');
+        return { 
+          data: null, 
+          error: { 
+            message: errJson.error?.message || errJson.error || 'Failed to process database operation',
+            code: errJson.error?.code || 'UNKNOWN'
+          } 
+        };
       }
 
       const body = await res.json();
@@ -316,18 +318,14 @@ class DatabaseBypassBuilder {
         }
       }
 
-      const response = { data: result, error };
-      if (onfulfilled) {
-        return Promise.resolve(onfulfilled(response));
-      }
-      return response;
+      return { data: result, error };
     } catch (err: any) {
-      const response = { data: null, error: { message: err.message, code: err.code || 'UNKNOWN' } };
-      if (onfulfilled) {
-        return Promise.resolve(onfulfilled(response));
-      }
-      return response;
+      return { data: null, error: { message: err.message, code: err.code || 'UNKNOWN' } };
     }
+  }
+
+  then(onfulfilled?: (value: any) => any, onrejected?: (reason: any) => any) {
+    return this.execute().then(onfulfilled, onrejected);
   }
 }
 
