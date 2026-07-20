@@ -1,6 +1,8 @@
 import { authLimiter, supabase, escapeLike, getLocalFallbackFile, saveLocalFallbackFile, loadOnboardingDB, saveOnboardingDB, logAudit, isEmailWhitelisted, ApprovalEntry } from "../core";
 import express from "express";
 import crypto from "crypto";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
 const router = express.Router();
 router.post('/api/auth/signup', async (req, res) => {
@@ -131,7 +133,7 @@ router.post('/api/auth/request-signup-link', async (req, res) => {
       if (!wlMatch) {
         return res.status(404).json({ 
           success: false, 
-          error: `The email "${cleanEmail}" is not listed under whitelisted domains or accounts. Contact brand-onboarding@nx-network.com for approval.` 
+          error: `The email "${cleanEmail}" is not listed under whitelisted domains or accounts. Contact brand-onboarding@nxnetwork.company for approval.` 
         });
       }
 
@@ -718,14 +720,16 @@ router.post('/api/auth/pwa-login', authLimiter, async (req, res) => {
       }
 
       const trimmedPin = String(pin).trim();
-      const computedHash = crypto.createHash('sha256').update(trimmedPin + user.phone).digest('hex');
-      let matched = (computedHash === user.recovery_pin);
+      let matched = false;
 
-      if (!matched) {
+      // 1. Check bcrypt hash (standard) matches Supabase pgcrypto / nx-ussd
+      if (user.recovery_pin && user.recovery_pin.startsWith('$2a$')) {
+        matched = await bcrypt.compare(trimmedPin, user.recovery_pin);
+      } else {
+        // Fallback for legacy sha256 hashes
+        const computedHash = crypto.createHash('sha256').update(trimmedPin + user.phone).digest('hex');
         const computedPlainHash = crypto.createHash('sha256').update(trimmedPin).digest('hex');
-        if (computedPlainHash === user.recovery_pin) {
-          matched = true;
-        }
+        matched = (computedHash === user.recovery_pin) || (computedPlainHash === user.recovery_pin);
       }
 
       if (!matched) {
@@ -735,7 +739,19 @@ router.post('/api/auth/pwa-login', authLimiter, async (req, res) => {
       const safeUser = { ...user };
       delete safeUser.recovery_pin;
 
-      res.json({ success: true, user: safeUser });
+      // Generate Custom Supabase-compatible JWT if Secret is configured
+      const jwtSecret = process.env.SUPABASE_JWT_SECRET;
+      let token = undefined;
+      if (jwtSecret) {
+        token = jwt.sign({
+          role: 'authenticated',
+          sub: user.id,
+          phone: user.phone,
+          roleType: user.role
+        }, jwtSecret, { expiresIn: '7d' });
+      }
+
+      res.json({ success: true, user: safeUser, access_token: token });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });
     }
@@ -764,9 +780,9 @@ router.post('/api/auth/reset-pwa-pin', async (req, res) => {
       if (Date.now() > record.expiresAt) return res.status(400).json({ success: false, error: 'OTP has expired.' });
       if (record.otp !== otp) return res.status(400).json({ success: false, error: 'Invalid verification code entered.' });
 
-      // Compute standard SHA-256(newPin + normalizedPhone) hashing block to match Login.tsx
-      const hashStr = newPin + normalizedPhone;
-      const computedHash = crypto.createHash('sha256').update(hashStr).digest('hex');
+      // Create standard bcrypt hash (matches Supabase pgcrypto / nx-ussd)
+      const salt = await bcrypt.genSalt(10);
+      const computedHash = await bcrypt.hash(newPin, salt);
 
       // Update in Supabase users
       const { data, error: updateErr } = await supabase
@@ -806,11 +822,31 @@ router.post('/api/auth/merchant-login', authLimiter, async (req, res) => {
 
       if (err2 || !user) return res.status(401).json({ success: false, error: 'User not found' });
 
-      // Compare password with sha256
-      const hash = crypto.createHash('sha256').update(password.trim()).digest('hex');
+      const trimmedPass = password.trim();
+      let matched = false;
+
+      // Check bcrypt hash
+      if (user.dashboard_password && user.dashboard_password.startsWith('$2a$')) {
+        matched = await bcrypt.compare(trimmedPass, user.dashboard_password);
+      } else {
+        // Fallback for legacy sha256
+        const hash = crypto.createHash('sha256').update(trimmedPass).digest('hex');
+        matched = (user.dashboard_password === hash);
+      }
       
-      if (user.dashboard_password === hash) {
-        return res.json({ success: true, user_id: user.id });
+      if (matched) {
+        // Generate Custom Supabase-compatible JWT
+        const jwtSecret = process.env.SUPABASE_JWT_SECRET;
+        let token = undefined;
+        if (jwtSecret) {
+          token = jwt.sign({
+            role: 'authenticated',
+            sub: user.id,
+            phone: user.phone,
+            roleType: user.role
+          }, jwtSecret, { expiresIn: '7d' });
+        }
+        return res.json({ success: true, user_id: user.id, access_token: token });
       }
       res.status(401).json({ success: false, error: 'Invalid password' });
     } catch(err: any) {

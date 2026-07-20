@@ -15,7 +15,12 @@ const AdminPortal = lazy(() => import('./pages/admin/AdminPortal'));
 const ControlCenter = lazy(() => import('./pages/control/ControlCenter'));
 const PwaApp = lazy(() => import('./pages/pwa/PwaApp'));
 const FmcgOnboarding = lazy(() => import('./pages/fmcg_onboarding/OnboardingApp'));
+const ApiDocs = lazy(() => import('./pages/docs/ApiDocs'));
 const LogisticsApiDocs = lazy(() => import('./pages/docs/LogisticsApiDocs'));
+const SalesAnalyticsApiDocs = lazy(() => import('./pages/docs/SalesAnalyticsApiDocs'));
+const TermsPage = lazy(() => import('./pages/landing/TermsPage'));
+const PrivacyPage = lazy(() => import('./pages/landing/PrivacyPage'));
+const HelpPage = lazy(() => import('./pages/landing/HelpPage'));
 
 class ErrorBoundary extends Component<{children: ReactNode}, {hasError: boolean, error: Error | null}> {
   public state: {hasError: boolean, error: Error | null} = { hasError: false, error: null };
@@ -126,8 +131,14 @@ export default function App() {
         return undefined;
       }
       
-      // Remove Vercel / APP domain suffixes to prevent '.vercel.app' from matching 'app' target
-      if (hostname.endsWith('.vercel.app')) {
+      // Remove Vercel / APP / NX Network domain suffixes to prevent matching issues
+      if (hostname.endsWith('.nxnetwork.company')) {
+        hostname = hostname.slice(0, -18);
+      } else if (hostname.endsWith('nxnetwork.company')) {
+        hostname = '';
+      } else if (hostname.endsWith('.company')) {
+        hostname = hostname.slice(0, -8);
+      } else if (hostname.endsWith('.vercel.app')) {
         hostname = hostname.slice(0, -11);
       } else if (hostname.endsWith('.app')) {
         hostname = hostname.slice(0, -4);
@@ -220,6 +231,12 @@ export default function App() {
           <Route path="/fmcgs/*" element={<FmcgsPortal />} />
           <Route path="/app/*" element={<PwaApp />} />
           <Route path="/docs/logistics-partners" element={<LogisticsApiDocs />} />
+          <Route path="/docs" element={<ApiDocs />} />
+          <Route path="/docs/logistics" element={<LogisticsApiDocs />} />
+          <Route path="/docs/sales-analytics" element={<SalesAnalyticsApiDocs />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/help" element={<HelpPage />} />
         </>
       );
     }
@@ -236,6 +253,12 @@ export default function App() {
         <Route path="/app/*" element={<PwaApp />} />
         <Route path="/control" element={<ControlCenter />} />
         <Route path="/docs/logistics-partners" element={<LogisticsApiDocs />} />
+          <Route path="/docs" element={<ApiDocs />} />
+        <Route path="/docs/logistics" element={<LogisticsApiDocs />} />
+        <Route path="/docs/sales-analytics" element={<SalesAnalyticsApiDocs />} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/help" element={<HelpPage />} />
       </>
     );
   };

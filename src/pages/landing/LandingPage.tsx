@@ -321,7 +321,7 @@ export default function LandingPage() {
             <span>Phone Number = Wallet</span>
           </div>
           <p className="text-xs text-nx-muted leading-relaxed">
-            NX is purpose-built for Kenya’s informal retail infrastructure, starting with kiosks and dukas in Mombasa.
+            NX is purpose-built for Kenya’s informal retail infrastructure, starting with kiosks and dukas in Mombasa to pioneer a self-sustaining <span className="text-nx-amber font-semibold">NX circular economy</span>.
           </p>
         </motion.div>
         
@@ -376,12 +376,7 @@ export default function LandingPage() {
           </motion.div>
         )}
 
-        <motion.div 
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }}
-          className="mt-4 text-[10px] text-nx-muted tracking-widest"
-        >
-          <a href="#terms" className="hover:text-nx-amber transition-colors border-b border-nx-muted/30">Terms & conditions apply.</a> · Customer NX expires 2 months after issuance.
-        </motion.div>
+
       </section>
 
       {/* Stats Bar */}
@@ -641,6 +636,169 @@ export default function LandingPage() {
                 "Over 70% of everyday essentials in Africa move through informal retail – NX makes that demand visible, consolidated, and bankable for the first time."
               </blockquote>
             </div>
+          </div>
+        </div>
+      </LazyLoadSection>
+
+      {/* Venture Thesis & Strategic Architecture Section */}
+      <LazyLoadSection id="venture-thesis" className="py-24 px-6 md:px-10 max-w-6xl mx-auto border-t border-nx-border scroll-mt-16">
+        <div className="flex items-center gap-4 text-[9px] uppercase tracking-[0.4em] text-nx-amber mb-6">
+          <div className="w-8 h-[1px] bg-nx-amber" /> VENTURE THESIS &amp; POSITIONING
+        </div>
+        <h2 className="font-display text-[clamp(40px,6vw,80px)] leading-none tracking-tight text-nx-paper mb-6 uppercase">
+          THE OPERATING LAYER FOR<br/><span className="text-nx-amber italic">INFORMAL RETAIL.</span>
+        </h2>
+        <p className="font-serif text-lg text-nx-paper/70 leading-relaxed max-w-3xl mb-16">
+          Kenya's informal retail sector moves billions in essential goods but remains a major black box below the distributor level. NX Network sits on top as an asset-light, co-operative network—capturing massive last-mile transaction loyalty and supply chain intelligence <span className="text-nx-amber font-semibold">without moving money, holding physical stock, or replacing existing distributors</span>.
+        </p>
+
+        {/* Two-Column Grid for Comparative Matrix and Stacked Architecture */}
+        <div className="grid lg:grid-cols-2 gap-12 items-start mb-20">
+          
+          {/* Comparative Matrix Column */}
+          <div className="bg-nx-card p-8 border border-nx-border rounded-2xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-nx-amber/[0.02] rounded-bl-[120px]" />
+            <h3 className="font-display text-sm tracking-wider text-nx-amber uppercase mb-6 flex items-center gap-2">
+              <BarChart3 className="w-4 h-4" /> Market Positioning Matrix
+            </h3>
+            
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-nx-border">
+                    <th className="pb-4 text-[9px] uppercase tracking-widest text-nx-muted font-mono">Value Dimension</th>
+                    <th className="pb-4 text-[9px] uppercase tracking-widest text-nx-muted font-mono text-center">Mobile Money</th>
+                    <th className="pb-4 text-[9px] uppercase tracking-widest text-nx-muted font-mono text-center">Trad. Loyalty</th>
+                    <th className="pb-4 text-[9px] uppercase tracking-widest text-nx-muted font-mono text-center">Brand Distrib.</th>
+                    <th className="pb-4 text-[10px] uppercase tracking-widest text-nx-amber font-mono text-center bg-nx-amber/5 rounded-t-xl px-3 border-t border-x border-nx-amber/25 font-bold">NX Network</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-nx-border/40 text-[11px] md:text-xs">
+                  <tr className="hover:bg-white/[0.01] transition-colors">
+                    <td className="py-4 font-sans font-semibold text-nx-paper pr-2">Moves Money / capital</td>
+                    <td className="py-4 text-center text-nx-green font-semibold">YES</td>
+                    <td className="py-4 text-center text-red-500/80 font-semibold">NO</td>
+                    <td className="py-4 text-center text-red-500/80 font-semibold">NO</td>
+                    <td className="py-4 text-center bg-nx-amber/5 px-3 border-x border-nx-amber/25">
+                      <span className="text-red-500/80 font-bold block">NO</span>
+                      <span className="text-[8px] text-nx-muted block font-mono mt-0.5">Asset-Light</span>
+                    </td>
+                  </tr>
+                  <tr className="hover:bg-white/[0.01] transition-colors">
+                    <td className="py-4 font-sans font-semibold text-nx-paper pr-2">Last-Mile Demand Data</td>
+                    <td className="py-4 text-center text-red-500/80 font-semibold">NO</td>
+                    <td className="py-4 text-center text-nx-green font-semibold">YES</td>
+                    <td className="py-4 text-center text-red-500/80 font-semibold">NO</td>
+                    <td className="py-4 text-center bg-nx-amber/5 px-3 border-x border-nx-amber/25">
+                      <span className="text-nx-green font-bold block">YES</span>
+                      <span className="text-[8px] text-nx-amber block font-mono mt-0.5">Real-Time</span>
+                    </td>
+                  </tr>
+                  <tr className="hover:bg-white/[0.01] transition-colors">
+                    <td className="py-4 font-sans font-semibold text-nx-paper pr-2">Accessible via USSD</td>
+                    <td className="py-4 text-center text-nx-green font-semibold">YES</td>
+                    <td className="py-4 text-center text-red-500/80 font-semibold">NO</td>
+                    <td className="py-4 text-center text-red-500/80 font-semibold">NO</td>
+                    <td className="py-4 text-center bg-nx-amber/5 px-3 border-x border-nx-amber/25">
+                      <span className="text-nx-green font-bold block">YES</span>
+                      <span className="text-[8px] text-nx-muted block font-mono mt-0.5">Zero Data</span>
+                    </td>
+                  </tr>
+                  <tr className="hover:bg-white/[0.01] transition-colors">
+                    <td className="py-4 font-sans font-semibold text-nx-paper pr-2">Merchant-Customer Loyalty</td>
+                    <td className="py-4 text-center text-red-500/80 font-semibold">NO</td>
+                    <td className="py-4 text-center text-nx-green font-semibold">YES</td>
+                    <td className="py-4 text-center text-red-500/80 font-semibold">NO</td>
+                    <td className="py-4 text-center bg-nx-amber/5 px-3 border-x border-b border-nx-amber/25 rounded-b-xl">
+                      <span className="text-nx-green font-bold block">YES</span>
+                      <span className="text-[8px] text-nx-muted block font-mono mt-0.5">P2P Driven</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div className="mt-6 p-4 bg-nx-amber/5 border border-nx-amber/20 rounded-xl">
+              <p className="text-[11px] text-[#b5b3aa] leading-relaxed">
+                <span className="text-nx-amber font-semibold uppercase block text-[10px] tracking-wider mb-1">Key Takeaway</span>
+                NX Network sits on top of everyday transactions. Because payments are peer-to-peer between customers and dukas, we capture loyalty metrics and demand telemetry without entering the flow of funds or acquiring licensing overheads.
+              </p>
+            </div>
+          </div>
+
+          {/* Strategic Stack Architecture */}
+          <div className="space-y-6">
+            <h3 className="font-display text-sm tracking-wider text-nx-green uppercase flex items-center gap-2">
+              <Layers className="w-4 h-4" /> Three-Layer Asset-Light Architecture
+            </h3>
+            
+            <div className="space-y-4">
+              {[
+                {
+                  layer: '01',
+                  color: 'text-blue-400',
+                  title: 'THE NX INTELLIGENCE LAYER (LOYALTY & DATA)',
+                  body: 'We capture high-velocity, weekly last-mile sell-through data by SKU, by region, and by kiosk. Brands run targeted customer promotions and demand aggregation with zero structural lag.'
+                },
+                {
+                  layer: '02',
+                  color: 'text-nx-amber',
+                  title: 'THE TRANSACTION LAYER (USSD & CASH-FLOW)',
+                  body: 'A frictionless USSD network running on feature phones. Payments remain entirely cash-based or peer-to-peer mobile money between the buyer and the shop owner. NX holds no money.'
+                },
+                {
+                  layer: '03',
+                  color: 'text-nx-green',
+                  title: 'THE PHYSICAL LAYER (ROUTE-ONLY ORDERING)',
+                  body: 'Dukas route aggregated restock orders through the NX Network directly to existing FMCG brands and distributors. We partner with distributors to amplify their last-mile capacity rather than replacing them.'
+                }
+              ].map((layer, index) => (
+                <div key={index} className="bg-nx-card p-6 border border-nx-border hover:border-nx-amber/20 transition-all rounded-xl flex gap-5 items-start">
+                  <div className={cn("font-display text-2xl font-black shrink-0", layer.color)}>
+                    {layer.layer}
+                  </div>
+                  <div>
+                    <h4 className="font-sans font-bold text-xs text-nx-paper mb-1 tracking-wider uppercase">{layer.title}</h4>
+                    <p className="text-xs text-nx-muted leading-relaxed">{layer.body}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+        </div>
+
+        {/* 3-Way Ecosystem Loop */}
+        <div className="border-t border-nx-border/50 pt-16">
+          <div className="text-center mb-12">
+            <h3 className="text-[10px] uppercase tracking-[0.3em] text-nx-amber mb-3 font-mono font-bold">THE REWARD ROTATION</h3>
+            <h4 className="font-serif text-2xl text-nx-paper">How Every Transaction Enriches the Entire Ecosystem</h4>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              {
+                title: 'Customers (Earn)',
+                icon: <Users className="w-6 h-6 text-nx-amber" />,
+                body: 'Reduce the squeeze of rising cost of living by earning real value-back units on everyday essential SKUs via offline-friendly USSD.'
+              },
+              {
+                title: 'Merchants (Retain)',
+                icon: <Store className="w-6 h-6 text-nx-green" />,
+                body: 'Build solid digital customer relationships, boost retention, and use earned pools to automatically lower invoice restock costs.'
+              },
+              {
+                title: 'FMCG Brands (Optimize)',
+                icon: <Activity className="w-6 h-6 text-blue-400" />,
+                body: 'Eliminate delivery inefficiencies and product stockouts through real-time demand-velocity tracking below the distributor level.'
+              }
+            ].map((part, i) => (
+              <div key={i} className="bg-nx-card p-6 border border-nx-border rounded-xl hover:border-nx-amber/15 transition-all text-center flex flex-col items-center">
+                <div className="p-3 bg-nx-ink rounded-full mb-4">{part.icon}</div>
+                <h5 className="font-serif text-base text-nx-paper mb-2">{part.title}</h5>
+                <p className="text-xs text-[#b5b3aa] leading-relaxed">{part.body}</p>
+              </div>
+            ))}
           </div>
         </div>
       </LazyLoadSection>
@@ -1301,7 +1459,7 @@ export default function LandingPage() {
                   <span className="font-display text-xl text-nx-green/70">06</span>
                   <div>
                     <h3 className="font-display text-sm tracking-wider text-nx-paper uppercase">Platform Revenue Engine</h3>
-                    <p className="text-[10px] text-nx-muted">Spreads, subscriptions, and brand campaign monetization</p>
+                    <p className="text-[10px] text-nx-muted">Spreads, subscriptions, and brand campaign monetization powering the <span className="text-nx-amber font-semibold">NX circular economy</span></p>
                   </div>
                 </div>
                 <div className="p-1.5 bg-nx-ink rounded-lg text-nx-muted hover:text-nx-amber transition-colors">
@@ -1321,7 +1479,7 @@ export default function LandingPage() {
                     <div className="p-6 md:p-8 bg-nx-ink/40">
                       <div className="grid md:grid-cols-3 gap-4">
                         {[
-                          { label: 'Primary Revenue', val: '40%', body: <><strong>Trading margin spread.</strong> NX sources from producers at trade price and supplies merchants. 60–70% funds pools, rest is platform revenue.</> },
+                          { label: 'Primary Revenue', val: '40%', body: <><strong>Trading margin spread.</strong> Dukas route aggregated orders through NX. We negotiate bulk margin spreads with FMCGs/distributors on the order pools. 60–70% funds loyalty pools, and the remainder is platform revenue. Fully asset-light.</> },
                           { label: 'Data & Brand Revenue', val: '↗', body: <><strong>Last-mile sell-through data.</strong> Monthly data fees from FMCG partners who need real-time SKU velocity and kiosk-level trends.</> },
                           { label: 'Fee & Subscriptions', val: '2 NX', body: <><strong>Transaction fee + franchise.</strong> Every txn carries a 2 NX fee. Certified and Hub merchants pay monthly subscription fees.</> }
                         ].map((item, i) => (
@@ -1377,10 +1535,11 @@ export default function LandingPage() {
             className="nx-btn-primary bg-[#3b82f6] hover:bg-blue-600 text-white text-sm px-8 py-4 inline-flex items-center gap-3 font-bold tracking-wider"
           >
             <Send className="w-5 h-5 text-white shrink-0" />
-            Email partners@nx-network.com to see kiosk‑level data from Mombasa
+            Email partners@nxnetwork.company to see kiosk‑level data from Mombasa
           </a>
         </div>
       </LazyLoadSection>
+
 
       {/* Always Solvent, Always Secure */}
       <LazyLoadSection id="features" className="py-24 px-6 md:px-10 max-w-6xl mx-auto border-t border-nx-border scroll-mt-20">
@@ -1621,57 +1780,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Terms & Conditions */}
-      <section id="terms" className="py-24 px-6 md:px-10 max-w-6xl mx-auto border-t border-nx-border">
-        <div className="flex items-center gap-4 text-[9px] uppercase tracking-[0.4em] text-nx-amber mb-6">
-          <div className="w-8 h-[1px] bg-nx-amber" /> Legal
-        </div>
-        <h2 className="font-display text-[clamp(40px,6vw,80px)] leading-none tracking-tight text-nx-paper mb-16">
-          TERMS &<br/>CONDITIONS.
-        </h2>
-        <div className="grid md:grid-cols-2 gap-0.5 bg-nx-border">
-          <div className="bg-nx-card p-10">
-            <div className="text-[11px] font-semibold text-nx-amber uppercase tracking-widest mb-6">FOR CUSTOMERS</div>
-            <ul className="space-y-3">
-              {[
-                'NX units have no cash value. They are loyalty credits only and cannot be withdrawn.',
-                'Customer NX balances expire 2 months after issuance. Expired units are forfeited.',
-                'NX is earned on cash paid — not on the total value including NX redemption.',
-                'A flat 2 NX service fee is deducted per confirmed transaction (if balance > 0).',
-                'Transactions are final once confirmed. NX is not liable for merchant disputes.',
-                'Repeated cancellations result in a 7-day suspension from Pay with NX.',
-                'Registration requires name and National ID. A 4-digit recovery PIN is mandatory.',
-                'Account recovery requires old number, ID and PIN to match exactly.'
-              ].map((li, i) => (
-                <li key={i} className="text-xs text-nx-muted leading-relaxed pl-4 relative before:content-['—'] before:absolute before:left-0 before:text-nx-amber">
-                  {li}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="bg-nx-card p-10">
-            <div className="text-[11px] font-semibold text-nx-amber uppercase tracking-widest mb-6">FOR MERCHANTS</div>
-            <ul className="space-y-3">
-              {[
-                'Merchant NX settlement pools never expire. Pools are funded by NX\'s trading margin.',
-                'NX acceptance per transaction is capped at your tier\'s ceiling: BASIC 20%, CERTIFIED 30%, HUB 40%.',
-                'Restock Invoices: Merchants can only use 60% of their NX balance for partial payment per restock cycle.',
-                'Certified and Hub merchants pay a monthly franchise fee. Non-payment leads to downgrade.',
-                'Hub merchants earn 0.2 NX per sub-merchant confirmed transaction. Paid out monthly.',
-                'NX delivers stock to dukas, then settles on delivery. Earned NX reduces part of the invoice, helping merchants restock with less cash outflow.',
-                'FMCG contributions may augment your pool at NX\'s discretion.',
-                'NX reserves the right to suspend accounts for platform abuse.',
-                'NX Network (Kenya) 2026. Terms subject to change with 7 days notice via SMS.'
-              ].map((li, i) => (
-                <li key={i} className="text-xs text-nx-muted leading-relaxed pl-4 relative before:content-['—'] before:absolute before:left-0 before:text-nx-amber">
-                  {li}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </section>
-
       {/* Contact */}
       <section id="contact" className="py-24 px-6 md:px-10 max-w-6xl mx-auto border-t border-nx-border">
         <div className="flex items-center gap-4 text-[9px] uppercase tracking-[0.4em] text-nx-amber mb-6">
@@ -1750,7 +1858,7 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="py-20 px-6 md:px-10 border-t border-nx-border bg-[#050505]">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-5 gap-12">
           <div className="col-span-1 md:col-span-2">
             <Link to="/" className="flex items-center gap-3 mb-6">
               <NXLogo title="Network" size="sm" />
@@ -1766,21 +1874,28 @@ export default function LandingPage() {
             <div className="text-[10px] uppercase tracking-[0.3em] text-nx-amber mb-6">Support</div>
             <ul className="space-y-4">
               <li>
-                <button 
-                  onClick={() => setShowHelp(true)}
-                  className="text-sm text-nx-muted hover:text-nx-paper transition-colors cursor-pointer text-left bg-transparent border-none p-0 focus:outline-hidden"
+                <Link 
+                  to="/help"
+                  className="text-sm text-nx-muted hover:text-nx-paper transition-colors cursor-pointer text-left bg-transparent border-none p-0 focus:outline-hidden block"
                 >
                   Help Center
-                </button>
+                </Link>
               </li>
-              <li><a href="#terms" className="text-sm text-nx-muted hover:text-nx-paper transition-colors">Terms of Service</a></li>
               <li>
-                <button 
-                  onClick={() => setShowPrivacy(true)}
-                  className="text-sm text-nx-muted hover:text-nx-paper transition-colors cursor-pointer text-left bg-transparent border-none p-0 focus:outline-hidden"
+                <Link 
+                  to="/terms" 
+                  className="text-sm text-nx-muted hover:text-nx-paper transition-colors block"
+                >
+                  Terms of Service
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  to="/privacy"
+                  className="text-sm text-nx-muted hover:text-nx-paper transition-colors cursor-pointer text-left bg-transparent border-none p-0 focus:outline-hidden block"
                 >
                   Privacy Policy
-                </button>
+                </Link>
               </li>
               <li><a href="tel:0781550151" className="text-sm text-nx-amber font-bold">0781550151</a></li>
             </ul>
@@ -1808,6 +1923,27 @@ export default function LandingPage() {
                 <a href={getPortalLink('partners')} className="flex items-center gap-2 text-sm text-nx-muted hover:text-nx-amber transition-colors group">
                   Partners Portal <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </a>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <div className="text-[10px] uppercase tracking-[0.3em] text-nx-amber mb-6">Developers</div>
+            <ul className="space-y-4">
+              <li>
+                <Link to="/docs" className="flex items-center gap-2 text-sm text-nx-muted hover:text-nx-amber transition-colors group">
+                  API Overview <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </Link>
+              </li>
+              <li>
+                <Link to="/docs/logistics" className="flex items-center gap-2 text-sm text-nx-muted hover:text-nx-amber transition-colors group">
+                  Logistics API <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </Link>
+              </li>
+              <li>
+                <Link to="/docs/sales-analytics" className="flex items-center gap-2 text-sm text-nx-muted hover:text-nx-amber transition-colors group">
+                  Sales Analytics API <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </Link>
               </li>
             </ul>
           </div>
@@ -1926,7 +2062,7 @@ export default function LandingPage() {
                 {/* Footer Section */}
                 <div className="border-t border-nx-border pt-4 text-center">
                   <span className="text-[10px] font-mono uppercase tracking-widest text-nx-muted">
-                    Support: compliance@nx-network.com · Customer Care: 0781550151
+                    Support: compliance@nxnetwork.company · Customer Care: 0781550151
                   </span>
                 </div>
 
@@ -2052,7 +2188,7 @@ export default function LandingPage() {
                 {/* Support Contact */}
                 <div className="border-t border-nx-border pt-4 text-center">
                   <span className="text-[10px] font-mono uppercase tracking-widest text-nx-muted">
-                    Compliance: compliance@nx-network.com · Customer Line: 0781550151
+                    Compliance: compliance@nxnetwork.company · Customer Line: 0781550151
                   </span>
                 </div>
 

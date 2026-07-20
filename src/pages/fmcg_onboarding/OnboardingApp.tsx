@@ -326,7 +326,7 @@ export default function FmcgOnboarding() {
                               To safeguard the liquidity pools of the NX Live core network, brand connections require manual authorization unless registered via a pre-approved wholesale domain prefix.
                            </p>
                            <p className="text-[10px] text-nx-muted leading-relaxed mt-2 font-semibold">
-                              Please contact brand-onboarding@nx-network.com for expedited review.
+                              Please contact brand-onboarding@nxnetwork.company for expedited review.
                            </p>
                         </div>
 
@@ -423,7 +423,7 @@ export default function FmcgOnboarding() {
                <p className="text-xs text-nx-muted mb-4">To authenticate with the NX API, include your API key in the <code className="bg-[#0a0a0a] px-2 py-1 rounded text-[#00d4ff] font-mono border border-white/5">x-api-key</code> header.</p>
                <div className="bg-[#0a0a0a] border border-white/10 rounded-xl p-4 overflow-x-auto">
                   <pre className="text-[11px] font-mono text-nx-muted leading-relaxed select-all">
-<span className="text-[#00d4ff]">curl</span> -X POST https://api.nx-network.com/v1/fmcg/liquidate \
+<span className="text-[#00d4ff]">curl</span> -X POST https://api.nxnetwork.company/v1/fmcg/liquidate \
   -H <span className="text-[#ffb547]">"Content-Type: application/json"</span> \
   -H <span className="text-[#ffb547]">"x-api-key: nx_live_YOUR_API_KEY_HERE"</span> \
   -d '{`{

@@ -66,7 +66,7 @@ const PORTAL_ONBOARDING_DATA: Record<string, PortalConfig> = {
       {
         title: "Frictionless",
         highlight: "Merchant Pay",
-        subtitle: "Just scan a merchant QR code or dial a quick offline prompt to instantly redeem your balances.",
+        subtitle: "Redeem your balances by dialing a quick offline USSD prompt instantly at any participating duka.",
         icon: ShieldCheck,
         color: "var(--nx-amber)",
       }

@@ -1145,9 +1145,6 @@ export default function MerchantDashboard({ user, onLogout }: { user: any, onLog
                 </span>
               )}
             </div>
-            <div className="bg-[#1a1d23] border border-[#2a2d35] rounded-md px-2 py-1 shadow-inner">
-              <span className="font-mono text-[10px] font-bold text-[#e8a020] tracking-widest select-none">{user.merchant_code}</span>
-            </div>
           </div>
         </div>
         <button onClick={onLogout} className="p-2 text-nx-muted hover:text-nx-ember transition-colors">
@@ -1605,7 +1602,7 @@ export default function MerchantDashboard({ user, onLogout }: { user: any, onLog
                 {pendingTxns.length === 0 ? (
                   <div className="text-center py-10 text-nx-muted text-[10px] border border-dashed border-nx-border rounded-2xl bg-nx-card/30">
                     <div className="mb-2 opacity-50">NO PENDING PAYMENTS</div>
-                    <div className="text-[8px] uppercase tracking-widest">Awaiting customer scans...</div>
+                    <div className="text-[8px] uppercase tracking-widest">Awaiting customer USSD transactions...</div>
                   </div>
                 ) : (
                   pendingTxns.map((txn) => (

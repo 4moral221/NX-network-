@@ -379,6 +379,354 @@ function BidModal({ batch, brand, onClose, onSuccess }: {
   );
 }
 
+// ── QUICK START MODAL ──────────────────────────────────────────
+type QuickStartModalProps = {
+  brand: any;
+  onGenerateKey: (type: 'sandbox' | 'production') => Promise<string | undefined>;
+  onClose: () => void;
+  apiKeys: any[];
+};
+
+function QuickStartModal({ brand, onGenerateKey, onClose, apiKeys }: QuickStartModalProps) {
+  const [activeStep, setActiveStep] = useState<1 | 2 | 3>(1);
+  const [localKey, setLocalKey] = useState<string>('');
+  const [keyType, setKeyType] = useState<'sandbox' | 'production'>('sandbox');
+  const [generating, setGenerating] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [lang, setLang] = useState<'curl' | 'node' | 'python'>('curl');
+
+  useEffect(() => {
+    if (apiKeys && apiKeys.length > 0) {
+      const sandboxKey = apiKeys.find(k => k.type === 'sandbox');
+      const prodKey = apiKeys.find(k => k.type === 'production');
+      if (sandboxKey) {
+        setLocalKey(`nx_sandbox_••••••••${sandboxKey.last4}`);
+        setKeyType('sandbox');
+      } else if (prodKey) {
+        setLocalKey(`nx_live_••••••••${prodKey.last4}`);
+        setKeyType('production');
+      }
+    }
+  }, [apiKeys]);
+
+  const handleGen = async (type: 'sandbox' | 'production') => {
+    setGenerating(true);
+    setKeyType(type);
+    try {
+      const generated = await onGenerateKey(type);
+      if (generated) {
+        setLocalKey(generated);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const codeSnippets = {
+    curl: {
+      sandbox: `curl -X GET "https://api.nxnetwork.company/api/logistics/dispatches" \\\n  -H "Authorization: Bearer ${localKey || 'YOUR_SANDBOX_KEY'}" \\\n  -H "Content-Type: application/json"`,
+      production: `curl -X GET "https://api.nxnetwork.company/api/logistics/dispatches" \\\n  -H "Authorization: Bearer ${localKey || 'YOUR_PRODUCTION_KEY'}" \\\n  -H "Content-Type: application/json"`
+    },
+    node: {
+      sandbox: `fetch("https://api.nxnetwork.company/api/logistics/dispatches", {\n  method: "GET",\n  headers: {\n    "Authorization": "Bearer ${localKey || 'YOUR_SANDBOX_KEY'}",\n    "Content-Type": "application/json"\n  }\n})\n.then(res => res.json())\n.then(data => console.log(data));`,
+      production: `fetch("https://api.nxnetwork.company/api/logistics/dispatches", {\n  method: "GET",\n  headers: {\n    "Authorization": "Bearer ${localKey || 'YOUR_PRODUCTION_KEY'}",\n    "Content-Type": "application/json"\n  }\n})\n.then(res => res.json())\n.then(data => console.log(data));`
+    },
+    python: {
+      sandbox: `import requests\n\nheaders = {\n    "Authorization": "Bearer ${localKey || 'YOUR_SANDBOX_KEY'}",\n    "Content-Type": "application/json"\n}\n\nresponse = requests.get("https://api.nxnetwork.company/api/logistics/dispatches", headers=headers)\nprint(response.json())`,
+      production: `import requests\n\nheaders = {\n    "Authorization": "Bearer ${localKey || 'YOUR_PRODUCTION_KEY'}",\n    "Content-Type": "application/json"\n}\n\nresponse = requests.get("https://api.nxnetwork.company/api/logistics/dispatches", headers=headers)\nprint(response.json())`
+    }
+  };
+
+  const handleCopyCode = () => {
+    const code = codeSnippets[lang][keyType];
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-[#1a1d23]/80 backdrop-blur-sm flex items-center justify-center p-4">
+      <motion.div 
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.95, opacity: 0 }}
+        className="bg-white border text-[#1a1d23] border-[#e4e6ea] rounded-3xl w-full max-w-4xl overflow-hidden shadow-2xl flex flex-col md:flex-row h-[600px]"
+      >
+        <div className="w-full md:w-64 bg-[#f4f5f7] border-r border-[#e4e6ea] p-6 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center gap-2 mb-6">
+              <div className="bg-[#1a1d23] text-white p-1.5 rounded-lg">
+                <Shield className="w-4 h-4" />
+              </div>
+              <span className="font-extrabold text-xs tracking-wider uppercase">NX Quick Start</span>
+            </div>
+            <div className="space-y-2">
+              {[
+                { step: 1, label: '1. Generate Key', desc: 'Secure classified credentials' },
+                { step: 2, label: '2. Test Endpoint', desc: 'Copy interactive snippets' },
+                { step: 3, label: '3. Go Live', desc: 'System synchronization' }
+              ].map(s => (
+                <button
+                  key={s.step}
+                  onClick={() => setActiveStep(s.step as 1 | 2 | 3)}
+                  className={cn(
+                    "w-full text-left p-3 rounded-xl transition-all flex items-center gap-3 border",
+                    activeStep === s.step 
+                      ? "bg-white border-[#e4e6ea] shadow-sm text-[#1a1d23] font-bold"
+                      : "border-transparent text-[#6b7280] hover:text-[#1a1d23]"
+                  )}
+                >
+                  <div className={cn(
+                    "w-6 h-6 rounded-full flex items-center justify-center text-xs font-extrabold",
+                    activeStep === s.step ? "bg-[#1a1d23] text-white" : "bg-gray-200 text-[#6b7280]"
+                  )}>
+                    {s.step}
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold leading-none">{s.label}</div>
+                    <div className="text-[9px] text-[#6b7280] mt-0.5 font-normal leading-none">{s.desc}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="text-[10px] text-[#6b7280] font-mono leading-relaxed uppercase">
+            © NX Network. All API keys strictly audited.
+          </div>
+        </div>
+
+        <div className="flex-1 p-8 flex flex-col justify-between overflow-y-auto">
+          <div>
+            <div className="flex justify-between items-start mb-6">
+              <div>
+                <h2 className="text-2xl font-extrabold text-[#1a1d23] tracking-tight">
+                  {activeStep === 1 && 'Step 1: Generate classified API key'}
+                  {activeStep === 2 && 'Step 2: Test sandbox or production endpoints'}
+                  {activeStep === 3 && 'Step 3: Establish Live Synchronization'}
+                </h2>
+                <p className="text-xs text-[#6b7280] mt-1 max-w-xl">
+                  {activeStep === 1 && 'Select between Sandbox (for safe staging and mock dispatches) and Production APIs (to manage live inventory restocks).'}
+                  {activeStep === 2 && 'Send test requests programmatically with our live generated token.'}
+                  {activeStep === 3 && 'Prepare your systems to go live with the NX supply network.'}
+                </p>
+              </div>
+              <button onClick={onClose} className="text-[#6b7280] hover:text-[#1a1d23] transition-colors p-1">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {activeStep === 1 && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="border border-[#e4e6ea] p-5 rounded-2xl bg-[#fafafa] flex flex-col justify-between h-44">
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-bold uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded">Sandbox Env</span>
+                        <Shield className="w-4 h-4 text-amber-600" />
+                      </div>
+                      <h3 className="text-sm font-extrabold text-[#1a1d23]">Classified Sandbox Key</h3>
+                      <p className="text-[11px] text-[#6b7280] mt-1 leading-normal">
+                        Safe environment for digital staging and automated ERP checks. No real-world stock impact.
+                      </p>
+                    </div>
+                    <button
+                      disabled={generating}
+                      onClick={() => handleGen('sandbox')}
+                      className="w-full bg-white border border-[#e4e6ea] hover:border-[#1a1d23] text-[#1a1d23] font-bold py-2 rounded-xl text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shadow-sm"
+                    >
+                      {generating && keyType === 'sandbox' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Key className="w-3.5 h-3.5 text-amber-600" />}
+                      Generate Sandbox Key
+                    </button>
+                  </div>
+
+                  <div className="border border-[#e4e6ea] p-5 rounded-2xl bg-[#fafafa] flex flex-col justify-between h-44">
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-bold uppercase tracking-wider text-[#059669] bg-green-50 px-2 py-0.5 rounded">Production Env</span>
+                        <ShieldAlert className="w-4 h-4 text-[#059669]" />
+                      </div>
+                      <h3 className="text-sm font-extrabold text-[#1a1d23]">Classified Production Key</h3>
+                      <p className="text-[11px] text-[#6b7280] mt-1 leading-normal">
+                        Binds directly with the live merchant retail pipeline. Executes real wholesale allocations.
+                      </p>
+                    </div>
+                    <button
+                      disabled={generating}
+                      onClick={() => handleGen('production')}
+                      className="w-full bg-[#1a1d23] hover:bg-[#2a2d35] text-white font-bold py-2 rounded-xl text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shadow-md"
+                    >
+                      {generating && keyType === 'production' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Key className="w-3.5 h-3.5 text-[#059669]" />}
+                      Generate Production Key
+                    </button>
+                  </div>
+                </div>
+
+                {localKey && (
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="p-4 bg-amber-50 border border-amber-200 rounded-xl space-y-2">
+                    <div className="flex items-center justify-between text-xs font-mono font-bold text-amber-800">
+                      <span>Generated {keyType.toUpperCase()} Key Successfully:</span>
+                      <span className="text-[10px] bg-amber-200 px-1.5 py-0.5 rounded uppercase">Store Safely</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <div className="bg-white border border-amber-200 px-4 py-3 rounded-lg flex-1 font-mono text-xs text-[#1a1d23] break-all select-all font-bold">
+                        {localKey}
+                      </div>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(localKey);
+                          setCopied(true);
+                          setTimeout(() => setCopied(false), 2000);
+                        }}
+                        className="bg-amber-600 hover:bg-amber-700 text-white px-4 rounded-lg font-bold text-xs flex items-center gap-1.5"
+                      >
+                        {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                        {copied ? 'Copied' : 'Copy'}
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </div>
+            )}
+
+            {activeStep === 2 && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between border-b border-[#e4e6ea] pb-2">
+                  <div className="flex gap-2">
+                    {(['curl', 'node', 'python'] as const).map(l => (
+                      <button
+                        key={l}
+                        onClick={() => setLang(l)}
+                        className={cn(
+                          "px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all",
+                          lang === l ? "bg-[#1a1d23] text-white" : "text-[#6b7280] hover:bg-gray-100"
+                        )}
+                      >
+                        {l === 'node' ? 'NodeJS / Fetch' : l}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex gap-2">
+                    {(['sandbox', 'production'] as const).map(t => (
+                      <button
+                        key={t}
+                        onClick={() => setKeyType(t)}
+                        className={cn(
+                          "px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-widest border",
+                          keyType === t 
+                            ? (t === 'sandbox' ? "bg-amber-50 border-amber-200 text-amber-700" : "bg-green-50 border-green-200 text-green-700")
+                            : "bg-transparent border-gray-200 text-[#6b7280]"
+                        )}
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="relative">
+                  <pre className="bg-[#0f141c] text-slate-100 p-5 rounded-2xl font-mono text-xs overflow-x-auto leading-relaxed max-h-56">
+                    <code>{codeSnippets[lang][keyType]}</code>
+                  </pre>
+                  <button
+                    onClick={handleCopyCode}
+                    className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white border border-white/10 p-2 rounded-lg transition-all flex items-center gap-1 text-[10px] font-bold uppercase"
+                  >
+                    {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                    {copied ? 'Copied' : 'Copy'}
+                  </button>
+                </div>
+
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl flex items-start gap-3">
+                  <Info className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+                  <div className="text-[11px] text-blue-900 leading-relaxed">
+                    <span className="font-extrabold">Auto-Inject Active:</span> The code block above is automatically injected with your active {keyType} credential. You can copy-paste and run this immediately in your staging terminal or backend code.
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeStep === 3 && (
+              <div className="space-y-4">
+                <div className="p-5 border border-[#e4e6ea] rounded-2xl bg-slate-50 space-y-4">
+                  <h3 className="font-extrabold text-sm text-[#1a1d23] uppercase tracking-wider">Synchronization Readiness Checklist</h3>
+                  <div className="space-y-3">
+                    {[
+                      { title: 'Classified API Keys Configured', desc: 'Secure environment variables configured inside your digital logistics system / ERP.' },
+                      { title: 'SKU Catalogs Matching', desc: 'Ensure your internal stock codes match the NX SKU standard (BR, ML, SG, CO, F).' },
+                      { title: 'Payload HMAC Signatures Handled', desc: 'Establish robust validation to verify callbacks originating from the secure NX gateway.' },
+                      { title: 'Launch Production Stream', desc: 'Begin pulling automated wholesale bids and push live restock dispatch notifications.' }
+                    ].map((item, index) => (
+                      <div key={index} className="flex gap-3 items-start">
+                        <div className="mt-0.5 bg-green-500 text-white rounded-full p-0.5 shrink-0">
+                          <Check className="w-3.5 h-3.5 text-white" />
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold text-[#1a1d23]">{item.title}</div>
+                          <p className="text-[10px] text-[#6b7280] mt-0.5 leading-normal">{item.desc}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="p-4 bg-green-50 border border-green-200 rounded-xl text-xs text-green-900 leading-relaxed flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5 text-green-600" />
+                  <span>Your system is fully certified to interface programmatically with the NX dispatch network.</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="border-t border-[#e4e6ea] pt-6 flex justify-between items-center bg-white">
+            <button
+              onClick={() => {
+                if (activeStep > 1) setActiveStep((activeStep - 1) as 1 | 2 | 3);
+              }}
+              disabled={activeStep === 1}
+              className="text-xs font-bold text-[#6b7280] hover:text-[#1a1d23] disabled:opacity-35 disabled:hover:text-[#6b7280] transition-colors uppercase tracking-wider"
+            >
+              Previous Step
+            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  const key = `nx_has_seen_quickstart_${brand.id}`;
+                  localStorage.setItem(key, 'true');
+                  onClose();
+                }}
+                className="px-6 py-2.5 rounded-xl text-xs font-bold border border-[#e4e6ea] hover:border-[#1a1d23] transition-all uppercase tracking-wider text-[#6b7280] hover:text-[#1a1d23]"
+              >
+                Skip Guide
+              </button>
+              {activeStep < 3 ? (
+                <button
+                  onClick={() => setActiveStep((activeStep + 1) as 1 | 2 | 3)}
+                  className="bg-[#1a1d23] hover:bg-[#2a2d35] text-white px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1"
+                >
+                  Next Step <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    const key = `nx_has_seen_quickstart_${brand.id}`;
+                    localStorage.setItem(key, 'true');
+                    onClose();
+                  }}
+                  className="bg-[#059669] hover:bg-[#047857] text-white px-8 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-md"
+                >
+                  Finish & Go to Dashboard <Check className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 // ── MAIN PORTAL ──────────────────────────────────────────────
 export default function PartnersPortal() {
   const getAuthHeaders = async (extraHeaders: Record<string, string> = {}) => {
@@ -502,6 +850,17 @@ export default function PartnersPortal() {
     }
   }, [isLoggedIn]);
   const [brand, setBrand] = useState<any>(null);
+  const [showQuickStart, setShowQuickStart] = useState(false);
+
+  useEffect(() => {
+    if (isLoggedIn && brand) {
+      const key = `nx_has_seen_quickstart_${brand.id}`;
+      const hasSeen = localStorage.getItem(key);
+      if (!hasSeen) {
+        setShowQuickStart(true);
+      }
+    }
+  }, [isLoggedIn, brand]);
   const [error, setError] = useState('');
   const [authMode, setAuthMode] = useState<'login' | 'register' | 'setup' | 'whitelist_signup'>('login');
   const [loginData, setLoginData] = useState({ brand: '', password: '' });
@@ -826,10 +1185,11 @@ export default function PartnersPortal() {
 
 
 
-  const handleGenerateKey = async () => {
+  const handleGenerateKey = async (type: 'sandbox' | 'production' = 'production') => {
     if (!brand) return;
-    if (apiKeys.length > 0) {
-      if (!confirm("Regenerating your integration key will immediately revoke and disable all of your existing keys. Do you wish to proceed?")) {
+    const existingOfThisType = apiKeys.filter(k => k.type === type || (!k.type && type === 'production'));
+    if (existingOfThisType.length > 0) {
+      if (!confirm(`Regenerating your ${type} integration key will immediately revoke and disable your existing ${type} key. Do you wish to proceed?`)) {
         return;
       }
     }
@@ -838,13 +1198,14 @@ export default function PartnersPortal() {
       const res = await fetch('/api/logistics/generate-key', {
         method: 'POST',
         headers: await getAuthHeaders({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify({ brand_name: brand.name, brand_id: brand.id })
+        body: JSON.stringify({ brand_name: brand.name, brand_id: brand.id, type })
       });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.error || 'Failed to generate key');
 
       setRawKeyToShow(data.key);
       fetchApiKeys();
+      return data.key;
     } catch (err: any) {
       showNotification('Failed to generate API key: ' + err.message, 'error');
     } finally {
@@ -1471,7 +1832,7 @@ MERCHANT_CODE: M-104 | PHONE: +254766666666 | ORDER_SPEC: Pembe 2kg*22 | ORDER_Q
                   To safeguard the liquidity pools of the NX Live core network, brand connections require manual authorization unless registered via a pre-approved wholesale domain prefix.
                </p>
                <p className="text-[10px] text-[#4b5563] leading-relaxed mt-2 font-semibold">
-                  Please contact brand-onboarding@nx-network.com for expedited review.
+                  Please contact brand-onboarding@nxnetwork.company for expedited review.
                </p>
             </div>
 
@@ -1526,6 +1887,14 @@ MERCHANT_CODE: M-104 | PHONE: +254766666666 | ORDER_SPEC: Pembe 2kg*22 | ORDER_Q
   return (
     <div className="min-h-screen bg-[#f4f5f7] text-[#1a1d23] font-sans">
       <AnimatePresence>
+        {showQuickStart && (
+          <QuickStartModal 
+            brand={brand} 
+            onGenerateKey={handleGenerateKey} 
+            onClose={() => setShowQuickStart(false)} 
+            apiKeys={apiKeys}
+          />
+        )}
         {errorAlert && (
           <motion.div 
             initial={{ opacity: 0, y: -50, scale: 0.95 }}
@@ -1846,14 +2215,31 @@ MERCHANT_CODE: M-104 | PHONE: +254766666666 | ORDER_SPEC: Pembe 2kg*22 | ORDER_Q
                 <p className="text-sm text-[#6b7280] mt-1">Manage secure credentials to interface your digital supply systems and ERP directly with NX.</p>
               </div>
               {!rawKeyToShow && (
-                <button 
-                  onClick={handleGenerateKey}
-                  disabled={loading}
-                  className="bg-[#1a1d23] text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-[#2a2d35] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-black/10"
-                >
-                  <Plus className={cn("w-4 h-4", loading && "animate-spin")} />
-                  Generate Integration Key
-                </button>
+                <div className="flex gap-3">
+                  <button 
+                    onClick={() => setShowQuickStart(true)}
+                    className="border border-[#e4e6ea] text-[#1a1d23] hover:border-[#1a1d23] px-5 py-3 rounded-xl font-bold flex items-center gap-2 transition-all shadow-sm bg-white"
+                  >
+                    <Sparkles className="w-4 h-4 text-amber-500" />
+                    Quick Start Guide
+                  </button>
+                  <button 
+                    onClick={() => handleGenerateKey('sandbox')}
+                    disabled={loading}
+                    className="bg-white border border-[#e4e6ea] hover:border-[#1a1d23] text-[#1a1d23] px-5 py-3 rounded-xl font-bold flex items-center gap-2 transition-all disabled:opacity-50"
+                  >
+                    <Plus className={cn("w-4 h-4 text-amber-500", loading && "animate-spin")} />
+                    Generate Sandbox Key
+                  </button>
+                  <button 
+                    onClick={() => handleGenerateKey('production')}
+                    disabled={loading}
+                    className="bg-[#1a1d23] text-white px-5 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-[#2a2d35] transition-all disabled:opacity-50"
+                  >
+                    <Plus className={cn("w-4 h-4 text-green-400", loading && "animate-spin")} />
+                    Generate Production Key
+                  </button>
+                </div>
               )}
             </div>
 
@@ -1907,7 +2293,6 @@ MERCHANT_CODE: M-104 | PHONE: +254766666666 | ORDER_SPEC: Pembe 2kg*22 | ORDER_Q
                 <div className="bg-white border border-[#e4e6ea] rounded-2xl overflow-hidden shadow-sm">
                   <div className="px-6 py-4 border-b border-[#e4e6ea] bg-[#fafafa] flex items-center justify-between">
                     <h3 className="font-bold text-xs uppercase tracking-wider">Active System Connectors</h3>
-                    <div className="px-2 py-0.5 bg-[#d1fae5] text-[#059669] rounded text-[9px] font-bold uppercase">Production</div>
                   </div>
                   <div className="divide-y divide-[#f4f5f7]">
                     {apiKeys.length === 0 ? (
@@ -1929,10 +2314,17 @@ MERCHANT_CODE: M-104 | PHONE: +254766666666 | ORDER_SPEC: Pembe 2kg*22 | ORDER_Q
                             </div>
                           </div>
                           <div className="flex items-center gap-4">
-                            <span className="flex items-center gap-1.5 text-[10px] font-bold text-[#059669] bg-[#d1fae5] px-2.5 py-1 rounded-full uppercase">
-                              <div className="w-1.5 h-1.5 rounded-full bg-[#059669]" />
-                              Active
-                            </span>
+                            {key.type === 'sandbox' ? (
+                              <span className="flex items-center gap-1.5 text-[10px] font-bold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full uppercase border border-amber-200/50">
+                                <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                                Sandbox
+                              </span>
+                            ) : (
+                              <span className="flex items-center gap-1.5 text-[10px] font-bold text-[#059669] bg-[#d1fae5] px-2.5 py-1 rounded-full uppercase">
+                                <div className="w-1.5 h-1.5 rounded-full bg-[#059669]" />
+                                Production
+                              </span>
+                            )}
                             <button
                               onClick={() => handleRevokeKey(key.id)}
                               className="text-[10px] font-bold text-red-600 bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded-lg uppercase tracking-wider transition-all border border-red-200/50"

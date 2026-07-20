@@ -5,15 +5,39 @@ import crypto from "crypto";
 const router = express.Router();
 router.post('/api/logistics/generate-key', requirePartner, async (req, res) => {
     try {
-      const { brand_name, company_name } = req.body;
+      const { brand_name, company_name, type } = req.body;
       const finalBrand = brand_name || company_name;
       if (!finalBrand) return res.status(400).json({ success: false, error: 'Partner name required' });
       
-      const rawKey = `nx_live_${crypto.randomBytes(16).toString('hex')}`;
-      const { data: pRec, error } = await supabase.from('fmcg_partners').update({ api_key: rawKey }).ilike('name', finalBrand).select().maybeSingle();
-      if (error || !pRec) return res.status(500).json({ success: false, error: 'Failed to generate logistics API key' });
+      const isSandbox = type === 'sandbox';
+      const keyPrefix = isSandbox ? 'nx_sandbox_' : 'nx_live_';
+      const rawKey = `${keyPrefix}${crypto.randomBytes(16).toString('hex')}`;
+      
+      if (isSandbox) {
+        const { data: pRec } = await supabase.from('fmcg_partners').select('id, name').ilike('name', finalBrand).maybeSingle();
+        if (!pRec) return res.status(404).json({ success: false, error: 'Partner not found' });
+        
+        const file = 'sandbox_api_keys.json';
+        const existing = getLocalFallbackFile<{ id: string; partner_id: number; partner_name: string; key: string; created_at: string; revoked: boolean }>(file);
+        const updated = existing.filter(k => k.partner_id !== pRec.id);
+        const newKeyObj = {
+          id: crypto.randomUUID(),
+          partner_id: pRec.id,
+          partner_name: pRec.name,
+          key: rawKey,
+          created_at: new Date().toISOString(),
+          revoked: false
+        };
+        updated.push(newKeyObj);
+        saveLocalFallbackFile(file, updated);
+        
+        res.json({ success: true, key: rawKey, prefix: keyPrefix, last4: rawKey.slice(-4), id: newKeyObj.id, type: 'sandbox' });
+      } else {
+        const { data: pRec, error } = await supabase.from('fmcg_partners').update({ api_key: rawKey }).ilike('name', finalBrand).select().maybeSingle();
+        if (error || !pRec) return res.status(500).json({ success: false, error: 'Failed to generate logistics API key' });
 
-      res.json({ success: true, key: rawKey, prefix: 'nx_live_', last4: rawKey.slice(-4), id: pRec.id });
+        res.json({ success: true, key: rawKey, prefix: keyPrefix, last4: rawKey.slice(-4), id: pRec.id, type: 'production' });
+      }
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });
     }
@@ -25,17 +49,38 @@ router.get('/api/logistics/api-keys', requirePartner, async (req, res) => {
       const cleanBrand = String(brand_name).trim().toLowerCase();
       
       const { data: pRec } = await supabase.from('fmcg_partners').select('id, name, api_key, created_at').ilike('name', cleanBrand).maybeSingle();
-      if (!pRec || !pRec.api_key) return res.json({ success: true, keys: [] });
-
-      const rawKey = pRec.api_key;
-      let prefix = 'nx_live_';
-      let last4 = '****';
-      if (rawKey.length > 4) {
-          if (rawKey.startsWith('nx_live_')) last4 = rawKey.slice(-4);
-          else { prefix = 'sys_'; last4 = rawKey.slice(-4); }
+      
+      const keys: any[] = [];
+      
+      if (pRec && pRec.api_key) {
+        const rawKey = pRec.api_key;
+        let prefix = 'nx_live_';
+        let last4 = '****';
+        if (rawKey.length > 4) {
+            if (rawKey.startsWith('nx_live_')) last4 = rawKey.slice(-4);
+            else if (rawKey.startsWith('nx_sandbox_')) { prefix = 'nx_sandbox_'; last4 = rawKey.slice(-4); }
+            else { prefix = 'sys_'; last4 = rawKey.slice(-4); }
+        }
+        keys.push({ id: pRec.id, partner_id: pRec.id, prefix, last4, created_at: pRec.created_at || new Date().toISOString(), revoked: false, type: 'production' });
       }
 
-      const keys = [{ id: pRec.id, partner_id: pRec.id, prefix, last4, created_at: pRec.created_at || new Date().toISOString(), revoked: false }];
+      if (pRec) {
+        const file = 'sandbox_api_keys.json';
+        const sandboxKeys = getLocalFallbackFile<{ id: string; partner_id: number; partner_name: string; key: string; created_at: string; revoked: boolean }>(file);
+        const match = sandboxKeys.find(k => k.partner_id === pRec.id && !k.revoked);
+        if (match) {
+          keys.push({
+            id: match.id,
+            partner_id: pRec.id,
+            prefix: 'nx_sandbox_',
+            last4: match.key.slice(-4),
+            created_at: match.created_at,
+            revoked: false,
+            type: 'sandbox'
+          });
+        }
+      }
+
       res.json({ success: true, keys });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });
@@ -45,7 +90,17 @@ router.post('/api/logistics/revoke-key', requirePartner, async (req, res) => {
     try {
       const { key_id } = req.body;
       if (!key_id) return res.status(400).json({ success: false, error: 'Key ID required' });
-      await supabase.from('fmcg_partners').update({ api_key: null }).eq('id', key_id);
+      
+      const file = 'sandbox_api_keys.json';
+      const existing = getLocalFallbackFile<{ id: string; partner_id: number; partner_name: string; key: string; created_at: string; revoked: boolean }>(file);
+      const isSandbox = existing.some(k => k.id === key_id);
+      
+      if (isSandbox) {
+        const updated = existing.filter(k => k.id !== key_id);
+        saveLocalFallbackFile(file, updated);
+      } else {
+        await supabase.from('fmcg_partners').update({ api_key: null }).eq('id', key_id);
+      }
       res.json({ success: true, message: 'Key revoked successfully' });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });

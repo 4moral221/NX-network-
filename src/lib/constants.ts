@@ -9,21 +9,22 @@ export const PORTAL_URLS = {
 };
 
 const PROD_DOMAINS: Record<keyof typeof PORTAL_URLS, string> = {
-  landing: 'nx-network-landing.vercel.app',
-  pwa: 'nx-network-pwa.vercel.app',
-  admin: 'nx-network-admin.vercel.app',
-  hub: 'nx-network-landing.vercel.app',
-  partners: 'nx-network-landing.vercel.app',
-  fmcgs: 'nx-network-landing.vercel.app',
-  sim: 'nx-network-landing.vercel.app',
+  landing: 'nxnetwork.company',
+  pwa: 'app.nxnetwork.company',
+  admin: 'admin.nxnetwork.company',
+  hub: 'hub.nxnetwork.company',
+  partners: 'partners.nxnetwork.company',
+  fmcgs: 'fmcg.nxnetwork.company',
+  sim: 'sim.nxnetwork.company',
 };
 
 export const getPortalLink = (key: keyof typeof PORTAL_URLS): string => {
   if (typeof window !== 'undefined' && window.location) {
     const hostname = window.location.hostname.toLowerCase();
     
-    // Check if running on Vercel production
-    const isProd = hostname.includes('vercel.app') || 
+    // Check if running on Vercel production or custom domain
+    const isProd = hostname.includes('nxnetwork.company') || 
+                   hostname.includes('vercel.app') || 
                    hostname.includes('nx-network') || 
                    hostname.includes('nx-admin');
                    

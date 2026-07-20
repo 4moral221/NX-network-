@@ -16,7 +16,7 @@ interface CodeExample {
 }
 
 export default function LogisticsApiDocs() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'auth' | 'jobs' | 'deliveries' | 'earnings' | 'webhooks' | 'sandbox'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'auth' | 'jobs' | 'deliveries' | 'earnings' | 'webhooks' | 'sandbox' | 'economics'>('overview');
   const [langTab, setLangTab] = useState<'curl' | 'javascript' | 'python'>('curl');
   const [copiedText, setCopiedText] = useState<string | null>(null);
   
@@ -135,7 +135,7 @@ export default function LogisticsApiDocs() {
           { sku: "BROOKSIDE-500ML", qty: 40 }
         ],
         signature_code: "1234",
-        proof_photo_url: "https://cdn.nx-network.com/proof/JOB-2026-00123-DEL-77801.jpg"
+        proof_photo_url: "https://cdn.nxnetwork.company/proof/JOB-2026-00123-DEL-77801.jpg"
       }, null, 2));
     }
   };
@@ -178,13 +178,13 @@ export default function LogisticsApiDocs() {
   // Auth snippets
   const authCode: CodeExample = {
     title: "auth",
-    curl: `curl -X POST https://api.nx-network.com/v1/auth/login \\
+    curl: `curl -X POST https://api.nxnetwork.company/v1/auth/login \\
   -H "Content-Type: application/json" \\
   -d '{
     "partner_id": "PARTNER-001",
     "api_key": "your_api_key_here"
   }'`,
-    javascript: `fetch('https://api.nx-network.com/v1/auth/login', {
+    javascript: `fetch('https://api.nxnetwork.company/v1/auth/login', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json'
@@ -198,7 +198,7 @@ export default function LogisticsApiDocs() {
 .then(data => console.log(data.access_token));`,
     python: `import requests
 
-url = "https://api.nx-network.com/v1/auth/login"
+url = "https://api.nxnetwork.company/v1/auth/login"
 payload = {
     "partner_id": "PARTNER-001",
     "api_key": "your_api_key_here"
@@ -209,12 +209,41 @@ token = response.json().get("access_token")
 print(token)`
   };
 
+  // Demand board snippets
+  const demandBoardCode: CodeExample = {
+    title: "demand-board",
+    curl: `curl -X GET "https://api.nxnetwork.company/v1/logistics/demand-board?region=nairobi-central&min_batch_size=500" \\
+  -H "Authorization: Bearer <your_access_token>"`,
+    javascript: `fetch('https://api.nxnetwork.company/v1/logistics/demand-board?region=nairobi-central&min_batch_size=500', {
+  method: 'GET',
+  headers: {
+    'Authorization': 'Bearer ' + accessToken
+  }
+})
+.then(res => res.json())
+.then(data => console.log(data));`,
+    python: `import requests
+
+url = "https://api.nxnetwork.company/v1/logistics/demand-board"
+headers = {
+    "Authorization": "Bearer " + access_token
+}
+params = {
+    "region": "nairobi-central",
+    "min_batch_size": 500
+}
+
+response = requests.get(url, headers=headers, params=params)
+data = response.json()
+print(data)`
+  };
+
   // Jobs retrieval snippets
   const jobsCode: CodeExample = {
     title: "jobs",
-    curl: `curl -X GET "https://api.nx-network.com/v1/jobs?status=open&region=Mombasa" \\
+    curl: `curl -X GET "https://api.nxnetwork.company/v1/jobs?status=open&region=Mombasa" \\
   -H "Authorization: Bearer <your_access_token>"`,
-    javascript: `fetch('https://api.nx-network.com/v1/jobs?status=open&region=Mombasa', {
+    javascript: `fetch('https://api.nxnetwork.company/v1/jobs?status=open&region=Mombasa', {
   method: 'GET',
   headers: {
     'Authorization': 'Bearer ' + accessToken
@@ -224,7 +253,7 @@ print(token)`
 .then(jobs => console.log(jobs));`,
     python: `import requests
 
-url = "https://api.nx-network.com/v1/jobs"
+url = "https://api.nxnetwork.company/v1/jobs"
 headers = {
     "Authorization": "Bearer " + access_token
 }
@@ -241,7 +270,7 @@ print(jobs)`
   // Confirm delivery snippets
   const confirmCode: CodeExample = {
     title: "confirm",
-    curl: `curl -X POST https://api.nx-network.com/v1/jobs/JOB-2026-00123/deliveries/DEL-77801/confirm \\
+    curl: `curl -X POST https://api.nxnetwork.company/v1/jobs/JOB-2026-00123/deliveries/DEL-77801/confirm \\
   -H "Authorization: Bearer <your_access_token>" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -251,9 +280,9 @@ print(jobs)`
       { "sku": "BROOKSIDE-500ML", "qty": 40 }
     ],
     "signature_code": "1234",
-    "proof_photo_url": "https://cdn.nx-network.com/proof/photo.jpg"
+    "proof_photo_url": "https://cdn.nxnetwork.company/proof/photo.jpg"
   }'`,
-    javascript: `fetch('https://api.nx-network.com/v1/jobs/JOB-2026-00123/deliveries/DEL-77801/confirm', {
+    javascript: `fetch('https://api.nxnetwork.company/v1/jobs/JOB-2026-00123/deliveries/DEL-77801/confirm', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer ' + accessToken,
@@ -266,14 +295,14 @@ print(jobs)`
       { sku: 'BROOKSIDE-500ML', qty: 40 }
     ],
     signature_code: '1234',
-    proof_photo_url: 'https://cdn.nx-network.com/proof/photo.jpg'
+    proof_photo_url: 'https://cdn.nxnetwork.company/proof/photo.jpg'
   })
 })
 .then(res => res.json())
 .then(result => console.log(result));`,
     python: `import requests
 
-url = "https://api.nx-network.com/v1/jobs/JOB-2026-00123/deliveries/DEL-77801/confirm"
+url = "https://api.nxnetwork.company/v1/jobs/JOB-2026-00123/deliveries/DEL-77801/confirm"
 headers = {
     "Authorization": "Bearer " + access_token,
     "Content-Type": "application/json"
@@ -285,7 +314,7 @@ payload = {
         { "sku": "BROOKSIDE-500ML", "qty": 40 }
     ],
     "signature_code": "1234",
-    "proof_photo_url": "https://cdn.nx-network.com/proof/photo.jpg"
+    "proof_photo_url": "https://cdn.nxnetwork.company/proof/photo.jpg"
 }
 
 response = requests.post(url, headers=headers, json=payload)
@@ -311,7 +340,7 @@ print(response.json())`
           
           <div className="hidden sm:flex items-center gap-2 text-xs text-nx-muted font-mono">
             <Server className="w-3.5 h-3.5 text-nx-green" />
-            <span>Sandbox: https://sandbox.api.nx-network.com/v1</span>
+            <span>Sandbox: https://sandbox.api.nxnetwork.company/v1</span>
           </div>
         </div>
       </header>
@@ -331,12 +360,13 @@ print(response.json())`
             <nav className="space-y-1">
               {[
                 { id: 'overview', label: '1. Overview', icon: FileText },
-                { id: 'auth', label: '2. Authentication', icon: Key },
-                { id: 'jobs', label: '3. Delivery Jobs', icon: Terminal },
-                { id: 'deliveries', label: '4. Dropoff Confirmation', icon: Shield },
-                { id: 'earnings', label: '5. Earnings & Metrics', icon: Activity },
-                { id: 'webhooks', label: '6. Webhooks', icon: Webhook },
-                { id: 'sandbox', label: '7. Interactive Sandbox', icon: RefreshCw },
+                { id: 'economics', label: '2. Market & Economics', icon: Layers },
+                { id: 'auth', label: '3. Authentication', icon: Key },
+                { id: 'jobs', label: '4. Delivery Jobs', icon: Terminal },
+                { id: 'deliveries', label: '5. Dropoff Confirmation', icon: Shield },
+                { id: 'earnings', label: '6. Earnings & Metrics', icon: Activity },
+                { id: 'webhooks', label: '7. Webhooks', icon: Webhook },
+                { id: 'sandbox', label: '8. Interactive Sandbox', icon: RefreshCw },
               ].map((item) => {
                 const Icon = item.icon;
                 return (
@@ -470,6 +500,110 @@ print(response.json())`
                 </div>
               )}
 
+              {/* MARKET & ECONOMICS SECTION */}
+              {activeTab === 'economics' && (
+                <div className="space-y-8">
+                  <div className="space-y-2">
+                    <h1 className="font-display text-3xl text-nx-paper tracking-wider uppercase">Market Sizing &amp; Unit Economics</h1>
+                    <p className="font-serif text-lg text-[#b5b3aa] leading-relaxed">
+                      Informal retail dominates FMCG sales in East Africa. NX digitizes and aggregates this immense offline footprint, driving direct last-mile efficiency.
+                    </p>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-6">
+                    {/* TAM / SAM */}
+                    <div className="bg-nx-card p-6 border border-nx-border rounded-xl space-y-6">
+                      <div>
+                        <span className="text-[10px] uppercase font-mono tracking-widest text-nx-amber font-bold block mb-1">AGGREGATED TAM &amp; SAM</span>
+                        <h3 className="font-display text-lg text-nx-paper uppercase font-extrabold tracking-tight">Market Opportunity</h3>
+                      </div>
+
+                      <div className="space-y-4">
+                        {/* TAM */}
+                        <div className="border border-nx-border/50 bg-[#0f0e0c]/40 p-4 rounded-lg flex gap-4 items-start">
+                          <div className="font-display text-3xl font-black text-nx-amber shrink-0">70%+</div>
+                          <div>
+                            <h4 className="font-sans font-bold text-[10px] text-nx-paper mb-0.5 tracking-wider uppercase">TOTAL ADDRESSABLE MARKET (TAM)</h4>
+                            <p className="text-[11px] text-nx-muted leading-relaxed">
+                              Over <strong>70% of Kenya's daily FMCG consumer spend</strong> is transacted through informal retail kiosks (dukas and tabletop vendors). Across <strong>250,000+ active shops</strong>, this represents a massive <strong>$20B+ annual market</strong> operating completely offline.
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* SAM */}
+                        <div className="border border-nx-border/50 bg-[#0f0e0c]/40 p-4 rounded-lg flex gap-4 items-start">
+                          <div className="font-display text-3xl font-black text-nx-green shrink-0">80k</div>
+                          <div>
+                            <h4 className="font-sans font-bold text-[10px] text-nx-paper mb-0.5 tracking-wider uppercase">SERVICEABLE ADDRESSABLE MARKET (SAM)</h4>
+                            <p className="text-[11px] text-nx-muted leading-relaxed">
+                              Our target focuses on <strong>80,000+ urban &amp; semi-urban dukas</strong> in key Kenyan cities. Aggregating order flows at scale establishes an addressable order pipeline of over <strong>$1.2 Billion annually</strong>.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Unit Economics Monthly Model */}
+                    <div className="bg-nx-card p-6 border border-nx-border rounded-xl space-y-6">
+                      <div>
+                        <span className="text-[10px] uppercase font-mono tracking-widest text-nx-green font-bold block mb-1">PER DUKA MONTHLY MODEL</span>
+                        <h3 className="font-display text-lg text-nx-paper uppercase font-extrabold tracking-tight">Unit Economics Scenario</h3>
+                      </div>
+
+                      <div className="p-4 border border-nx-border/50 bg-[#0f0e0c]/40 rounded-lg space-y-2.5">
+                        <div className="flex justify-between items-center text-[10px] font-mono font-bold text-nx-paper uppercase border-b border-nx-border/30 pb-1.5">
+                          <span>Metric / Dimension</span>
+                          <span>Value (KES / Mo)</span>
+                        </div>
+
+                        <div className="flex justify-between items-center text-xs text-nx-muted">
+                          <span>Duka Monthly Restock Volume</span>
+                          <span className="font-mono text-nx-paper font-semibold">KES 30,000</span>
+                        </div>
+
+                        <div className="flex justify-between items-center text-xs text-nx-muted">
+                          <span>NX Base Trading Spread / Margin (6.0%)</span>
+                          <span className="font-mono text-nx-paper font-semibold">KES 1,800</span>
+                        </div>
+
+                        <div className="flex justify-between items-center text-xs text-[#b5b3aa] pl-3 border-l border-nx-border">
+                          <span>↳ Loyalty Pool Allocation (70%)</span>
+                          <span className="font-mono text-nx-green font-medium">KES 1,260</span>
+                        </div>
+
+                        <div className="flex justify-between items-center text-xs text-[#b5b3aa] pl-3 border-l border-nx-border">
+                          <span>↳ Net Platform Commission (30%)</span>
+                          <span className="font-mono text-nx-amber font-semibold">KES 540</span>
+                        </div>
+
+                        <div className="flex justify-between items-center text-xs text-nx-muted border-t border-nx-border/30 pt-1.5">
+                          <span>Direct Cash Restock Savings (Cashback)</span>
+                          <span className="font-mono text-nx-green font-semibold">KES 1,260+</span>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3 text-center">
+                        <div className="bg-[#0e0d0b] border border-nx-border p-3 rounded-lg">
+                          <div className="font-display text-xl text-nx-green font-black">+35%</div>
+                          <div className="text-[8px] uppercase tracking-wider text-nx-muted mt-0.5">Campaign SKU Uplift</div>
+                        </div>
+                        <div className="bg-[#0e0d0b] border border-nx-border p-3 rounded-lg">
+                          <div className="font-display text-xl text-nx-amber font-black">+15%</div>
+                          <div className="text-[8px] uppercase tracking-wider text-nx-muted mt-0.5">Merchant Retention</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-nx-green/5 border border-nx-green/20 rounded-xl">
+                    <p className="text-xs text-[#b5b3aa] leading-relaxed">
+                      <strong className="text-nx-green uppercase tracking-wider block mb-1 font-mono text-[10px]">Ecosystem Loyalty Feedback Loop</strong>
+                      Platform revenue is entirely non-extractive and derived directly from real trading volume spreads. By returning 70% of bulk order margin gains back to duka merchants as immediate invoice cashback offsets, we create a powerful and sustainable loyalty loop that naturally captures localized market share.
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {/* AUTHENTICATION SECTION */}
               {activeTab === 'auth' && (
                 <div className="space-y-6">
@@ -542,13 +676,83 @@ print(response.json())`
               {activeTab === 'jobs' && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="font-mono text-xl text-nx-paper uppercase font-bold">Jobs Dispatch</h2>
+                    <h2 className="font-mono text-xl text-nx-paper uppercase font-bold">Jobs Dispatch &amp; Demand Board</h2>
                     <p className="text-xs text-nx-muted leading-relaxed mt-1">
-                      Inspect and pull open aggregated routing jobs, accept responsibilities, and update status logs.
+                      Retrieve aggregated restock demand and pull open routing tasks to manage last-mile execution.
                     </p>
                   </div>
 
                   <div className="space-y-4">
+                    {/* DEMAND BOARD ENDPOINT */}
+                    <div className="p-4 bg-[#060810] border border-nx-border rounded-xl space-y-3">
+                      <div className="flex items-center justify-between text-xs font-mono">
+                        <span className="bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded font-bold uppercase">GET</span>
+                        <span className="text-nx-paper font-bold">/v1/logistics/demand-board</span>
+                      </div>
+                      <div className="text-[11px] text-[#b5b3aa]">
+                        Aggregated restock demand from merchant clusters, batched by SKU and location. Built for partners who need to inspect cluster-level volume trends.
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="text-xs font-mono font-bold text-nx-paper">Query Parameters</div>
+                      <table className="w-full text-left text-xs border border-nx-border rounded-lg overflow-hidden font-mono">
+                        <thead className="bg-[#0a0d1a] border-b border-nx-border">
+                          <tr>
+                            <th className="p-2.5 text-nx-amber">Parameter</th>
+                            <th className="p-2.5 text-nx-amber">Type</th>
+                            <th className="p-2.5 text-nx-amber">Presence</th>
+                            <th className="p-2.5 text-nx-amber">Description</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr className="border-b border-nx-border/50">
+                            <td className="p-2.5">region</td>
+                            <td className="p-2.5 text-nx-muted">string</td>
+                            <td className="p-2.5 text-nx-amber">Optional</td>
+                            <td className="p-2.5 text-nx-muted text-[11px]">Filter by county or cluster code, e.g. "nairobi-central"</td>
+                          </tr>
+                          <tr className="border-b border-nx-border/50">
+                            <td className="p-2.5">sku_category</td>
+                            <td className="p-2.5 text-nx-muted">string</td>
+                            <td className="p-2.5 text-nx-amber">Optional</td>
+                            <td className="p-2.5 text-nx-muted text-[11px]">Filter demand by product category</td>
+                          </tr>
+                          <tr>
+                            <td className="p-2.5">min_batch_size</td>
+                            <td className="p-2.5 text-nx-muted">integer</td>
+                            <td className="p-2.5 text-nx-amber">Optional</td>
+                            <td className="p-2.5 text-nx-muted text-[11px]">Only return batches at or above this threshold</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="text-xs font-mono font-bold text-nx-paper">Client Call Generator</div>
+                      {renderCodeSnippet(demandBoardCode)}
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="text-xs font-mono font-bold text-nx-paper">Expected Response (Status 200)</div>
+                      <pre className="p-4 bg-[#060810] border border-nx-border rounded-xl font-mono text-[11px] text-nx-green overflow-x-auto leading-relaxed">
+{`{
+  "region": "nairobi-central",
+  "batches": [
+    {
+      "sku": "cooking-oil-2l",
+      "merchant_count": 34,
+      "total_units": 612,
+      "status": "open"
+    }
+  ]
+}`}
+                      </pre>
+                    </div>
+
+                    <div className="my-8 border-t border-nx-border/30" />
+
+                    {/* ORIGINAL JOBS LISTING ENDPOINT */}
                     <div className="p-4 bg-[#060810] border border-nx-border rounded-xl space-y-3">
                       <div className="flex items-center justify-between text-xs font-mono">
                         <span className="bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded font-bold uppercase">GET</span>
@@ -722,7 +926,7 @@ print(response.json())`
                         <span>Security &amp; Signature Validation</span>
                       </div>
                       <p className="text-[11px] text-[#b5b3aa] leading-relaxed">
-                        NX signs payloads via standard HMAC-SHA256 hash. The signature is attached inside the header: <code className="text-nx-green">X-NX-Signature</code>. Partners must hash raw body buffers using the assigned webhook secret and check equality before digesting contents.
+                        NX signs payloads via standard secure HMAC signature. The signature is attached inside the header: <code className="text-nx-green">X-NX-Signature</code>. Partners must hash raw body buffers using the assigned webhook secret and check equality before digesting contents.
                       </p>
                     </div>
 
@@ -845,7 +1049,7 @@ print(response.json())`
                         
                         <div className="flex-1 bg-black rounded-xl p-4 border border-nx-border font-mono text-xs overflow-auto flex flex-col justify-between">
                           <div className="space-y-2">
-                            <div className="text-nx-muted"># Connecting to sandbox.api.nx-network.com/v1...</div>
+                            <div className="text-nx-muted"># Connecting to sandbox.api.nxnetwork.company/v1...</div>
                             {simLoading && <div className="text-nx-amber animate-pulse"># Handshake initiated... calculating settlement offsets...</div>}
                             
                             {simResponse && (
