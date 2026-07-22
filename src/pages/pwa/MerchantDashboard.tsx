@@ -1842,17 +1842,7 @@ export default function MerchantDashboard({ user, onLogout }: { user: any, onLog
                </div>
             </div>
             
-            <div className="bg-nx-amber/5 border border-nx-amber/30 rounded-2xl p-6 flex gap-4 items-start">
-              <div className="w-10 h-10 rounded-full bg-nx-amber/20 flex items-center justify-center shrink-0">
-                <Truck className="w-5 h-5 text-nx-amber" />
-              </div>
-              <div>
-                <h4 className="text-xs font-bold text-nx-paper mb-1">Bulk Savings Active</h4>
-                <p className="text-[10px] text-nx-muted leading-relaxed">
-                  Multiple merchants are requesting flour this window. Current discount level: <span className="text-nx-green font-bold">12% OFF RRP</span>.
-                </p>
-              </div>
-            </div>
+
           </div>
         )}
 

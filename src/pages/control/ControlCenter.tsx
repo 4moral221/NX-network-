@@ -211,7 +211,7 @@ export default function ControlCenter() {
               <div className="text-center">
                 <MapIcon className="w-12 h-12 text-[#1c2230] mx-auto mb-4" />
                 <div className="text-[#3d4f6a] font-mono text-xs uppercase tracking-[0.3em]">Geospatial Engine Offline</div>
-                <div className="text-[10px] text-[#1c2230] mt-2 font-mono">Simulating Nairobi Cluster...</div>
+                <div className="text-[10px] text-[#1c2230] mt-2 font-mono">Simulating Mombasa Cluster...</div>
               </div>
             </div>
             

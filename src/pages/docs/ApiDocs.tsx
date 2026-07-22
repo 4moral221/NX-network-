@@ -113,7 +113,7 @@ export default function ApiDocs() {
                       <code>
                         <span className="text-nx-muted">{"// 200 OK\n"}</span>
                         {"{\n"}
-                        <span className="text-blue-400">{"  \"region\""}</span>{": \"nairobi-central\",\n"}
+                        <span className="text-blue-400">{"  \"region\""}</span>{": \"mombasa-central\",\n"}
                         <span className="text-blue-400">{"  \"batches\""}</span>{": [\n"}
                         {"    {\n"}
                         <span className="text-blue-400">{"      \"sku\""}</span>{": \"cooking-oil-2l\",\n"}

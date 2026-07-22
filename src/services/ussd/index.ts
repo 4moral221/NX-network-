@@ -2,7 +2,7 @@
 // NX Network — USSD Edge Function — Production v8 (Full Specification)
 // ============================================================
 
-import { t, merchantMenuStr } from "./utils";
+import { t, merchantMenuStr, verifyPin, normalizePhoneNumber } from "./utils";
 import { handleRegistration } from "./handlers/registration";
 import { handleRecovery } from "./handlers/recovery";
 import { handleCustomerMenu } from "./handlers/transactions";
@@ -23,7 +23,8 @@ export const handleUssdRequest = async (req: Request) => {
 
   const rawBody = await req.text();
   const body = new URLSearchParams(rawBody);
-  const phoneNumber = body.get("phoneNumber") || "";
+  const rawPhone = body.get("phoneNumber") || "";
+  const phoneNumber = normalizePhoneNumber(rawPhone);
   const sessionId = body.get("sessionId") || "";
   let rawText = (body.get("text") || "").trim();
 
@@ -47,7 +48,13 @@ export const handleUssdRequest = async (req: Request) => {
       let user = isDemo ? null : await cache.get<any>(cacheKey);
 
       if (!user) {
-        const { data } = await supabase.from("users").select("*").eq("phone", phoneNumber).maybeSingle();
+        const phoneWithPlus = phoneNumber.startsWith("+") ? phoneNumber : `+${phoneNumber}`;
+        const phoneWithoutPlus = phoneNumber.replace(/^\+/, "");
+        const { data } = await supabase
+          .from("users")
+          .select("*")
+          .or(`phone.eq.${phoneWithPlus},phone.eq.${phoneWithoutPlus}`)
+          .maybeSingle();
         user = data || null;
         if (user && !isDemo) {
           // Cache user details for 5 minutes
@@ -58,25 +65,20 @@ export const handleUssdRequest = async (req: Request) => {
       // 2. Language Selection Flow (Priority #1 if not set)
       let lang = user?.language || null;
 
-      // If language is not set, we MUST stay in the language pick menu until selected
-      if (!lang) {
+      // If user exists but language is not set, we prompt for language pick
+      if (!lang && user) {
         if (parts.length === 0) {
           return new Response(`CON ${t("en", "lang_pick")}`);
         }
         if (parts[0] === "1" || parts[0] === "2") {
           lang = parts[0] === "1" ? "en" : "sw";
-          // If user already exists, update their language. If not, we'll use this lang for registration.
-          if (user) {
-            await supabase.from("users").update({ language: lang }).eq("phone", phoneNumber);
-            if (!isDemo) {
-              await cache.delete(cacheKey); // Invalidate cache since user updated
-            }
+          await supabase.from("users").update({ language: lang }).eq("phone", phoneNumber);
+          if (!isDemo) {
+            await cache.delete(cacheKey); // Invalidate cache since user updated
           }
         } else {
           return new Response(`CON ${t("en", "lang_pick")}`);
         }
-        // Note: If lang was just picked, we might want to proceed to the main menu in the same request
-        // But Africa's Talking appends the pick to the text, so the next request will have parts[0]=1
       }
 
       const currentLang = lang || "en";
@@ -90,7 +92,7 @@ export const handleUssdRequest = async (req: Request) => {
         const simulatedParts = ["3", "1", ...parts];
         responseText = await handleCustomerMenu(phoneNumber, currentLang, simulatedParts, user);
       } else {
-        const hasNoLanguage = !user || user.language === null || user.language === undefined;
+        const hasNoLanguage = user && (user.language === null || user.language === undefined);
         const effectiveParts = (hasNoLanguage && parts.length > 0) ? parts.slice(1) : parts;
 
         if (effectiveParts.length === 0) {
@@ -109,46 +111,100 @@ export const handleUssdRequest = async (req: Request) => {
             case "2": 
               responseText = `END ${t(currentLang, "help")}`;
               break;
-            case "3": 
+            case "3": {
               if (!user) {
-                  responseText = `END ${t(currentLang, "not_registered")}`;
+                responseText = `END ${t(currentLang, "not_registered")}`;
               } else if (user.status === "suspended") {
-                  responseText = `END ${t(currentLang, "fraud_suspended", { reason: "Security Policy" })}`;
-              } else if (user.role === "merchant") {
-                  // INTERCEPTOR: If there's a pending transaction, show it first before the menu
+                responseText = `END ${t(currentLang, "fraud_suspended", { reason: "Security Policy" })}`;
+              } else {
+                // PIN gate
+                if (effectiveParts.length === 1) {
+                  responseText = `CON ${t(currentLang, "enter_login_pin")}`;
+                  break;
+                }
+                const enteredPin = effectiveParts[1];
+                const pinOk = await verifyPin(enteredPin, user.recovery_pin, phoneNumber);
+                if (!pinOk) {
+                  await supabase.from("nx_logs").insert({ phone: phoneNumber, context: "LOGIN_PIN_FAILED" });
+                  responseText = `END ${t(currentLang, "invalid_login_pin")}`;
+                  break;
+                }
+
+                const menuParts = ["3", ...effectiveParts.slice(2)];
+
+                if (user.role === "merchant") {
+                  // Pending transaction interceptor
+                  const phoneWithPlus = phoneNumber.startsWith("+") ? phoneNumber : `+${phoneNumber}`;
+                  const phoneWithoutPlus = phoneNumber.replace(/^\+/, "");
+                  const mCode = user.merchant_code || "";
+
                   const { data: pending } = await supabase.from("transactions")
                     .select("*")
-                    .eq("merchant_phone", phoneNumber)
-                    .eq("status", "awaiting_merchant")
+                    .or(`merchant_code.eq.${mCode},merchant_phone.eq.${phoneWithPlus},merchant_phone.eq.${phoneWithoutPlus}`)
+                    .in("status", ["awaiting_merchant", "completed", "confirmed"])
                     .order("created_at", { ascending: false })
                     .limit(1)
                     .maybeSingle();
 
-                  if (pending && effectiveParts.length === 1) {
+                  const isAwaiting = pending && pending.status === "awaiting_merchant";
+
+                  if (isAwaiting && menuParts.length === 1) {
                     responseText = `CON ${t(currentLang, "merchant_confirm_prompt", {
                       amount: pending.amount,
                       phone: pending.customer_phone,
                       nx: pending.nx_redeemed
                     })}`;
-                  } else if (pending && effectiveParts.length === 2 && (effectiveParts[1] === "1" || effectiveParts[1] === "2")) {
-                    const isConfirm = effectiveParts[1] === "1";
+                  } else if (isAwaiting && menuParts.length === 2 && (menuParts[1] === "1" || menuParts[1] === "2")) {
+                    const isConfirm = menuParts[1] === "1";
                     let success = false;
                     if (isConfirm) {
                       success = await merchantFinalise(pending);
+                      if (success && pending.amount >= 100) {
+                        responseText = `CON ${t(currentLang, "log_basket_prompt")}`;
+                      } else {
+                        responseText = success ? `END Transaction Approved!` : `END Error finalizing.`;
+                      }
                     } else {
                       const { error } = await supabase.from("transactions").update({
                         status: "rejected_by_merchant"
                       }).eq("id", pending.id);
-                      success = !error;
+                      responseText = !error ? `END Transaction Rejected.` : `END Error.`;
                     }
-                    responseText = success ? `END ${isConfirm ? "Transaction Approved!" : "Transaction Rejected."}` : `END Error finalizing.`;
+                  } else if (pending && (pending.status === "completed" || pending.status === "confirmed") && menuParts.length === 3 && menuParts[1] === "1") {
+                    if (menuParts[2] === "2") {
+                      responseText = `END Transaction Approved! Basket not logged.`;
+                    } else {
+                      responseText = `CON ${t(currentLang, "log_basket_enter")}`;
+                    }
+                  } else if (pending && (pending.status === "completed" || pending.status === "confirmed") && menuParts.length === 4 && menuParts[1] === "1" && menuParts[2] === "1") {
+                    const basketInput = menuParts[3];
+                    const { parseBasket } = await import("./handlers/basket");
+                    const items = parseBasket(basketInput);
+                    if (items.length > 0) {
+                      const rows = items.map(i => ({
+                        transaction_code: pending.transaction_code,
+                        merchant_code: user.merchant_code,
+                        sku_code: i.code,
+                        sku_name: i.name,
+                        variant: i.variant || null,
+                        unit_price: i.price || null,
+                        qty: i.qty,
+                        logged_by: 'merchant'
+                      }));
+                      await supabase.from("transaction_items").insert(rows);
+                      responseText = `END Approved! ${items.length} item(s) logged.`;
+                    } else {
+                      responseText = `END Approved! Could not parse items.`;
+                    }
                   } else {
-                    responseText = await handleMerchantMenu(phoneNumber, currentLang, effectiveParts, user);
+                    responseText = await handleMerchantMenu(phoneNumber, currentLang, menuParts, user);
                   }
-              } else {
-                  responseText = await handleCustomerMenu(phoneNumber, currentLang, effectiveParts, user);
+                } else {
+                  responseText = await handleCustomerMenu(phoneNumber, currentLang, menuParts, user);
+                }
               }
               break;
+            }
             case "4": 
               responseText = await handleRecovery(phoneNumber, currentLang, effectiveParts);
               break;

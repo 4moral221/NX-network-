@@ -500,11 +500,11 @@ export default function FmcgsPortal() {
 
   // Mock points for intelligence map
   const intelMapPoints = [
-    { type: 'hub', lat: -1.2864, lng: 36.8172, name: "Nairobi CBD Central Hub", role: "Major Dispatch Coordination Hub", tier: "HUB" },
-    { type: 'shop', lat: -1.2745, lng: 36.8483, name: "Eastleigh Wholesaler Node", role: "Franchise Tier: HUB (70% Pool Rate)\nUtilization: 38% (Peak Health)", tier: "HUB" },
-    { type: 'shop', lat: -1.2831, lng: 36.7456, name: "Kawangware Kiosk", role: "Franchise Tier: BASIC (60% Pool Rate)\nUtilization: 94% (Throttled 0x)", tier: "BASIC" },
-    { type: 'shop', lat: -1.3142, lng: 36.7905, name: "Kibera Micro-Duka", role: "Franchise Tier: CERTIFIED (65% Pool Rate)\nUtilization: 68% (Throttled 0.5x)", tier: "CERTIFIED" },
-    { type: 'shop', lat: -1.2173, lng: 36.8904, name: "Roysambu Super Duka", role: "Franchise Tier: CERTIFIED (65% Pool Rate)\nUtilization: 22% (Active)", tier: "CERTIFIED" }
+    { type: 'hub', lat: -4.0435, lng: 39.6682, name: "Mombasa Island Central Hub", role: "Major Dispatch Coordination Hub", tier: "HUB" },
+    { type: 'shop', lat: -4.0321, lng: 39.6812, name: "Nyali Wholesaler Node", role: "Franchise Tier: HUB (70% Pool Rate)\nUtilization: 38% (Peak Health)", tier: "HUB" },
+    { type: 'shop', lat: -3.9852, lng: 39.7121, name: "Bamburi Kiosk", role: "Franchise Tier: BASIC (60% Pool Rate)\nUtilization: 94% (Throttled 0x)", tier: "BASIC" },
+    { type: 'shop', lat: -4.0812, lng: 39.6543, name: "Likoni Micro-Duka", role: "Franchise Tier: CERTIFIED (65% Pool Rate)\nUtilization: 68% (Throttled 0.5x)", tier: "CERTIFIED" },
+    { type: 'shop', lat: -4.0215, lng: 39.6312, name: "Changamwe Super Duka", role: "Franchise Tier: CERTIFIED (65% Pool Rate)\nUtilization: 22% (Active)", tier: "CERTIFIED" }
   ];
 
   // Safety Rails States
@@ -2238,7 +2238,7 @@ export default function FmcgsPortal() {
                                name: 'Restock Bid & Invoicing Feeds', 
                                desc: 'Draw pending merchant wholesale restock streams into your warehousing system.',
                                instructions: 'Extract full merchant demand streams. Pull the exact daily restock batches, push bulk bidding quotes, and ingest successful allocations automatically to generate precise digital invoices.',
-                               code: 'GET /api/fmcg/pending-bids\nAuthorization: Bearer nx_live_...\nReturns 200 OK\n{\n  "active_batches": [\n    { "batch_id": "b-987", "volume_kes": 18500, "region": "Nairobi Central" }\n  ]\n}'
+                               code: 'GET /api/fmcg/pending-bids\nAuthorization: Bearer nx_live_...\nReturns 200 OK\n{\n  "active_batches": [\n    { "batch_id": "b-987", "volume_kes": 18500, "region": "Mombasa Central" }\n  ]\n}'
                             },
                           ].map(lib => (
                             <div key={lib.name} onClick={() => setSelectedDoc(lib)} className="p-4 bg-black/40 border border-white/5 rounded-xl hover:bg-nx-amber/5 hover:border-nx-amber/20 transition-all cursor-pointer group">

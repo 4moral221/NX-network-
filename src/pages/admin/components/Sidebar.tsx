@@ -16,6 +16,7 @@ import {
   Radio,
   FileSearch,
   Search,
+  Mail,
   LogOut
 } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
@@ -42,6 +43,7 @@ export default function Sidebar({ activeSection, onSetSection, adminRole, adminE
     { id: 'invoices', label: 'Invoices', icon: FileText, badge: stats.pending_invoices },
     { id: 'hub_payouts', label: 'Hub Payouts', icon: CreditCard },
     { id: 'applications', label: 'Applications', icon: Smartphone, badge: stats.apps },
+    { id: 'waitlist', label: 'Waitlist & Subscribers', icon: Mail, badge: stats.subscribers },
     { id: 'map', label: 'Live Map', icon: MapIcon },
     { id: 'sim', label: 'USSD Interface', icon: Smartphone },
     { id: 'fraud', label: 'Fraud Logs', icon: ShieldAlert, badge: stats.fraud_alerts },

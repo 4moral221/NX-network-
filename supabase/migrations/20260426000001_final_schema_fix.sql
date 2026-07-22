@@ -28,7 +28,7 @@ SET gross_margin = EXCLUDED.gross_margin;
 -- These will serve as valid targets for the Customer PWA
 INSERT INTO users (phone, name, role, merchant_code, franchise_tier, location, status)
 VALUES 
-  ('254711111111', 'Mama Watene Shop', 'merchant', 'M613794', 'BASIC', 'Nairobi West', 'active'),
+  ('254711111111', 'Mama Watene Shop', 'merchant', 'M613794', 'BASIC', 'Mombasa West', 'active'),
   ('254722222222', 'Kijiji Mini-Mart', 'merchant', 'M804225', 'CERTIFIED', 'South B', 'active'),
   ('254733333333', 'Central Hub Stores', 'merchant', 'M-HUB-1', 'HUB', 'Industrial Area', 'active')
 ON CONFLICT (phone) DO UPDATE 

@@ -354,7 +354,7 @@ function BidModal({ batch, brand, onClose, onSuccess }: {
             <label className="block text-[11px] font-bold uppercase tracking-widest text-[#6b7280] mb-2">Notes (optional)</label>
             <textarea
               rows={2} value={notes} onChange={e => setNotes(e.target.value)}
-              placeholder="e.g. Nairobi region only, min 200 units per drop-point"
+              placeholder="e.g. Mombasa region only, min 200 units per drop-point"
               className="w-full border-2 border-[#e4e6ea] focus:border-[#2563eb] rounded-xl px-4 py-3 text-sm outline-none transition-colors resize-none"
             />
           </div>
@@ -890,11 +890,11 @@ export default function PartnersPortal() {
 
   // Mock points for intelligence map
   const intelMapPoints = [
-    { type: 'hub', lat: -1.2864, lng: 36.8172, name: "Nairobi CBD Central Hub", role: "Major Dispatch Coordination Hub", tier: "HUB" },
-    { type: 'shop', lat: -1.2745, lng: 36.8483, name: "Eastleigh Wholesaler Node", role: "Franchise Tier: HUB (70% Pool Rate)\nUtilization: 38% (Peak Health)", tier: "HUB" },
-    { type: 'shop', lat: -1.2831, lng: 36.7456, name: "Kawangware Kiosk", role: "Franchise Tier: BASIC (60% Pool Rate)\nUtilization: 94% (Throttled 0x)", tier: "BASIC" },
-    { type: 'shop', lat: -1.3142, lng: 36.7905, name: "Kibera Micro-Duka", role: "Franchise Tier: CERTIFIED (65% Pool Rate)\nUtilization: 68% (Throttled 0.5x)", tier: "CERTIFIED" },
-    { type: 'shop', lat: -1.2173, lng: 36.8904, name: "Roysambu Super Duka", role: "Franchise Tier: CERTIFIED (65% Pool Rate)\nUtilization: 22% (Active)", tier: "CERTIFIED" }
+    { type: 'hub', lat: -4.0435, lng: 39.6682, name: "Mombasa Island Central Hub", role: "Major Dispatch Coordination Hub", tier: "HUB" },
+    { type: 'shop', lat: -4.0321, lng: 39.6812, name: "Nyali Wholesaler Node", role: "Franchise Tier: HUB (70% Pool Rate)\nUtilization: 38% (Peak Health)", tier: "HUB" },
+    { type: 'shop', lat: -3.9852, lng: 39.7121, name: "Bamburi Kiosk", role: "Franchise Tier: BASIC (60% Pool Rate)\nUtilization: 94% (Throttled 0x)", tier: "BASIC" },
+    { type: 'shop', lat: -4.0812, lng: 39.6543, name: "Likoni Micro-Duka", role: "Franchise Tier: CERTIFIED (65% Pool Rate)\nUtilization: 68% (Throttled 0.5x)", tier: "CERTIFIED" },
+    { type: 'shop', lat: -4.0215, lng: 39.6312, name: "Changamwe Super Duka", role: "Franchise Tier: CERTIFIED (65% Pool Rate)\nUtilization: 22% (Active)", tier: "CERTIFIED" }
   ];
 
   // API Key Management States
@@ -1331,7 +1331,7 @@ export default function PartnersPortal() {
       text += `-------------------------------------\n\n`;
 
       reqs.forEach((r) => {
-        const m = merchantMap.get(r.merchant_code) || { name: `Duka ${r.merchant_code}`, phone: r.merchant_phone || 'N/A', location: 'Unknown Locality (Nairobi Central)' };
+        const m = merchantMap.get(r.merchant_code) || { name: `Duka ${r.merchant_code}`, phone: r.merchant_phone || 'N/A', location: 'Unknown Locality (Mombasa Central)' };
         text += `MERCHANT_CODE: ${r.merchant_code} | PHONE: ${m.phone} | ORDER_QTY: ${r.quantity || 1} units | LOCATION: ${m.location}\n`;
       });
 
@@ -1592,7 +1592,7 @@ MERCHANT_CODE: M-104 | PHONE: +254766666666 | ORDER_SPEC: Pembe 2kg*22 | ORDER_Q
             <div className="space-y-4">
               <div>
                 <label className="block text-[11px] font-bold uppercase tracking-widest text-[#6b7280] mb-2">Company / Fleet Name</label>
-                <input type="text" value={signupData.companyName} onChange={e => setSignupData({ ...signupData, companyName: e.target.value })} className="w-full border-2 border-[#e4e6ea] focus:border-[#1a1d23] rounded-xl px-4 py-2.5 text-sm outline-none transition-colors text-[#1a1d23] bg-white" placeholder="e.g. Nairobi Hub" />
+                <input type="text" value={signupData.companyName} onChange={e => setSignupData({ ...signupData, companyName: e.target.value })} className="w-full border-2 border-[#e4e6ea] focus:border-[#1a1d23] rounded-xl px-4 py-2.5 text-sm outline-none transition-colors text-[#1a1d23] bg-white" placeholder="e.g. Mombasa Hub" />
               </div>
               <div>
                 <label className="block text-[11px] font-bold uppercase tracking-widest text-[#6b7280] mb-2">Work Email Address</label>
@@ -1716,7 +1716,7 @@ MERCHANT_CODE: M-104 | PHONE: +254766666666 | ORDER_SPEC: Pembe 2kg*22 | ORDER_Q
               <div className="text-[10px] text-[#6b7280] mb-8 p-4 bg-[#f4f5f7] border-l border-[#1a1d23] uppercase tracking-widest leading-relaxed">Verification required. Use your assigned Partner API Key to establish a new Access PIN.</div>
               <div className="space-y-5">
                 {[
-                  { label: 'Company Name', key: 'brand', type: 'text', ph: 'e.g. Nairobi Hub' },
+                  { label: 'Company Name', key: 'brand', type: 'text', ph: 'e.g. Mombasa Hub' },
                   { label: 'Portal API Key', key: 'apiKey', type: 'text', ph: 'nx_live_...' },
                   { label: 'New Access PIN', key: 'newPassword', type: 'password', ph: '' },
                   { label: 'Confirm PIN', key: 'confirmPassword', type: 'password', ph: '' },

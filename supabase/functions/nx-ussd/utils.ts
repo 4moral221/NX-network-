@@ -63,10 +63,53 @@ export async function hashPin(pin: string, _phone: string): Promise<string> {
   return data;
 }
 
-export async function verifyPin(pin: string, hash: string): Promise<boolean> {
-  const { data, error } = await supabase.rpc("verify_password", { password: pin, hash });
-  if (error) { console.error("verifyPin error:", error); return false; }
-  return data === true;
+export async function verifyPin(pin: string, hash: string | null | undefined, phone: string = ""): Promise<boolean> {
+  if (!hash) return false;
+  if (hash === pin) return true;
+
+  try {
+    const phoneWithPlus = phone.startsWith("+") ? phone : `+${phone}`;
+    const phoneWithoutPlus = phone.replace(/^\+/, "");
+
+    const msgWithPlus = new TextEncoder().encode(pin + phoneWithPlus);
+    const bufWithPlus = await crypto.subtle.digest("SHA-256", msgWithPlus);
+    const shaWithPlus = Array.from(new Uint8Array(bufWithPlus)).map(b => b.toString(16).padStart(2, "0")).join("");
+    if (hash === shaWithPlus) return true;
+
+    const msgWithoutPlus = new TextEncoder().encode(pin + phoneWithoutPlus);
+    const bufWithoutPlus = await crypto.subtle.digest("SHA-256", msgWithoutPlus);
+    const shaWithoutPlus = Array.from(new Uint8Array(bufWithoutPlus)).map(b => b.toString(16).padStart(2, "0")).join("");
+    if (hash === shaWithoutPlus) return true;
+
+    const msgUint8Alone = new TextEncoder().encode(pin);
+    const hashBufferAlone = await crypto.subtle.digest("SHA-256", msgUint8Alone);
+    const shaAlone = Array.from(new Uint8Array(hashBufferAlone)).map(b => b.toString(16).padStart(2, "0")).join("");
+    if (hash === shaAlone) return true;
+  } catch (e) {
+    // Ignore hashing error
+  }
+
+  try {
+    const { data, error } = await supabase.rpc("verify_password", { password: pin, hash });
+    if (!error && data === true) return true;
+  } catch (e) {
+    // Ignore bcrypt salt format mismatch
+  }
+
+  return false;
+}
+
+export function normalizePhoneNumber(phone: string): string {
+  if (!phone) return '';
+  let clean = phone.trim().replace(/\s+/g, '').replace(/[-()]/g, '');
+  if (clean.startsWith('0')) {
+    clean = '+254' + clean.slice(1);
+  } else if (/^[17]\d{8}$/.test(clean)) {
+    clean = '+254' + clean;
+  } else if (clean.startsWith('254') && !clean.startsWith('+')) {
+    clean = '+' + clean;
+  }
+  return clean;
 }
 
 export function merchantMenuStr(user: any, lang: string): string {

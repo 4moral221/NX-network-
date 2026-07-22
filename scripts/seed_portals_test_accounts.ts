@@ -127,7 +127,7 @@ async function run() {
   const hubUserData = {
     id: hubId,
     phone: hubPhone,
-    name: 'Nairobi Central Hub',
+    name: 'Mombasa Central Hub',
     role: 'merchant',
     franchise_tier: 'HUB',
     tier: 'HUB',

@@ -655,7 +655,7 @@ export default function MerchantPortal() {
                         </div>
                         <div>
                            <div className="text-sm font-bold text-white mb-0.5">Unilever Logistics</div>
-                           <p className="text-[10px] text-[#5a5a7a] leading-tight">Priority delivery for HUB merchants in Nairobi East. Zero delivery fees.</p>
+                           <p className="text-[10px] text-[#5a5a7a] leading-tight">Priority delivery for HUB merchants in Mombasa East. Zero delivery fees.</p>
                         </div>
                      </div>
                   </div>

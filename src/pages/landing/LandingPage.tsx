@@ -54,6 +54,61 @@ export default function LandingPage() {
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
   const [openSpec, setOpenSpec] = useState<string | null>(null);
 
+  // Waitlist/Newsletter Form States
+  const [waitlistEmail, setWaitlistEmail] = useState('');
+  const [waitlistStatus, setWaitlistStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
+  const [waitlistMessage, setWaitlistMessage] = useState('');
+
+  const handleWaitlistSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!waitlistEmail) return;
+
+    setWaitlistStatus('submitting');
+    setWaitlistMessage('');
+
+    try {
+      const emailLower = waitlistEmail.trim().toLowerCase();
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(emailLower)) {
+        setWaitlistStatus('error');
+        setWaitlistMessage('Please enter a valid email address.');
+        return;
+      }
+
+      // First check if email already exists
+      const { data: existing } = await supabase
+        .from('waitlist')
+        .select('email')
+        .eq('email', emailLower)
+        .maybeSingle();
+
+      if (existing) {
+        setWaitlistStatus('error');
+        setWaitlistMessage('This email address is already subscribed to network updates!');
+        return;
+      }
+
+      const { error } = await supabase.from('waitlist').insert({
+        email: emailLower,
+        name: '',
+        role: 'subscriber',
+        subscribed_at: new Date().toISOString()
+      });
+
+      if (!error) {
+        setWaitlistStatus('success');
+        setWaitlistMessage("Thank you for subscribing! You will receive network updates and market insights directly in your inbox.");
+        setWaitlistEmail('');
+      } else {
+        setWaitlistStatus('error');
+        setWaitlistMessage(error.message || 'Failed to register. Please check your email and try again.');
+      }
+    } catch (err: any) {
+      setWaitlistStatus('error');
+      setWaitlistMessage('Connection error. Please try again.');
+    }
+  };
+
   const stories = [
     {
       title: "Mama Sarah's Dukas",
@@ -1850,6 +1905,95 @@ export default function LandingPage() {
                 The unified portal for transporters, logistics providers, and regional partners to manage restocking, bid on fulfillment, and coordinate last-mile runs.
               </p>
             </a>
+          </div>
+        </div>
+      </section>
+
+
+
+      {/* Newsletter / Network Updates Signup Section */}
+      <section className="py-20 px-6 md:px-10 border-t border-nx-border bg-[#030303] relative overflow-hidden">
+        {/* Decorative Grid Lines */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#111_1px,transparent_1px),linear-gradient(to_bottom,#111_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-30 pointer-events-none" />
+        
+        <div className="max-w-4xl mx-auto relative z-10">
+          <div className="bg-nx-ink border border-nx-border/80 rounded-3xl p-8 md:p-12 relative overflow-hidden shadow-2xl">
+            {/* Glowing accents */}
+            <div className="absolute -top-40 -right-40 w-80 h-80 bg-nx-amber/5 rounded-full blur-[100px] pointer-events-none" />
+            <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-nx-green/5 rounded-full blur-[100px] pointer-events-none" />
+            
+            <div className="grid md:grid-cols-5 gap-8 items-center">
+              <div className="md:col-span-3 space-y-4">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-nx-amber/10 border border-nx-amber/20 text-[10px] text-nx-amber uppercase font-mono tracking-wider">
+                  <span className="w-1.5 h-1.5 rounded-full bg-nx-amber animate-pulse" />
+                  Stay Updated
+                </div>
+                <h2 className="font-display text-2xl md:text-3xl text-nx-paper font-semibold tracking-tight leading-tight">
+                  Subscribe for network updates &amp; market insights
+                </h2>
+                <p className="text-sm text-nx-muted leading-relaxed max-w-md">
+                  Get real-time announcements on network expansions, FMCG reward launches, market intelligence reports, and platform features delivered directly to your inbox.
+                </p>
+              </div>
+              
+              <div className="md:col-span-2">
+                {waitlistStatus === 'success' ? (
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="p-6 rounded-2xl bg-nx-green/5 border border-nx-green/30 text-center space-y-3"
+                  >
+                    <div className="w-12 h-12 rounded-full bg-nx-green/10 flex items-center justify-center mx-auto text-nx-green">
+                      <CheckCircle2 className="w-6 h-6" />
+                    </div>
+                    <h3 className="font-display text-lg text-nx-paper font-medium">You're subscribed!</h3>
+                    <p className="text-xs text-nx-muted leading-relaxed">
+                      {waitlistMessage || "Thank you for subscribing. You'll receive real-time network updates and market insights directly in your inbox."}
+                    </p>
+                  </motion.div>
+                ) : (
+                  <form onSubmit={handleWaitlistSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                      <label htmlFor="waitlist-email" className="block text-[10px] font-mono uppercase text-nx-muted tracking-wider">
+                        Enter your email address
+                      </label>
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <input
+                          id="waitlist-email"
+                          type="email"
+                          required
+                          placeholder="you@example.com"
+                          value={waitlistEmail}
+                          onChange={(e) => setWaitlistEmail(e.target.value)}
+                          className="flex-1 bg-[#050505] border border-nx-border rounded-xl px-4 py-3 text-sm text-nx-paper placeholder:text-nx-muted/60 focus:outline-hidden focus:border-nx-amber focus:ring-1 focus:ring-nx-amber transition-all"
+                        />
+                        <button
+                          type="submit"
+                          disabled={waitlistStatus === 'submitting'}
+                          className="sm:w-auto bg-nx-amber hover:bg-nx-amber/90 disabled:bg-nx-amber/50 disabled:cursor-not-allowed text-nx-ink font-semibold rounded-xl px-6 py-3 text-sm flex items-center justify-center gap-2 cursor-pointer transition-colors whitespace-nowrap"
+                        >
+                          {waitlistStatus === 'submitting' ? (
+                            <>
+                              <RefreshCw className="w-4 h-4 animate-spin" />
+                              Subscribing...
+                            </>
+                          ) : (
+                            <>
+                              Subscribe
+                              <ArrowRight className="w-4 h-4" />
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                    
+                    {waitlistStatus === 'error' && (
+                      <p className="text-xs text-red-400 font-medium">{waitlistMessage}</p>
+                    )}
+                  </form>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </section>

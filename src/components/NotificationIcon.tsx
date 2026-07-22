@@ -24,7 +24,7 @@ const DEFAULT_NOTIFICATIONS: Record<string, Notification[]> = {
     {
       id: 'admin-2',
       title: 'Restock Velocity Node Spark',
-      body: 'Nairobi Region experiencing surge in consumer duka restocks.',
+      body: 'Mombasa Region experiencing surge in consumer duka restocks.',
       time: '2h ago',
       read: false,
       type: 'success'
@@ -70,7 +70,7 @@ const DEFAULT_NOTIFICATIONS: Record<string, Notification[]> = {
     {
       id: 'partner-1',
       title: 'AI Compilation Complete',
-      body: 'Nairobi West sub-county restock bids compiled with 98% route accuracy.',
+      body: 'Mombasa West sub-county restock bids compiled with 98% route accuracy.',
       time: '8m ago',
       read: false,
       type: 'success'

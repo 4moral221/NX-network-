@@ -236,4 +236,69 @@ router.post('/api/predict_restock', requireAuth, async (req, res) => {
       res.status(500).json({ success: false, error: err.message });
     }
   });
+
+router.post('/api/landing/subscribe', async (req, res) => {
+  try {
+    const { email, role, phone, name } = req.body;
+    
+    if (!email || typeof email !== 'string') {
+      return res.status(400).json({ success: false, error: "Email address is required." });
+    }
+    
+    const emailLower = email.trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailLower)) {
+      return res.status(400).json({ success: false, error: "Please enter a valid email address." });
+    }
+    
+    const roleStr = typeof role === 'string' ? role.trim() : 'visitor';
+    const phoneStr = typeof phone === 'string' ? phone.trim() : '';
+    const nameStr = typeof name === 'string' ? name.trim() : '';
+    
+    const waitlistPath = path.join(process.cwd(), "data", "waitlist.json");
+    
+    let waitlist: any[] = [];
+    if (fs.existsSync(waitlistPath)) {
+      try {
+        waitlist = JSON.parse(fs.readFileSync(waitlistPath, 'utf8'));
+      } catch (err) {
+        console.error("Error reading waitlist.json:", err);
+      }
+    }
+    
+    const alreadyExists = waitlist.some((item: any) => item.email.toLowerCase() === emailLower);
+    if (alreadyExists) {
+      return res.status(400).json({ 
+        success: false, 
+        error: "This email address is already registered on our waitlist!" 
+      });
+    }
+    
+    const newEntry = {
+      email: emailLower,
+      role: roleStr,
+      phone: phoneStr,
+      name: nameStr,
+      subscribedAt: new Date().toISOString()
+    };
+    
+    waitlist.push(newEntry);
+    
+    const dir = path.dirname(waitlistPath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    
+    fs.writeFileSync(waitlistPath, JSON.stringify(waitlist, null, 2), 'utf8');
+    
+    return res.json({ 
+      success: true, 
+      message: "Thank you! You have been successfully added to our waitlist." 
+    });
+  } catch (err: any) {
+    console.error("Subscription Error:", err);
+    res.status(500).json({ success: false, error: "An unexpected error occurred. Please try again." });
+  }
+});
+
 export default router;

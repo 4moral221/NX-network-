@@ -105,7 +105,7 @@ Current Network Health State:
 - Core Franchise Tier: ${t}
 
 Provide a short, elegant, strategic 3-paragraph execution memo for this brand (FMCG Partner). 
-Reference specific Kenyan context (such as Nairobi retail corridors like Eastleigh, Kawangware, Kibera, Githurai, Kasarani, Roysambu, and duaka/kiosk behaviors).
+Reference specific Kenyan context (such as Mombasa coastal retail corridors like Nyali, Bamburi, Likoni, Changamwe, Kongowea, Tudor, and duka/kiosk behaviors).
 Highlight how they can use the Franchise Tiers (BASIC, CERTIFIED, HUB with 60%, 65%, 70% Pool Rates) and how they can optimize their FMCG Boosts to push SKU volume. 
 Address the safety rails (the current throttling of ${multiplier}x and merchant acceptance ceiling of ${ceiling}) and suggest whether they should inject more booster liquidity into the pool or expand wholesale distribution to HUB merchants to bypass distributor bottleneck.
 Keep the tone inspiring, professional, and dense with genuine retail economic advice. Do not use generic filler words. Format nicely in Markdown.`;
@@ -287,12 +287,12 @@ router.post('/api/gemini/compile-batch', requireAuth, async (req, res) => {
     const advicePrompt = `Analyze the following raw NX Batch Master Shipment file:
 ${fileContent}
 
-Compile the orders into localized route plan groupings based on geographical proximity within Nairobi regions (e.g., grouping by Githurai, Roysambu, Kasarani, Clay City, Kahawa West, Mwiki, etc.). Use the Location from the raw log as reference.
+Compile the orders into localized route plan groupings based on geographical proximity within Mombasa regions (e.g., grouping by Nyali, Bamburi, Likoni, Changamwe, Kongowea, Tudor, etc.). Use the Location from the raw log as reference.
 
 Please output a JSON object obeying the requested schema. Ensure that you:
 1. Extract the Batch ID and SKU Code from the master file header.
-2. Group all orders by their regional locality (e.g., Githurai, Kasarani, Roysambu, etc.).
-3. For each merchant order, extract the MERCHANT_CODE, PHONE, and ORDER_SPEC. Also generate a realistic Kenyan duka merchant business name (e.g. "Mama Mwangi Duka", "Amani Retail", "Kasarani Wholesale", "Githurai Fresh Market") for the merchantName field based on their unique merchant code. Yes, generate a realistic merchant name since it is not provided in raw text.
+2. Group all orders by their regional locality (e.g., Nyali, Bamburi, Likoni, etc.).
+3. For each merchant order, extract the MERCHANT_CODE, PHONE, and ORDER_SPEC. Also generate a realistic Kenyan duka merchant business name (e.g. "Mama Coast Duka", "Nyali Retail", "Likoni Wholesale", "Bamburi Fresh Market") for the merchantName field based on their unique merchant code. Yes, generate a realistic merchant name since it is not provided in raw text.
 4. Set specificOrder as the ORDER_SPEC (e.g. "Pembe 2kg*15") and exactQuantity as the integer parsed from the ORDER_QTY field (e.g. 15).
 `;
 
@@ -348,7 +348,7 @@ Please output a JSON object obeying the requested schema. Ensure that you:
                 items: {
                   type: "OBJECT",
                   properties: {
-                    name: { type: "STRING", description: "The localized area or neighborhood zone in Nairobi" },
+                    name: { type: "STRING", description: "The localized area or neighborhood zone in Mombasa" },
                     orders: {
                       type: "ARRAY",
                       items: {

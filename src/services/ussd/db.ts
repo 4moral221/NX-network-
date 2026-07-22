@@ -7,7 +7,8 @@ export const ussdContext = new AsyncLocalStorage<{ isDemo: boolean }>();
 export const supabase = new Proxy({}, {
   get(target, prop, receiver) {
     const context = ussdContext.getStore();
-    const client = (context && context.isDemo) ? mockSupabase : serverSupabase;
+    const isTestNoKey = !process.env.SUPABASE_SERVICE_ROLE_KEY && !process.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
+    const client = ((context && context.isDemo) || isTestNoKey) ? mockSupabase : serverSupabase;
     const value = Reflect.get(client, prop);
     if (typeof value === 'function') {
       return value.bind(client);

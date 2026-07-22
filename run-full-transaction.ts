@@ -130,16 +130,16 @@ async function main() {
   // 1: Choose Registration choice
   // 2: Choose Register as Merchant
   // Fresh Duka: Business name
-  // Nairobi: Location
+  // Mombasa: Location
   // 12345678: National ID
   // 1234: 4-digit PIN
-  // All combined: "1*1*2*Fresh Duka*Nairobi*12345678*1234"
+  // All combined: "1*1*2*Fresh Duka*Mombasa*12345678*1234"
   
   const regSessionId = "USSD_REG_SESSION_" + Math.random().toString(36).slice(2, 10).toUpperCase();
   const regParams = new URLSearchParams();
   regParams.set("sessionId", regSessionId);
   regParams.set("phoneNumber", merchantPhone);
-  regParams.set("text", "1*1*2*Fresh Duka*Nairobi*12345678*1234");
+  regParams.set("text", "1*1*2*Fresh Duka*Mombasa*12345678*1234");
 
   const regRes = await fetch("http://localhost:3000/api/ussd", {
     method: "POST",

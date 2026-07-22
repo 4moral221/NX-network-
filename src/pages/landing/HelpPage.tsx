@@ -46,7 +46,7 @@ export default function HelpPage() {
     {
       category: 'partners',
       question: 'WHO CAN REGISTER AS A LOGISTICS PARTNER?',
-      answer: 'Any licensed local transporter or last-mile delivery provider in Nairobi/regional hubs can register on partners.nxnetwork.company. Bids on bulk restocking runs are posted daily. Once approved and whitelisted, you can accept, track, and complete delivery runs.'
+      answer: 'Any licensed local transporter or last-mile delivery provider in Mombasa/regional hubs can register on partners.nxnetwork.company. Bids on bulk restocking runs are posted daily. Once approved and whitelisted, you can accept, track, and complete delivery runs.'
     },
     {
       category: 'partners',

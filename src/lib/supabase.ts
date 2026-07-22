@@ -40,6 +40,7 @@ if (supabaseUrl && !supabaseUrl.startsWith('http')) {
   supabaseUrl = `https://${supabaseUrl}`;
 }
 
+// Direct export of standard Supabase JS client without table query interceptors or local bypasses
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
@@ -48,305 +49,6 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
 });
 
-// ============================================================
-// Transparent Interceptor for family_accounts table
-// Redirects queries to server-side JSON-file API endpoint
-// ============================================================
-class FamilyAccountsMockBuilder {
-  private method: 'select' | 'insert' | 'update' | 'delete' = 'select';
-  private filterCol: string | null = null;
-  private filterVal: any = null;
-  private insertData: any = null;
-  private updateData: any = null;
-  private isMaybeSingle = false;
-  private isSingle = false;
-
-  select(columns?: string) {
-    this.method = 'select';
-    return this;
-  }
-
-  insert(data: any) {
-    this.method = 'insert';
-    this.insertData = data;
-    return this;
-  }
-
-  update(data: any) {
-    this.method = 'update';
-    this.updateData = data;
-    return this;
-  }
-
-  delete() {
-    this.method = 'delete';
-    return this;
-  }
-
-  eq(column: string, value: any) {
-    this.filterCol = column;
-    this.filterVal = value;
-    return this;
-  }
-
-  maybeSingle() {
-    this.isMaybeSingle = true;
-    return this;
-  }
-
-  single() {
-    this.isSingle = true;
-    return this;
-  }
-
-  order(column: string, options?: any) {
-    return this;
-  }
-
-  limit(count: number) {
-    return this;
-  }
-
-  async execute() {
-    try {
-      const getApiUrl = () => {
-        if (typeof window === 'undefined') {
-          return 'http://127.0.0.1:3000/api/family_accounts';
-        }
-        return '/api/family_accounts';
-      };
-
-      let result: any = null;
-      let error: any = null;
-
-      if (this.method === 'select') {
-        let url = getApiUrl();
-        if (this.filterCol && this.filterVal) {
-          url += `?${encodeURIComponent(this.filterCol)}=${encodeURIComponent(this.filterVal)}`;
-        }
-        const res = await fetch(url);
-        if (!res.ok) {
-          throw new Error('Failed to fetch family accounts');
-        }
-        const data = await res.json();
-        
-        if (this.isMaybeSingle) {
-          result = data[0] || null;
-        } else if (this.isSingle) {
-          result = data[0];
-          if (!result) {
-            error = { message: 'Not found' };
-          }
-        } else {
-          result = data;
-        }
-      } else if (this.method === 'insert') {
-        const url = getApiUrl();
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(this.insertData)
-        });
-        if (!res.ok) {
-          throw new Error('Failed to insert family account');
-        }
-        result = await res.json();
-      } else if (this.method === 'update') {
-        let url = getApiUrl();
-        if (this.filterCol && this.filterVal) {
-          url += `?${encodeURIComponent(this.filterCol)}=${encodeURIComponent(this.filterVal)}`;
-        }
-        const res = await fetch(url, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(this.updateData)
-        });
-        if (!res.ok) {
-          throw new Error('Failed to update family account');
-        }
-        result = await res.json();
-      }
-
-      return { data: result, error };
-    } catch (err: any) {
-      return { data: null, error: { message: err.message } };
-    }
-  }
-
-  then(onfulfilled?: (value: any) => any, onrejected?: (reason: any) => any) {
-    return this.execute().then(onfulfilled, onrejected);
-  }
-}
-
-class DatabaseBypassBuilder {
-  private tableName: string;
-  private method: 'select' | 'insert' | 'update' | 'delete' = 'select';
-  private selectColumns = '*';
-  private filters: Array<{ type: string; column: string; value: any }> = [];
-  private insertData: any = null;
-  private updateData: any = null;
-  private isSingle = false;
-  private isMaybeSingle = false;
-
-  constructor(tableName: string) {
-    this.tableName = tableName;
-  }
-
-  select(columns?: string) {
-    this.method = 'select';
-    if (columns) this.selectColumns = columns;
-    return this;
-  }
-
-  insert(data: any) {
-    this.method = 'insert';
-    this.insertData = data;
-    return this;
-  }
-
-  update(data: any) {
-    this.method = 'update';
-    this.updateData = data;
-    return this;
-  }
-
-  delete() {
-    this.method = 'delete';
-    return this;
-  }
-
-  eq(column: string, value: any) {
-    this.filters.push({ type: 'eq', column, value });
-    return this;
-  }
-
-  neq(column: string, value: any) {
-    this.filters.push({ type: 'neq', column, value });
-    return this;
-  }
-
-  in(column: string, value: any) {
-    this.filters.push({ type: 'in', column, value });
-    return this;
-  }
-
-  gt(column: string, value: any) {
-    this.filters.push({ type: 'gt', column, value });
-    return this;
-  }
-
-  gte(column: string, value: any) {
-    this.filters.push({ type: 'gte', column, value });
-    return this;
-  }
-
-  lt(column: string, value: any) {
-    this.filters.push({ type: 'lt', column, value });
-    return this;
-  }
-
-  lte(column: string, value: any) {
-    this.filters.push({ type: 'lte', column, value });
-    return this;
-  }
-
-  order(column: string, options?: any) {
-    this.filters.push({ type: 'order', column, value: options });
-    return this;
-  }
-
-  limit(count: number) {
-    this.filters.push({ type: 'limit', column: '', value: count });
-    return this;
-  }
-
-  maybeSingle() {
-    this.isMaybeSingle = true;
-    return this;
-  }
-
-  single() {
-    this.isSingle = true;
-    return this;
-  }
-
-  async execute() {
-    try {
-      const getApiUrl = () => {
-        if (typeof window === 'undefined') {
-          return 'http://127.0.0.1:3000/api/db-bypass';
-        }
-        return '/api/db-bypass';
-      };
-
-      const res = await fetch(getApiUrl(), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          table: this.tableName,
-          method: this.method,
-          selectColumns: this.selectColumns,
-          filters: this.filters,
-          insertData: this.insertData,
-          updateData: this.updateData
-        })
-      });
-
-      if (!res.ok) {
-        const errJson = await res.json().catch(() => ({}));
-        return { 
-          data: null, 
-          error: { 
-            message: errJson.error?.message || errJson.error || 'Failed to process database operation',
-            code: errJson.error?.code || 'UNKNOWN'
-          } 
-        };
-      }
-
-      const body = await res.json();
-      let result = body.data;
-      let error = body.error;
-
-      if (result) {
-        if (this.isMaybeSingle) {
-          result = result[0] || null;
-        } else if (this.isSingle) {
-          result = result[0];
-          if (!result) {
-            error = { message: 'Not found' };
-          }
-        }
-      }
-
-      return { data: result, error };
-    } catch (err: any) {
-      return { data: null, error: { message: err.message, code: err.code || 'UNKNOWN' } };
-    }
-  }
-
-  then(onfulfilled?: (value: any) => any, onrejected?: (reason: any) => any) {
-    return this.execute().then(onfulfilled, onrejected);
-  }
-}
-
-const originalFrom = supabase.from;
-supabase.from = function(table: string) {
-  if (table === 'family_accounts') {
-    return new FamilyAccountsMockBuilder() as any;
-  }
-  const bypassTables = [
-    'transactions',
-    'users',
-    'ledger_entries',
-    'merchant_margins',
-    'fmcg_margin_contributions',
-    'merchant_whitelist'
-  ];
-  if (bypassTables.includes(table)) {
-    return new DatabaseBypassBuilder(table) as any;
-  }
-  return originalFrom.call(this, table);
-};
 
 // ============================================================
 // mockSupabase — in-memory/localStorage demo client used ONLY by
@@ -355,8 +57,27 @@ supabase.from = function(table: string) {
 // Contains no real credentials, no network calls — safe to keep.
 // ============================================================
 
+const nodeMockStore: Record<string, any[]> = {};
+
 const getStoredMockTable = (table: string): any[] => {
-  if (typeof window === 'undefined') return [];
+  if (typeof window === 'undefined') {
+    if (!nodeMockStore[table]) {
+      if (table === 'users') {
+        nodeMockStore[table] = [
+          { id: '1', email: 'formidablefoe254@gmail.com', phone: '254700000000', role: 'admin', is_admin: true, admin_role: 'super_admin', name: 'Admin', status: 'active', language: 'en' },
+          { id: '2', phone: '254700000005', role: 'customer', name: 'Alex jaka', status: 'active', nx_balance: 1000, recovery_pin: '1234', language: 'en' },
+          { id: 'merchant-3267', phone: '254703267919', role: 'merchant', merchant_code: 'M798253', location: 'Mombasa', national_id: '12345678', recovery_pin: '1234', status: 'active', name: 'Corner Shop', franchise_tier: 'BASIC', nx_balance: 0, language: 'en' }
+        ];
+      } else if (table === 'merchant_margins') {
+        nodeMockStore[table] = [
+          { id: 'margin-3267', merchant_code: 'M798253', gross_margin: 10000 }
+        ];
+      } else {
+        nodeMockStore[table] = [];
+      }
+    }
+    return nodeMockStore[table];
+  }
   const stored = localStorage.getItem(`nx_mock_table_${table}`);
   if (stored) {
     try {
@@ -381,9 +102,9 @@ const getStoredMockTable = (table: string): any[] => {
   let defaults: any[] = [];
   if (table === 'users') {
     defaults = [
-      { id: '1', email: 'formidablefoe254@gmail.com', phone: '254700000000', role: 'admin', is_admin: true, admin_role: 'super_admin', name: 'Admin', status: 'active' },
-      { id: '2', phone: '254700000005', role: 'customer', name: 'Alex jaka', status: 'active', nx_balance: 1000, recovery_pin: '7e68c9d6a4c9bd2ab4ca38833b9503644657cb2c7e108939579d310ea18bcc27' },
-      { id: 'merchant-3267', phone: '254703267919', role: 'merchant', merchant_code: 'M798253', location: 'Nairobi', national_id: '12345678', recovery_pin: '4b3cb899df0279bb36ffb821cbe00f97844ef14283be5cd1c022dcc9624a7773', status: 'active', name: 'Corner Shop', franchise_tier: 'BASIC', nx_balance: 0 }
+      { id: '1', email: 'formidablefoe254@gmail.com', phone: '254700000000', role: 'admin', is_admin: true, admin_role: 'super_admin', name: 'Admin', status: 'active', language: 'en' },
+      { id: '2', phone: '254700000005', role: 'customer', name: 'Alex jaka', status: 'active', nx_balance: 1000, recovery_pin: '1234', language: 'en' },
+      { id: 'merchant-3267', phone: '254703267919', role: 'merchant', merchant_code: 'M798253', location: 'Mombasa', national_id: '12345678', recovery_pin: '1234', status: 'active', name: 'Corner Shop', franchise_tier: 'BASIC', nx_balance: 0, language: 'en' }
     ];
   } else if (table === 'transactions') {
     defaults = [];
@@ -404,14 +125,17 @@ const getStoredMockTable = (table: string): any[] => {
 };
 
 const setStoredMockTable = (table: string, data: any[]) => {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem(`nx_mock_table_${table}`, JSON.stringify(data));
+  if (typeof window === 'undefined') {
+    nodeMockStore[table] = data;
+    return;
   }
+  localStorage.setItem(`nx_mock_table_${table}`, JSON.stringify(data));
 };
 
 class SupabaseMockBuilder {
   private table: string;
   private filters: { column: string; value: any; op: string }[] = [];
+  private orFilters: { column: string; value: any; op: string }[][] = [];
   private orderCol: string | null = null;
   private orderAsc = true;
   private limitCount: number | null = null;
@@ -434,7 +158,22 @@ class SupabaseMockBuilder {
   like(column: string, value: any) { this.filters.push({ column, value, op: 'like' }); return this; }
   ilike(column: string, value: any) { this.filters.push({ column, value, op: 'ilike' }); return this; }
   in(column: string, values: any[]) { this.filters.push({ column, value: values, op: 'in' }); return this; }
-  or() { return this; }
+  or(expr?: string) {
+    if (expr) {
+      const parts = expr.split(',');
+      const conds: { column: string; value: any; op: string }[] = [];
+      for (const part of parts) {
+        const m = part.match(/^([^.]+)\.([^.]+)\.(.+)$/);
+        if (m) {
+          conds.push({ column: m[1], op: m[2], value: m[3] });
+        }
+      }
+      if (conds.length > 0) {
+        this.orFilters.push(conds);
+      }
+    }
+    return this;
+  }
   not() { return this; }
   order(column: string, options?: any) { this.orderCol = column; this.orderAsc = options?.ascending !== false; return this; }
   limit(count: number) { this.limitCount = count; return this; }
@@ -457,6 +196,21 @@ class SupabaseMockBuilder {
           case 'in':  return Array.isArray(fv) && fv.some(x => String(x).toLowerCase() === String(val).toLowerCase());
           default: return true;
         }
+      });
+    }
+    for (const orConds of this.orFilters) {
+      data = data.filter(item => {
+        return orConds.some(cond => {
+          const val = item[cond.column];
+          if (val === undefined) return false;
+          const fv = cond.value;
+          switch (cond.op) {
+            case 'eq': return String(val).toLowerCase() === String(fv).toLowerCase();
+            case 'neq': return String(val).toLowerCase() !== String(fv).toLowerCase();
+            case 'like': case 'ilike': return String(val).toLowerCase().includes(String(fv).toLowerCase());
+            default: return false;
+          }
+        });
       });
     }
     if (this.orderCol) {

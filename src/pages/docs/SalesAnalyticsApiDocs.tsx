@@ -72,12 +72,12 @@ export default function SalesAnalyticsApiDocs() {
         });
       } else if (simEndpoint === 'duka-trends') {
         setSimResponse({
-          "region": "Nairobi East",
+          "region": "Mombasa East",
           "monitored_dukas_count": 482,
           "active_orders_pool_count": 188,
           "hotspots": [
-            { "location": "Kayole", "dukas_active": 140, "demand_velocity_score": 9.4, "top_category": "Cooking Oils" },
-            { "location": "Dandora", "dukas_active": 95, "demand_velocity_score": 8.1, "top_category": "Maize Flour" }
+            { "location": "Nyali", "dukas_active": 140, "demand_velocity_score": 9.4, "top_category": "Cooking Oils" },
+            { "location": "Likoni", "dukas_active": 95, "demand_velocity_score": 8.1, "top_category": "Maize Flour" }
           ],
           "switching_alerts": [
             {
@@ -127,7 +127,7 @@ export default function SalesAnalyticsApiDocs() {
         sku: "ROYCO-MCHUZI-MIX-200G",
         discount_per_unit_kes: 12,
         max_duration_weeks: 4,
-        target_regions: ["Nairobi East", "Mombasa Main"],
+        target_regions: ["Mombasa East", "Mombasa Main"],
         merchant_tier_eligible: ["BASIC", "CERTIFIED"]
       }, null, 2));
     }
@@ -257,9 +257,9 @@ print(response.json())`
 
   const dukaTrendsCode: CodeExample = {
     title: "duka-trends",
-    curl: `curl -X GET "https://api.nxnetwork.company/v1/analytics/duka-trends?region=NairobiEast" \\
+    curl: `curl -X GET "https://api.nxnetwork.company/v1/analytics/duka-trends?region=MombasaEast" \\
   -H "Authorization: Bearer <your_access_token>"`,
-    javascript: `fetch('https://api.nxnetwork.company/v1/analytics/duka-trends?region=NairobiEast', {
+    javascript: `fetch('https://api.nxnetwork.company/v1/analytics/duka-trends?region=MombasaEast', {
   method: 'GET',
   headers: {
     'Authorization': 'Bearer ' + accessToken
@@ -274,7 +274,7 @@ headers = {
     "Authorization": "Bearer " + access_token
 }
 params = {
-    "region": "NairobiEast"
+    "region": "MombasaEast"
 }
 
 response = requests.get(url, headers=headers, params=params)
@@ -290,7 +290,7 @@ print(response.json())`
     "sku": "ROYCO-MCHUZI-MIX-200G",
     "discount_per_unit_kes": 12,
     "max_duration_weeks": 4,
-    "target_regions": ["Nairobi East"],
+    "target_regions": ["Mombasa East"],
     "merchant_tier_eligible": ["BASIC", "CERTIFIED"]
   }'`,
     javascript: `fetch('https://api.nxnetwork.company/v1/campaigns/promotion', {
@@ -303,7 +303,7 @@ print(response.json())`
     sku: 'ROYCO-MCHUZI-MIX-200G',
     discount_per_unit_kes: 12,
     max_duration_weeks: 4,
-    target_regions: ['Nairobi East'],
+    target_regions: ['Mombasa East'],
     merchant_tier_eligible: ['BASIC', 'CERTIFIED']
   })
 })
@@ -320,7 +320,7 @@ payload = {
     "sku": "ROYCO-MCHUZI-MIX-200G",
     "discount_per_unit_kes": 12,
     "max_duration_weeks": 4,
-    "target_regions": ["Nairobi East"],
+    "target_regions": ["Mombasa East"],
     "merchant_tier_eligible": ["BASIC", "CERTIFIED"]
 }
 
@@ -722,7 +722,7 @@ print(response.json())`
               </div>
 
               <div className="bg-[#100d0c] border border-[#ffaa00]/10 p-4 rounded-xl text-xs text-nx-amber/90 leading-relaxed font-mono">
-                GET https://api.nxnetwork.company/v1/analytics/duka-trends?region=NairobiEast
+                GET https://api.nxnetwork.company/v1/analytics/duka-trends?region=MombasaEast
               </div>
 
               <div className="space-y-4">

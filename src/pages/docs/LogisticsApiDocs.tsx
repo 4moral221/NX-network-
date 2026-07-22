@@ -212,9 +212,9 @@ print(token)`
   // Demand board snippets
   const demandBoardCode: CodeExample = {
     title: "demand-board",
-    curl: `curl -X GET "https://api.nxnetwork.company/v1/logistics/demand-board?region=nairobi-central&min_batch_size=500" \\
+    curl: `curl -X GET "https://api.nxnetwork.company/v1/logistics/demand-board?region=mombasa-central&min_batch_size=500" \\
   -H "Authorization: Bearer <your_access_token>"`,
-    javascript: `fetch('https://api.nxnetwork.company/v1/logistics/demand-board?region=nairobi-central&min_batch_size=500', {
+    javascript: `fetch('https://api.nxnetwork.company/v1/logistics/demand-board?region=mombasa-central&min_batch_size=500', {
   method: 'GET',
   headers: {
     'Authorization': 'Bearer ' + accessToken
@@ -229,7 +229,7 @@ headers = {
     "Authorization": "Bearer " + access_token
 }
 params = {
-    "region": "nairobi-central",
+    "region": "mombasa-central",
     "min_batch_size": 500
 }
 
@@ -710,7 +710,7 @@ print(response.json())`
                             <td className="p-2.5">region</td>
                             <td className="p-2.5 text-nx-muted">string</td>
                             <td className="p-2.5 text-nx-amber">Optional</td>
-                            <td className="p-2.5 text-nx-muted text-[11px]">Filter by county or cluster code, e.g. "nairobi-central"</td>
+                            <td className="p-2.5 text-nx-muted text-[11px]">Filter by county or cluster code, e.g. "mombasa-central"</td>
                           </tr>
                           <tr className="border-b border-nx-border/50">
                             <td className="p-2.5">sku_category</td>
@@ -737,7 +737,7 @@ print(response.json())`
                       <div className="text-xs font-mono font-bold text-nx-paper">Expected Response (Status 200)</div>
                       <pre className="p-4 bg-[#060810] border border-nx-border rounded-xl font-mono text-[11px] text-nx-green overflow-x-auto leading-relaxed">
 {`{
-  "region": "nairobi-central",
+  "region": "mombasa-central",
   "batches": [
     {
       "sku": "cooking-oil-2l",

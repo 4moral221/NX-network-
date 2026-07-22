@@ -1,6 +1,6 @@
 // NX Network — USSD v9 (basket logging)
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { t, merchantMenuStr } from "./utils.ts";
+import { t, merchantMenuStr, verifyPin, normalizePhoneNumber } from "./utils.ts";
 import { handleRegistration } from "./handlers/registration.ts";
 import { handleRecovery } from "./handlers/recovery.ts";
 import { handlePinReset } from "./handlers/pin_reset.ts";
@@ -23,7 +23,8 @@ Deno.serve(async (req) => {
 
   const rawBody = await req.text();
   const body = new URLSearchParams(rawBody);
-  const phoneNumber = body.get("phoneNumber") || "";
+  const rawPhone = body.get("phoneNumber") || "";
+  const phoneNumber = normalizePhoneNumber(rawPhone);
   const sessionId  = body.get("sessionId")  || "";
   let rawText = (body.get("text") || "").trim();
 
@@ -35,7 +36,15 @@ Deno.serve(async (req) => {
   const parts = rawText === "" ? [] : rawText.split("*");
 
   try {
-    const { data: user } = await supabase.from("users").select("*").eq("phone", phoneNumber).maybeSingle();
+    const phoneWithPlus = phoneNumber.startsWith("+") ? phoneNumber : `+${phoneNumber}`;
+    const phoneWithoutPlus = phoneNumber.replace(/^\+/, "");
+
+    const { data: user } = await supabase
+      .from("users")
+      .select("*")
+      .or(`phone.eq.${phoneWithPlus},phone.eq.${phoneWithoutPlus}`)
+      .maybeSingle();
+
     let lang = user?.language || null;
 
     if (!lang) {
@@ -77,7 +86,7 @@ Deno.serve(async (req) => {
             // PIN gate
             if (effectiveParts.length === 1) { responseText = `CON ${t(currentLang, "enter_login_pin")}`; break; }
             const enteredPin = effectiveParts[1];
-            const { data: pinOk } = await supabase.rpc("verify_password", { password: enteredPin, hash: user.recovery_pin });
+            const pinOk = await verifyPin(enteredPin, user.recovery_pin, phoneNumber);
             if (!pinOk) {
               await supabase.from("nx_logs").insert({ phone: phoneNumber, context: "LOGIN_PIN_FAILED" });
               responseText = `END ${t(currentLang, "invalid_login_pin")}`; break;
@@ -87,13 +96,21 @@ Deno.serve(async (req) => {
 
             if (user.role === "merchant") {
               // Pending transaction interceptor
+              const phoneWithPlus = phoneNumber.startsWith("+") ? phoneNumber : `+${phoneNumber}`;
+              const phoneWithoutPlus = phoneNumber.replace(/^\+/, "");
+              const mCode = user.merchant_code || "";
+
               const { data: pending } = await supabase.from("transactions")
-                .select("*").eq("merchant_phone", phoneNumber).eq("status", "awaiting_merchant")
+                .select("*")
+                .or(`merchant_code.eq.${mCode},merchant_phone.eq.${phoneWithPlus},merchant_phone.eq.${phoneWithoutPlus}`)
+                .in("status", ["awaiting_merchant", "completed", "confirmed"])
                 .order("created_at", { ascending: false }).limit(1).maybeSingle();
 
-              if (pending && menuParts.length === 1) {
+              const isAwaiting = pending && pending.status === "awaiting_merchant";
+
+              if (isAwaiting && menuParts.length === 1) {
                 responseText = `CON ${t(currentLang, "merchant_confirm_prompt", { amount: pending.amount, phone: pending.customer_phone, nx: pending.nx_redeemed })}`;
-              } else if (pending && menuParts.length === 2 && (menuParts[1] === "1" || menuParts[1] === "2")) {
+              } else if (isAwaiting && menuParts.length === 2 && (menuParts[1] === "1" || menuParts[1] === "2")) {
                 const isConfirm = menuParts[1] === "1";
                 if (isConfirm) {
                   const success = await merchantFinalise(pending);
@@ -107,14 +124,14 @@ Deno.serve(async (req) => {
                   const { error } = await supabase.from("transactions").update({ status: "rejected_by_merchant" }).eq("id", pending.id);
                   responseText = !error ? `END Transaction Rejected.` : `END Error.`;
                 }
-              } else if (pending && menuParts.length === 3 && menuParts[1] === "1") {
+              } else if (pending && (pending.status === "completed" || pending.status === "confirmed") && menuParts.length === 3 && menuParts[1] === "1") {
                 // Basket logging step — merchant enters items or skips
                 if (menuParts[2] === "2") {
                   responseText = `END Transaction Approved! Basket not logged.`;
                 } else {
                   responseText = `CON ${t(currentLang, "log_basket_enter")}`;
                 }
-              } else if (pending && menuParts.length === 4 && menuParts[1] === "1" && menuParts[2] === "1") {
+              } else if (pending && (pending.status === "completed" || pending.status === "confirmed") && menuParts.length === 4 && menuParts[1] === "1" && menuParts[2] === "1") {
                 // Parse and save basket items
                 const basketInput = menuParts[3];
                 const { parseBasket } = await import("./handlers/basket.ts");

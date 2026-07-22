@@ -42,6 +42,12 @@ import {
   ExternalLink,
   Trash2,
   Menu,
+  Mail,
+  Download,
+  UserPlus,
+  Send,
+  FileSpreadsheet,
+  Filter,
 } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
 import toast, { Toaster } from 'react-hot-toast';
@@ -56,7 +62,7 @@ import Sidebar from '@/src/pages/admin/components/Sidebar';
 import { TIER_CONFIG } from '@/src/services/ussd/config';
 import DashboardStats from '@/src/pages/admin/components/DashboardStats';
 
-type Section = 'overview' | 'merchants' | 'customers' | 'txns' | 'restock' | 'pools' | 'invoices' | 'hub_payouts' | 'applications' | 'whitelist' | 'logs' | 'map' | 'sim' | 'treasury' | 'fraud' | 'fmcg' | 'broadcasts' | 'audit' | 'staff';
+type Section = 'overview' | 'merchants' | 'customers' | 'txns' | 'restock' | 'pools' | 'invoices' | 'hub_payouts' | 'applications' | 'whitelist' | 'logs' | 'map' | 'sim' | 'treasury' | 'fraud' | 'fmcg' | 'broadcasts' | 'audit' | 'staff' | 'waitlist';
 
 const MaskedPhone = ({ phone, className }: { phone?: string, className?: string }) => {
   const [isRevealed, setIsRevealed] = useState(false);
@@ -150,8 +156,18 @@ export default function AdminPortal() {
     pending_invoices: 0,
     pending_fmcg: 0,
     fraud_alerts: 0,
-    staff: 0
+    staff: 0,
+    subscribers: 0
   });
+  const [waitlistSubscribers, setWaitlistSubscribers] = useState<any[]>([]);
+  const [loadingWaitlist, setLoadingWaitlist] = useState(false);
+  const [waitlistSearch, setWaitlistSearch] = useState('');
+  const [waitlistRoleFilter, setWaitlistRoleFilter] = useState('all');
+  const [showAddSubModal, setShowAddSubModal] = useState(false);
+  const [newSubEmail, setNewSubEmail] = useState('');
+  const [newSubName, setNewSubName] = useState('');
+  const [newSubRole, setNewSubRole] = useState('subscriber');
+  const [sendingEmailId, setSendingEmailId] = useState<string | null>(null);
   const [merchants, setMerchants] = useState<any[]>([]);
   const [customers, setCustomers] = useState<any[]>([]);
   const [staff, setStaff] = useState<any[]>([]);
@@ -472,9 +488,9 @@ export default function AdminPortal() {
   // Simple Kenyan location geocoding helper
   const getCoordinates = (locationStr: string) => {
     const loc = locationStr.toLowerCase();
-    // Default to Nairobi approx
-    let lat = -1.2864;
-    let lng = 36.8172;
+    // Default to Mombasa approx
+    let lat = -4.0352;
+    let lng = 39.6716;
 
     const coordinates: Record<string, [number, number]> = {
       'nairobi': [-1.2864, 36.8172],
@@ -769,6 +785,138 @@ export default function AdminPortal() {
     }
   };
 
+  const fetchWaitlistSubscribers = async () => {
+    setLoadingWaitlist(true);
+    try {
+      const { data, error } = await supabase
+        .from('waitlist')
+        .select('*')
+        .order('subscribed_at', { ascending: false });
+      if (error) {
+        console.error("Waitlist fetch error:", error);
+      } else if (data) {
+        setWaitlistSubscribers(data);
+        setStats((prev: any) => ({ ...prev, subscribers: data.length }));
+      }
+    } catch (err) {
+      console.error("Waitlist fetch exception:", err);
+    } finally {
+      setLoadingWaitlist(false);
+    }
+  };
+
+  const exportWaitlistCsv = () => {
+    if (waitlistSubscribers.length === 0) {
+      toast.error("No subscriber records to export");
+      return;
+    }
+    const filtered = waitlistSubscribers.filter(sub => {
+      const matchesSearch = !waitlistSearch || 
+        sub.email?.toLowerCase().includes(waitlistSearch.toLowerCase()) ||
+        sub.name?.toLowerCase().includes(waitlistSearch.toLowerCase());
+      const matchesRole = waitlistRoleFilter === 'all' || sub.role === waitlistRoleFilter;
+      return matchesSearch && matchesRole;
+    });
+
+    if (filtered.length === 0) {
+      toast.error("No subscribers match current filters");
+      return;
+    }
+
+    const headers = ["ID", "Email", "Name", "Role", "Subscribed At"];
+    const csvLines = [
+      headers.join(","),
+      ...filtered.map(s => [
+        `"${s.id || ''}"`,
+        `"${s.email || ''}"`,
+        `"${(s.name || '').replace(/"/g, '""')}"`,
+        `"${s.role || 'subscriber'}"`,
+        `"${s.subscribed_at ? new Date(s.subscribed_at).toISOString() : ''}"`
+      ].join(","))
+    ];
+
+    const blob = new Blob([csvLines.join("\n")], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `nx_subscribers_waitlist_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success(`Exported ${filtered.length} subscriber(s) to CSV`);
+  };
+
+  const handleAddSubscriber = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!newSubEmail.trim() || !newSubEmail.includes('@')) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
+    const emailLower = newSubEmail.trim().toLowerCase();
+    const { data: existing } = await supabase
+      .from('waitlist')
+      .select('id')
+      .eq('email', emailLower)
+      .maybeSingle();
+
+    if (existing) {
+      toast.error("This email address is already subscribed");
+      return;
+    }
+
+    const { error } = await supabase.from('waitlist').insert({
+      email: emailLower,
+      name: newSubName.trim(),
+      role: newSubRole,
+      subscribed_at: new Date().toISOString()
+    });
+
+    if (error) {
+      toast.error(error.message || "Failed to add subscriber");
+    } else {
+      toast.success("Subscriber added successfully!");
+      setNewSubEmail('');
+      setNewSubName('');
+      setShowAddSubModal(false);
+      await fetchWaitlistSubscribers();
+    }
+  };
+
+  const handleDeleteSubscriber = async (id: string, email: string) => {
+    if (!confirm(`Are you sure you want to remove ${email} from the waitlist?`)) return;
+    const { error } = await supabase.from('waitlist').delete().eq('id', id);
+    if (error) {
+      toast.error("Failed to delete subscriber: " + error.message);
+    } else {
+      toast.success("Subscriber removed");
+      setWaitlistSubscribers(prev => prev.filter(s => s.id !== id));
+      setStats((prev: any) => ({ ...prev, subscribers: Math.max(0, (prev.subscribers || 1) - 1) }));
+    }
+  };
+
+  const handleSendWelcomeEmail = async (sub: any) => {
+    setSendingEmailId(sub.id);
+    try {
+      const res = await supabase.functions.invoke('welcome-email', {
+        body: {
+          email: sub.email,
+          name: sub.name,
+          role: sub.role
+        }
+      });
+      if (res.error) {
+        toast.error("Email dispatch failed: " + res.error.message);
+      } else {
+        toast.success(`Welcome email dispatched to ${sub.email}`);
+      }
+    } catch (err: any) {
+      toast.error("Failed to send welcome email: " + err.message);
+    } finally {
+      setSendingEmailId(null);
+    }
+  };
+
   const fetchAdminData = async () => {
     setLoading(true);
     setError(null);
@@ -797,6 +945,10 @@ export default function AdminPortal() {
       
       if (activeSection === 'broadcasts') {
         fetchBroadcasts();
+      }
+
+      if (activeSection === 'waitlist' || activeSection === 'overview') {
+        await fetchWaitlistSubscribers();
       }
       
       const response = await fetch('/api/admin/user-stats', { headers: getAuthHeaders() });
@@ -3002,7 +3154,7 @@ export default function AdminPortal() {
                         rows={4}
                         value={broadcastMessage}
                         onChange={(e) => setBroadcastMessage(e.target.value)}
-                        placeholder="e.g. Pwani Oil just launched a 5% margin boost for all Cooking Oil stockists in Nairobi! Reply with 1 to claim."
+                        placeholder="e.g. Pwani Oil just launched a 5% margin boost for all Cooking Oil stockists in Mombasa! Reply with 1 to claim."
                         className="w-full bg-[#111111] border border-[#1e1e1e] rounded-xl px-4 py-3 text-sm text-[13px] font-mono focus:outline-none focus:border-[#00d4ff]/40 focus:bg-[#1a1a1a] transition-all resize-none text-[#e8e8e8]"
                       />
                       <div className="text-right text-[10px] text-white/20 mt-2 font-mono">{broadcastMessage.length} / 160 chars per SMS segment.</div>
@@ -3020,7 +3172,6 @@ export default function AdminPortal() {
                           <option>Low Stock Merchants (All SKUs)</option>
                           <option>High Volume Merchants (Tier 1)</option>
                           <option>Only Selected Hub Connects</option>
-                          <option>Nairobi Region Specific</option>
                           <option>Mombasa Region Specific</option>
                         </select>
                       </div>
@@ -3334,6 +3485,216 @@ export default function AdminPortal() {
 
                 </div>
 
+              </div>
+            </motion.div>
+          )}
+
+          {activeSection === 'waitlist' && (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+              {/* Header card with KPI stats */}
+              <div className="bg-gradient-to-r from-nx-ink via-[#080c14] to-[#030303] border border-nx-border/50 rounded-2xl p-6 md:p-8">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-white/10 pb-6 mb-6">
+                  <div>
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-[10px] text-amber-500 font-mono uppercase tracking-wider mb-2">
+                      <Mail className="w-3.5 h-3.5" />
+                      Audience Operations & Waitlist
+                    </div>
+                    <h2 className="text-xl md:text-2xl font-bold font-display text-white tracking-tight">
+                      Email Subscribers & Waitlist Management
+                    </h2>
+                    <p className="text-xs text-white/50 font-mono mt-1 max-w-2xl leading-relaxed">
+                      Manage audience subscriptions, trigger welcome automation flows, filter by segment, and export subscribers for operations or email campaigns.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-3">
+                    <button
+                      onClick={fetchWaitlistSubscribers}
+                      disabled={loadingWaitlist}
+                      className="px-3.5 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-mono font-medium text-white flex items-center gap-2 transition-all cursor-pointer"
+                      title="Refresh Subscribers"
+                    >
+                      <RefreshCw className={cn("w-3.5 h-3.5", loadingWaitlist && "animate-spin")} />
+                      Refresh
+                    </button>
+
+                    <button
+                      onClick={() => setShowAddSubModal(true)}
+                      className="px-4 py-2.5 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-500 rounded-xl text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer"
+                    >
+                      <UserPlus className="w-4 h-4" />
+                      Add Subscriber
+                    </button>
+
+                    <button
+                      onClick={exportWaitlistCsv}
+                      className="px-4 py-2.5 bg-[#00ff88]/10 hover:bg-[#00ff88]/20 border border-[#00ff88]/30 text-[#00ff88] rounded-xl text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer shadow-[0_0_15px_rgba(0,255,136,0.1)]"
+                    >
+                      <Download className="w-4 h-4" />
+                      Export CSV
+                    </button>
+                  </div>
+                </div>
+
+                {/* KPI Metrics */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="bg-black/40 border border-white/5 rounded-xl p-4">
+                    <div className="text-[9px] font-mono uppercase tracking-wider text-white/40 mb-1">Total Audience</div>
+                    <div className="text-2xl font-mono font-bold text-white flex items-center gap-2">
+                      {waitlistSubscribers.length}
+                      <span className="text-[10px] text-[#00ff88] bg-[#00ff88]/10 px-2 py-0.5 rounded-full font-sans font-normal">Active</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-black/40 border border-white/5 rounded-xl p-4">
+                    <div className="text-[9px] font-mono uppercase tracking-wider text-white/40 mb-1">General Subscribers</div>
+                    <div className="text-2xl font-mono font-bold text-[#4d9fff]">
+                      {waitlistSubscribers.filter(s => !s.role || s.role === 'subscriber').length}
+                    </div>
+                  </div>
+
+                  <div className="bg-black/40 border border-white/5 rounded-xl p-4">
+                    <div className="text-[9px] font-mono uppercase tracking-wider text-white/40 mb-1">Merchant Applicants</div>
+                    <div className="text-2xl font-mono font-bold text-amber-500">
+                      {waitlistSubscribers.filter(s => s.role === 'merchant_applicant').length}
+                    </div>
+                  </div>
+
+                  <div className="bg-black/40 border border-white/5 rounded-xl p-4">
+                    <div className="text-[9px] font-mono uppercase tracking-wider text-white/40 mb-1">FMCG & Logistics</div>
+                    <div className="text-2xl font-mono font-bold text-purple-400">
+                      {waitlistSubscribers.filter(s => s.role === 'fmcg_partner' || s.role === 'logistics_agent').length}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Filters & Search Toolbar */}
+              <div className="bg-white/[0.03] border border-white/5 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="relative w-full sm:w-80">
+                  <Search className="w-4 h-4 text-white/40 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={waitlistSearch}
+                    onChange={(e) => setWaitlistSearch(e.target.value)}
+                    placeholder="Search by email address or name..."
+                    className="w-full bg-black/40 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs font-mono text-white placeholder:text-white/30 focus:outline-none focus:border-amber-500/50"
+                  />
+                </div>
+
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                  <div className="flex items-center gap-2 text-xs font-mono text-white/50">
+                    <Filter className="w-3.5 h-3.5 text-amber-500" />
+                    <span>Segment:</span>
+                  </div>
+                  <select
+                    value={waitlistRoleFilter}
+                    onChange={(e) => setWaitlistRoleFilter(e.target.value)}
+                    className="bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-amber-500/50"
+                  >
+                    <option value="all">All Segments ({waitlistSubscribers.length})</option>
+                    <option value="subscriber">General Subscribers</option>
+                    <option value="merchant_applicant">Merchant Applicants</option>
+                    <option value="fmcg_partner">FMCG Partners</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Subscribers Table */}
+              <div className="bg-white/[0.03] border border-white/5 rounded-2xl overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-white/10 bg-black/40 text-[10px] font-mono text-white/40 uppercase tracking-wider">
+                        <th className="p-4 font-medium">Subscriber Email</th>
+                        <th className="p-4 font-medium">Name</th>
+                        <th className="p-4 font-medium">Target Segment</th>
+                        <th className="p-4 font-medium">Subscribed Date</th>
+                        <th className="p-4 font-medium text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5 text-xs font-mono text-white/80">
+                      {waitlistSubscribers.filter(sub => {
+                        const matchesSearch = !waitlistSearch || 
+                          sub.email?.toLowerCase().includes(waitlistSearch.toLowerCase()) ||
+                          sub.name?.toLowerCase().includes(waitlistSearch.toLowerCase());
+                        const matchesRole = waitlistRoleFilter === 'all' || sub.role === waitlistRoleFilter;
+                        return matchesSearch && matchesRole;
+                      }).length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="p-8 text-center text-white/40 italic">
+                            {loadingWaitlist ? (
+                              <div className="flex items-center justify-center gap-2">
+                                <Loader2 className="w-4 h-4 animate-spin text-amber-500" />
+                                <span>Loading waitlist subscribers...</span>
+                              </div>
+                            ) : (
+                              "No waitlist subscribers found matching current filters."
+                            )}
+                          </td>
+                        </tr>
+                      ) : (
+                        waitlistSubscribers.filter(sub => {
+                          const matchesSearch = !waitlistSearch || 
+                            sub.email?.toLowerCase().includes(waitlistSearch.toLowerCase()) ||
+                            sub.name?.toLowerCase().includes(waitlistSearch.toLowerCase());
+                          const matchesRole = waitlistRoleFilter === 'all' || sub.role === waitlistRoleFilter;
+                          return matchesSearch && matchesRole;
+                        }).map((sub) => (
+                          <tr key={sub.id} className="hover:bg-white/[0.02] transition-colors">
+                            <td className="p-4 font-bold text-white flex items-center gap-2">
+                              <Mail className="w-3.5 h-3.5 text-amber-500/70" />
+                              {sub.email}
+                            </td>
+                            <td className="p-4 text-white/60">
+                              {sub.name || <span className="text-white/20 italic">Not specified</span>}
+                            </td>
+                            <td className="p-4">
+                              <span className={cn(
+                                "px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider",
+                                sub.role === 'merchant_applicant' 
+                                  ? "bg-amber-500/10 text-amber-500 border border-amber-500/20"
+                                  : sub.role === 'fmcg_partner'
+                                  ? "bg-purple-500/10 text-purple-400 border border-purple-500/20"
+                                  : "bg-blue-500/10 text-blue-400 border border-blue-500/20"
+                              )}>
+                                {sub.role === 'merchant_applicant' ? 'Merchant' : sub.role === 'fmcg_partner' ? 'FMCG' : 'Subscriber'}
+                              </span>
+                            </td>
+                            <td className="p-4 text-white/40 text-[11px]">
+                              {sub.subscribed_at ? new Date(sub.subscribed_at).toLocaleString() : 'N/A'}
+                            </td>
+                            <td className="p-4 text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                <button
+                                  onClick={() => handleSendWelcomeEmail(sub)}
+                                  disabled={sendingEmailId === sub.id}
+                                  className="px-2.5 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer"
+                                  title="Dispatches welcome automation email via Resend"
+                                >
+                                  {sendingEmailId === sub.id ? (
+                                    <Loader2 className="w-3 h-3 animate-spin" />
+                                  ) : (
+                                    <Send className="w-3 h-3" />
+                                  )}
+                                  <span>Send Email</span>
+                                </button>
+
+                                <button
+                                  onClick={() => handleDeleteSubscriber(sub.id, sub.email)}
+                                  className="p-1.5 text-red-400/60 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all cursor-pointer"
+                                  title="Delete Subscriber"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </motion.div>
           )}
@@ -4647,7 +5008,7 @@ export default function AdminPortal() {
                 <input 
                   type="text" 
                   value={selectedApp.location}
-                  placeholder="e.g., Nairobi, Westlands"
+                  placeholder="e.g., Mombasa, Nyali"
                   onChange={(e) => setSelectedApp({...selectedApp, location: e.target.value})}
                   className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-xs text-white focus:outline-none focus:border-[#00ff88]/50 transition-all font-mono"
                 />
@@ -4679,6 +5040,96 @@ export default function AdminPortal() {
                 Certify Now
               </button>
             </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Add Subscriber Modal */}
+      {showAddSubModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-[#0f1118] border border-white/10 rounded-2xl p-6 md:p-8 max-w-md w-full shadow-2xl relative"
+          >
+            <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500">
+                  <UserPlus className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-display font-bold text-lg text-white">Add Waitlist Subscriber</h3>
+                  <p className="text-xs text-white/40 font-mono">Manual audience entry</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowAddSubModal(false)}
+                className="text-white/40 hover:text-white p-1 rounded-lg hover:bg-white/5 transition-all cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddSubscriber} className="space-y-4">
+              <div>
+                <label className="block text-[10px] font-mono uppercase text-white/50 tracking-wider mb-1.5">
+                  Email Address <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={newSubEmail}
+                  onChange={(e) => setNewSubEmail(e.target.value)}
+                  placeholder="e.g. subscriber@domain.com"
+                  className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-xs font-mono text-white focus:outline-none focus:border-amber-500/50"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-mono uppercase text-white/50 tracking-wider mb-1.5">
+                  Subscriber Name (Optional)
+                </label>
+                <input
+                  type="text"
+                  value={newSubName}
+                  onChange={(e) => setNewSubName(e.target.value)}
+                  placeholder="e.g. Jane Doe"
+                  className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-xs font-mono text-white focus:outline-none focus:border-amber-500/50"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-mono uppercase text-white/50 tracking-wider mb-1.5">
+                  Audience Segment
+                </label>
+                <select
+                  value={newSubRole}
+                  onChange={(e) => setNewSubRole(e.target.value)}
+                  className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-xs font-mono text-white focus:outline-none focus:border-amber-500/50"
+                >
+                  <option value="subscriber">General Network Subscriber</option>
+                  <option value="merchant_applicant">Merchant Applicant</option>
+                  <option value="fmcg_partner">FMCG Supply Partner</option>
+                </select>
+              </div>
+
+              <div className="pt-4 flex items-center justify-end gap-3 border-t border-white/10">
+                <button
+                  type="button"
+                  onClick={() => setShowAddSubModal(false)}
+                  className="px-4 py-2.5 rounded-xl border border-white/10 text-xs font-mono text-white/60 hover:text-white hover:bg-white/5 transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 bg-amber-500 text-black hover:bg-amber-400 font-mono font-bold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-[0_0_15px_rgba(245,158,11,0.3)]"
+                >
+                  Add Subscriber
+                </button>
+              </div>
+            </form>
           </motion.div>
         </div>
       )}

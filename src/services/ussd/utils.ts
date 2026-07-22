@@ -71,6 +71,49 @@ export async function hashPin(pin: string, phone: string): Promise<string> {
   return crypto.createHash("sha256").update(pin + phone).digest("hex");
 }
 
+export async function verifyPin(pin: string, hash: string | null | undefined, phone: string = ""): Promise<boolean> {
+  if (!hash) return false;
+  if (hash === pin) return true;
+
+  try {
+    const phoneWithPlus = phone.startsWith("+") ? phone : `+${phone}`;
+    const phoneWithoutPlus = phone.replace(/^\+/, "");
+
+    const shaWithPlus = crypto.createHash("sha256").update(pin + phoneWithPlus).digest("hex");
+    if (hash === shaWithPlus) return true;
+
+    const shaWithoutPlus = crypto.createHash("sha256").update(pin + phoneWithoutPlus).digest("hex");
+    if (hash === shaWithoutPlus) return true;
+
+    const shaAlone = crypto.createHash("sha256").update(pin).digest("hex");
+    if (hash === shaAlone) return true;
+  } catch (e) {
+    // Ignore hashing error
+  }
+
+  try {
+    const { data, error } = await supabase.rpc("verify_password", { password: pin, hash });
+    if (!error && data === true) return true;
+  } catch (e) {
+    // Ignore bcrypt salt format mismatch
+  }
+
+  return false;
+}
+
+export function normalizePhoneNumber(phone: string): string {
+  if (!phone) return '';
+  let clean = phone.trim().replace(/\s+/g, '').replace(/[-()]/g, '');
+  if (clean.startsWith('0')) {
+    clean = '+254' + clean.slice(1);
+  } else if (/^[17]\d{8}$/.test(clean)) {
+    clean = '+254' + clean;
+  } else if (clean.startsWith('254') && !clean.startsWith('+')) {
+    clean = '+' + clean;
+  }
+  return clean;
+}
+
 export function merchantMenuStr(user: any, lang: string): string {
   let menu = t(lang, "merchant_menu");
   menu += lang === "en" ? "\n4 Confirm Delivery" : "\n4 Thibitisha Mzigo";

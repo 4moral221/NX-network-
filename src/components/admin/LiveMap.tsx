@@ -136,7 +136,7 @@ export default function LiveMap({ hideStaffAndNX = false }: LiveMapProps = {}) {
 
   // Google Maps & Geolocation Controls
   const [mapProvider, setMapProvider] = useState<'google' | 'leaflet'>(hasGoogleMapsKey ? 'google' : 'leaflet');
-  const [mapCenter, setMapCenter] = useState<{ lat: number, lng: number }>({ lat: -1.2864, lng: 36.8172 });
+  const [mapCenter, setMapCenter] = useState<{ lat: number, lng: number }>({ lat: -4.0352, lng: 39.6716 });
   const [mapZoom, setMapZoom] = useState(7);
   const [selectedPin, setSelectedPin] = useState<any | null>(null);
   const [geolocating, setGeolocating] = useState(false);
@@ -175,8 +175,8 @@ export default function LiveMap({ hideStaffAndNX = false }: LiveMapProps = {}) {
     if (error) return;
 
     const processed = staff.map(s => {
-      const latVal = parseCoordinate(s.latitude) ?? (-1.2864 + (Math.random() - 0.5) * 0.5);
-      const lngVal = parseCoordinate(s.longitude) ?? (36.8172 + (Math.random() - 0.5) * 0.5);
+      const latVal = parseCoordinate(s.latitude) ?? (-4.0352 + (Math.random() - 0.5) * 0.5);
+      const lngVal = parseCoordinate(s.longitude) ?? (39.6716 + (Math.random() - 0.5) * 0.5);
       return {
         id: s.id,
         name: s.name || 'Staff',
@@ -218,8 +218,8 @@ export default function LiveMap({ hideStaffAndNX = false }: LiveMapProps = {}) {
 
     const processed = users.map(u => {
       const coords = getCoordinates(u.location);
-      const latVal = parseCoordinate(u.latitude) ?? parseCoordinate(coords?.lat) ?? (-1.2864 + (Math.random() - 0.5) * 0.5);
-      const lngVal = parseCoordinate(u.longitude) ?? parseCoordinate(coords?.lng) ?? (36.8172 + (Math.random() - 0.5) * 0.5);
+      const latVal = parseCoordinate(u.latitude) ?? parseCoordinate(coords?.lat) ?? (-4.0352 + (Math.random() - 0.5) * 0.5);
+      const lngVal = parseCoordinate(u.longitude) ?? parseCoordinate(coords?.lng) ?? (39.6716 + (Math.random() - 0.5) * 0.5);
       return {
         id: u.id,
         merchant_code: u.merchant_code,
