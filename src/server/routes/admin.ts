@@ -368,8 +368,7 @@ router.post('/api/admin/purge_test_data', requireAdmin, async (req, res) => {
           console.log('[Purge Data] Purging non-admin users');
           await supabase.from('users').delete().eq('is_admin', false);
           
-          // Re-sync balances for admins
-          await supabase.from('users').update({ nx_balance: 0 }).neq('id', '00000000-0000-0000-0000-000000000000');
+          // Non-admin users purged successfully
         } catch (ue: any) {
           console.warn('[Purge Data] Non-blocking user purge warning:', ue.message);
         }

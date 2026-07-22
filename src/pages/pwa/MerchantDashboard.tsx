@@ -324,46 +324,17 @@ export default function MerchantDashboard({ user, onLogout }: { user: any, onLog
         if (ledErr) throw ledErr;
       }
 
-      // 3. Update Parent's User Balance
-      const { data: parentAccount } = await supabase
-        .from('users')
-        .select('nx_balance')
-        .eq('phone', parentPhone)
-        .maybeSingle();
-
-      const currentParentBal = Number(parentAccount?.nx_balance || 0);
-      const parentNewBal = currentParentBal + nxEarned - nxRedeem;
-
-      const { error: parentUpdateErr } = await supabase
-        .from('users')
-        .update({
-          nx_balance: parentNewBal,
-          is_first_purchase_used: true,
-          cancellation_count: 0
-        })
-        .eq('phone', parentPhone);
-
-      if (parentUpdateErr) throw parentUpdateErr;
-
-      // 4. Update Merchant's User Balance
-      if (nxRedeem > 0) {
-        const { data: merchantAccount } = await supabase
-          .from('users')
-          .select('nx_balance')
-          .eq('phone', user.phone)
-          .maybeSingle();
-
-        const currentMerchantBal = Number(merchantAccount?.nx_balance || 0);
-        const newMerchantBal = currentMerchantBal + nxRedeem;
-
-        const { error: merchUpdateErr } = await supabase
+      // Update parent onboarding flags
+      try {
+        await supabase
           .from('users')
           .update({
-            nx_balance: newMerchantBal
+            is_first_purchase_used: true,
+            cancellation_count: 0
           })
-          .eq('phone', user.phone);
-
-        if (merchUpdateErr) throw merchUpdateErr;
+          .eq('phone', parentPhone);
+      } catch (e) {
+        // non-blocking onboarding flag update
       }
 
       toast.success("Family Code transaction processed successfully!");
@@ -732,151 +703,88 @@ export default function MerchantDashboard({ user, onLogout }: { user: any, onLog
         return;
       }
 
-      const { customer_phone, nx_earned = 0, nx_redeemed = 0, transaction_code, merchant_phone } = pendingTxn;
+      const { customer_phone, nx_earned = 0, nx_redeemed = 0, nx_fee = 0, transaction_code, merchant_phone } = pendingTxn;
 
-      // 1. Try to set to 'completed' which triggers the DB function handle_transaction_completion
+      let targetDebitPhone = customer_phone;
+      if (pendingTxn.family_code) {
+        const { data: family } = await supabase
+          .from('family_accounts')
+          .select('parent_phone')
+          .eq('family_code', pendingTxn.family_code)
+          .maybeSingle();
+        if (family?.parent_phone) {
+          targetDebitPhone = family.parent_phone;
+        }
+      }
+
+      // 1. Build ledger entries
+      const entries = [];
+      if (Number(nx_earned) > 0) {
+        entries.push({
+          account_phone: customer_phone,
+          entry_type: 'credit',
+          amount: Number(nx_earned),
+          reference: transaction_code,
+          expires_at: new Date(Date.now() + 60 * 24 * 3600 * 1000).toISOString()
+        });
+      }
+      if (Number(nx_redeemed) > 0) {
+        entries.push({
+          account_phone: targetDebitPhone,
+          entry_type: 'debit',
+          amount: -Number(nx_redeemed),
+          reference: transaction_code,
+          expires_at: new Date(Date.now() + 60 * 24 * 3600 * 1000).toISOString()
+        });
+        entries.push({
+          account_phone: merchant_phone || pendingTxn.merchant_phone,
+          entry_type: 'credit',
+          amount: Number(nx_redeemed),
+          reference: transaction_code,
+          expires_at: new Date(Date.now() + 99 * 365 * 24 * 3600 * 1000).toISOString()
+        });
+      }
+      if (Number(nx_fee) > 0) {
+        entries.push({
+          account_phone: merchant_phone || pendingTxn.merchant_phone,
+          entry_type: 'debit',
+          amount: -Number(nx_fee),
+          reference: transaction_code,
+          expires_at: new Date(Date.now() + 99 * 365 * 24 * 3600 * 1000).toISOString()
+        });
+      }
+
+      // 2. Write ledger entries FIRST
+      if (entries.length > 0) {
+        const { error: ledErr } = await supabase.from("ledger_entries").insert(entries);
+        if (ledErr) {
+          console.error("Ledger entries insert failed:", ledErr);
+          throw ledErr;
+        }
+      }
+
+      // 3. Mark transaction confirmed ONLY AFTER successful ledger writes
       const { error: updateErr } = await supabase
         .from('transactions')
-        .update({ status: 'completed' })
+        .update({ status: 'confirmed' })
         .eq('id', txnId);
-      
+
       if (updateErr) {
-        if (updateErr.message?.includes('last_transaction_at') || updateErr.code === '42703') {
-          console.warn("DB Trigger failing due to missing last_transaction_at. Falling back to manual finalization.");
-          
-          // Fallback: If DB trigger fails due to schema drift, we finalize manually.
-          // We use 'confirmed' as a terminal state that bypasses the broken 'completed' trigger.
-          const { error: fallbackErr } = await supabase
-            .from('transactions')
-            .update({ status: 'confirmed' })
-            .eq('id', txnId);
-          
-          if (fallbackErr) throw fallbackErr;
+        console.error("Transaction status update failed:", updateErr);
+        throw updateErr;
+      }
 
-          // Manual Ledger Entries (mirrors handle_transaction_completion trigger)
-          let targetDebitPhone = customer_phone;
-          if (pendingTxn.family_code) {
-            const { data: family } = await supabase
-              .from('family_accounts')
-              .select('parent_phone')
-              .eq('family_code', pendingTxn.family_code)
-              .maybeSingle();
-            if (family?.parent_phone) {
-              targetDebitPhone = family.parent_phone;
-            }
-          }
-
-          const entries = [];
-          if (nx_earned > 0) {
-            entries.push({
-              account_phone: customer_phone,
-              entry_type: 'credit',
-              amount: nx_earned,
-              reference: transaction_code,
-              expires_at: new Date(Date.now() + 60 * 24 * 3600 * 1000).toISOString()
-            });
-          }
-          if (nx_redeemed > 0) {
-            entries.push({
-              account_phone: targetDebitPhone,
-              entry_type: 'debit',
-              amount: -nx_redeemed,
-              reference: transaction_code,
-              expires_at: new Date(Date.now() + 60 * 24 * 3600 * 1000).toISOString()
-            });
-            // Credit merchant for customer redemption
-            entries.push({
-              account_phone: merchant_phone || pendingTxn.merchant_phone,
-              entry_type: 'credit',
-              amount: nx_redeemed,
-              reference: transaction_code,
-              expires_at: new Date(Date.now() + 99 * 365 * 24 * 3600 * 1000).toISOString()
-            });
-          }
-
-          if (entries.length) {
-            await supabase.from("ledger_entries").insert(entries);
-          }
-
-          // Update Customer Balance and first purchase
-          if (customer_phone) {
-            const { data: debitUser } = await supabase
-              .from('users')
-              .select('nx_balance')
-              .eq('phone', targetDebitPhone)
-              .maybeSingle();
-
-            const currentBal = Number(debitUser?.nx_balance || 0);
-            const parentNewBal = currentBal - Number(nx_redeemed);
-
-            await supabase
-              .from('users')
-              .update({ nx_balance: parentNewBal })
-              .eq('phone', targetDebitPhone);
-
-            if (targetDebitPhone !== customer_phone) {
-              const { data: childUser } = await supabase
-                .from('users')
-                .select('nx_balance')
-                .eq('phone', customer_phone)
-                .maybeSingle();
-              const childNewBal = Number(childUser?.nx_balance || 0) + Number(nx_earned);
-              await supabase
-                .from('users')
-                .update({
-                  nx_balance: childNewBal,
-                  is_first_purchase_used: true,
-                  cancellation_count: 0
-                })
-                .eq('phone', customer_phone);
-            } else {
-              const childNewBal = currentBal + (Number(nx_earned) - Number(nx_redeemed));
-              await supabase
-                .from('users')
-                .update({
-                  nx_balance: childNewBal,
-                  is_first_purchase_used: true,
-                  cancellation_count: 0
-                })
-                .eq('phone', customer_phone);
-            }
-          }
-
-          // Update Merchant Balance
-          const mPhone = merchant_phone || pendingTxn.merchant_phone;
-          if (mPhone && nx_redeemed > 0) {
-            const { data: merchantUser } = await supabase
-              .from('users')
-              .select('nx_balance')
-              .eq('phone', mPhone)
-              .maybeSingle();
-
-            const currentMerchantBal = Number(merchantUser?.nx_balance || 0);
-            const newMerchantBal = currentMerchantBal + Number(nx_redeemed);
-
-            await supabase
-              .from('users')
-              .update({
-                nx_balance: newMerchantBal
-              })
-              .eq('phone', mPhone);
-          }
-        } else {
-          throw updateErr;
-        }
-      } else {
-        // Normal success: Update customer first purchase without last_transaction_at just in case
-        if (customer_phone) {
-          try {
-            await supabase.from('users')
-              .update({ 
-                is_first_purchase_used: true,
-                cancellation_count: 0
-              })
-              .eq('phone', customer_phone);
-          } catch (e) {
-            console.error("Normal update first purchase failed:", e);
-          }
+      // Update onboarding flag for customer if applicable
+      if (customer_phone) {
+        try {
+          await supabase.from('users')
+            .update({ 
+              is_first_purchase_used: true,
+              cancellation_count: 0
+            })
+            .eq('phone', customer_phone);
+        } catch (e) {
+          // non-blocking onboarding flag update
         }
       }
 
