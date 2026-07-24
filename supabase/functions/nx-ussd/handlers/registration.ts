@@ -24,7 +24,7 @@ async function handleCustomerRegistration(phoneNumber: string, lang: string, par
     const pin = parts[5].trim();
     if (!isValidPin(pin)) return `CON ${t(lang, "set_pin")}\nInvalid PIN`;
     const hashedPin = await hashPin(pin, phoneNumber);
-    const { error } = await supabase.from("users").insert({ phone: phoneNumber, name: parts[3].trim(), national_id: parts[4].trim().toUpperCase(), recovery_pin: hashedPin, role: "customer", status: "active", language: lang });
+    const { error } = await supabase.from("users").insert({ phone: phoneNumber, name: parts[3].trim(), national_id: parts[4].trim().toUpperCase(), recovery_pin: hashedPin, role: "customer", status: "active", language: lang, franchise_tier: null, acceptance_percent: null });
     if (error) return `END ${t(lang, "reg_failed")}`;
     return `END ${t(lang, "welcome_customer", { name: parts[3].trim() })}`;
   }

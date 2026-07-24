@@ -110,6 +110,8 @@ export function normalizePhoneNumber(phone: string): string {
     clean = '+254' + clean;
   } else if (clean.startsWith('254') && !clean.startsWith('+')) {
     clean = '+' + clean;
+  } else if (!clean.startsWith('+') && clean.length > 0) {
+    clean = '+' + clean;
   }
   return clean;
 }

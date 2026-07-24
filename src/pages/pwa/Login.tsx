@@ -153,15 +153,17 @@ export default function Login({ onLogin }: { onLogin: (user: any) => void }) {
       return;
     }
 
-    // Normalize phone number: remove +, remove spaces, convert 07... to 2547...
-    let normalizedPhone = phone.replace(/\D/g, '');
-    if (normalizedPhone.startsWith('0')) {
-      normalizedPhone = '254' + normalizedPhone.substring(1);
-    } else if (normalizedPhone.startsWith('254')) {
-      // already in 254 format
-    } else if (normalizedPhone.length === 9) {
-      // assume it's 7XXXXXXXX
-      normalizedPhone = '254' + normalizedPhone;
+    // Normalize phone number to canonical +254 format
+    let clean = phone.trim().replace(/\s+/g, '').replace(/[-()]/g, '');
+    let normalizedPhone = clean;
+    if (clean.startsWith('0')) {
+      normalizedPhone = '+254' + clean.slice(1);
+    } else if (/^[17]\d{8}$/.test(clean)) {
+      normalizedPhone = '+254' + clean;
+    } else if (clean.startsWith('254') && !clean.startsWith('+')) {
+      normalizedPhone = '+' + clean;
+    } else if (!clean.startsWith('+')) {
+      normalizedPhone = '+' + clean;
     }
 
     // Check if Supabase is configured
@@ -193,6 +195,18 @@ export default function Login({ onLogin }: { onLogin: (user: any) => void }) {
       }
       
       const safeUser = data.user;
+
+      if (data.access_token) {
+        localStorage.setItem('nx_pwa_token', data.access_token);
+        try {
+          await supabase.auth.setSession({
+            access_token: data.access_token,
+            refresh_token: data.access_token,
+          });
+        } catch (_sessErr) {
+          // Non-critical if setSession throws on custom JWT format without refresh token
+        }
+      }
 
       if (rememberMe) {
         localStorage.setItem('nx_pwa_phone', safeUser.phone);

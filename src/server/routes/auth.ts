@@ -599,22 +599,37 @@ router.post('/api/auth/verify-otp', authLimiter, async (req, res) => {
       res.status(500).json({ success: false, error: err.message });
     }
   });
+function normalizePhone(rawPhone: string): { e164: string; withoutPlus: string; local: string } {
+  if (!rawPhone) return { e164: '', withoutPlus: '', local: '' };
+  let clean = rawPhone.trim().replace(/\s+/g, '').replace(/[-()]/g, '');
+  let e164 = clean;
+  if (clean.startsWith('0')) {
+    e164 = '+254' + clean.slice(1);
+  } else if (/^[17]\d{8}$/.test(clean)) {
+    e164 = '+254' + clean;
+  } else if (clean.startsWith('254') && !clean.startsWith('+')) {
+    e164 = '+' + clean;
+  } else if (!clean.startsWith('+') && clean.length > 0) {
+    e164 = '+' + clean;
+  }
+  const withoutPlus = e164.replace(/^\+/, '');
+  const local = e164.startsWith('+254') ? '0' + e164.substring(4) : e164;
+  return { e164, withoutPlus, local };
+}
+
 router.post('/api/auth/send-pwa-otp', authLimiter, async (req, res) => {
     try {
       const { phone } = req.body;
       if (!phone) return res.status(400).json({ success: false, error: 'Phone number is required' });
 
       // Clean/Normalize phone number
-      let normalizedPhone = phone.replace(/\D/g, '');
-      if (normalizedPhone.startsWith('0')) {
-        normalizedPhone = '254' + normalizedPhone.substring(1);
-      }
+      const { e164, withoutPlus, local } = normalizePhone(phone);
 
       // Check user existence
       const { data: user, error: userErr } = await supabase
         .from('users')
         .select('id, name, phone')
-        .or(`phone.eq.${normalizedPhone},phone.eq.+${normalizedPhone}`)
+        .or(`phone.eq.${e164},phone.eq.${withoutPlus},phone.eq.${local}`)
         .maybeSingle();
 
       if (userErr) {
@@ -632,10 +647,10 @@ router.post('/api/auth/send-pwa-otp', authLimiter, async (req, res) => {
       // Save to onboarding DB
       const db = loadOnboardingDB();
       if (!db.otps) db.otps = {};
-      db.otps[normalizedPhone] = { otp, expiresAt, type: 'pwa_pin_reset' };
+      db.otps[e164] = { otp, expiresAt, type: 'pwa_pin_reset' };
       saveOnboardingDB(db);
 
-      console.log(`[PWA PIN Reset] Generated OTP ${otp} for subscriber ${normalizedPhone}`);
+      console.log(`[PWA PIN Reset] Generated OTP ${otp} for subscriber ${e164}`);
 
       // AT credentials
       const atApiKey = process.env.AT_API_KEY || '';
@@ -649,7 +664,7 @@ router.post('/api/auth/send-pwa-otp', authLimiter, async (req, res) => {
             ? 'https://api.sandbox.africastalking.com/version1/messaging' 
             : 'https://api.africastalking.com/version1/messaging';
 
-          const formattedTo = normalizedPhone.startsWith('+') ? normalizedPhone : `+${normalizedPhone}`;
+          const formattedTo = e164;
 
           const params = new URLSearchParams();
           params.append('username', atUsername);
@@ -699,15 +714,12 @@ router.post('/api/auth/pwa-login', authLimiter, async (req, res) => {
         return res.status(400).json({ success: false, error: 'Phone and PIN are required' });
       }
 
-      let normalizedPhone = phone.replace(/\D/g, '');
-      if (normalizedPhone.startsWith('254')) normalizedPhone = normalizedPhone;
-      else if (normalizedPhone.startsWith('0')) normalizedPhone = '254' + normalizedPhone.substring(1);
-      else if (normalizedPhone.length === 9) normalizedPhone = '254' + normalizedPhone;
+      const { e164, withoutPlus, local } = normalizePhone(phone);
 
       const { data: users, error: dbError } = await supabase
         .from('users')
         .select('*')
-        .or(`phone.eq.${normalizedPhone},phone.eq.+${normalizedPhone}`)
+        .or(`phone.eq.${e164},phone.eq.${withoutPlus},phone.eq.${local}`)
         .limit(1);
 
       if (dbError) {
@@ -740,15 +752,30 @@ router.post('/api/auth/pwa-login', authLimiter, async (req, res) => {
       delete safeUser.recovery_pin;
 
       // Generate Custom Supabase-compatible JWT if Secret is configured
-      const jwtSecret = process.env.SUPABASE_JWT_SECRET;
+      const jwtSecret = process.env.SUPABASE_JWT_SECRET || process.env.JWT_SECRET || "super-secret-jwt-key-with-at-least-32-characters-long!";
       let token = undefined;
-      if (jwtSecret) {
+      try {
+        const expiresSeconds = 14 * 24 * 3600; // 14 days
         token = jwt.sign({
-          role: 'authenticated',
+          aud: 'authenticated',
+          exp: Math.floor(Date.now() / 1000) + expiresSeconds,
           sub: user.id,
+          role: 'authenticated',
+          email: `${user.phone}@pwa.nxnetwork.company`,
           phone: user.phone,
-          roleType: user.role
-        }, jwtSecret, { expiresIn: '7d' });
+          app_metadata: {
+            provider: 'pwa_phone',
+            providers: ['pwa_phone'],
+            user_role: user.role
+          },
+          user_metadata: {
+            name: user.name,
+            role: user.role,
+            merchant_code: user.merchant_code
+          }
+        }, jwtSecret);
+      } catch (jwtErr: any) {
+        console.warn("JWT signing error during pwa-login:", jwtErr.message);
       }
 
       res.json({ success: true, user: safeUser, access_token: token });
@@ -767,14 +794,11 @@ router.post('/api/auth/reset-pwa-pin', async (req, res) => {
         return res.status(400).json({ success: false, error: 'PIN must be exactly 4 digits.' });
       }
 
-      let normalizedPhone = phone.replace(/\D/g, '');
-      if (normalizedPhone.startsWith('0')) {
-        normalizedPhone = '254' + normalizedPhone.substring(1);
-      }
+      const { e164, withoutPlus, local } = normalizePhone(phone);
 
       // Verify OTP in DB
       const db = loadOnboardingDB();
-      const record = db.otps?.[normalizedPhone];
+      const record = db.otps?.[e164] || db.otps?.[withoutPlus] || db.otps?.[local];
 
       if (!record) return res.status(400).json({ success: false, error: 'No OTP session found or expired' });
       if (Date.now() > record.expiresAt) return res.status(400).json({ success: false, error: 'OTP has expired.' });
@@ -788,7 +812,7 @@ router.post('/api/auth/reset-pwa-pin', async (req, res) => {
       const { data, error: updateErr } = await supabase
         .from('users')
         .update({ recovery_pin: computedHash })
-        .eq('phone', normalizedPhone);
+        .or(`phone.eq.${e164},phone.eq.${withoutPlus},phone.eq.${local}`);
 
       if (updateErr) {
         return res.status(500).json({ success: false, error: `Failed to update credentials: ${updateErr.message}` });
@@ -796,7 +820,9 @@ router.post('/api/auth/reset-pwa-pin', async (req, res) => {
 
       // Consume OTP if verified from DB
       if (record && db.otps) {
-        delete db.otps[normalizedPhone];
+        delete db.otps[e164];
+        delete db.otps[withoutPlus];
+        delete db.otps[local];
         saveOnboardingDB(db);
       }
 
@@ -812,12 +838,13 @@ router.post('/api/auth/merchant-login', authLimiter, async (req, res) => {
       if (!phone || !password) return res.status(400).json({ success: false, error: 'Phone/code and password are required' });
 
       const cleanInput = String(phone).trim();
+      const { e164, withoutPlus, local } = normalizePhone(cleanInput);
       
       // Look up user by phone or merchant_code
       const { data: user, error: err2 } = await supabase
         .from('users')
         .select('id, dashboard_password, role, status, merchant_code, phone')
-        .or(`phone.eq.${cleanInput},merchant_code.eq.${cleanInput}`)
+        .or(`phone.eq.${e164},phone.eq.${withoutPlus},phone.eq.${local},phone.eq.${cleanInput},merchant_code.eq.${cleanInput}`)
         .maybeSingle();
 
       if (err2 || !user) return res.status(401).json({ success: false, error: 'User not found' });

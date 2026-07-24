@@ -21,12 +21,20 @@ async function sendOtpSms(phone: string, otp: string) {
 }
 
 async function isHighRisk(phoneNumber: string): Promise<boolean> {
-  const { data: user } = await supabase.from("users").select("created_at, nx_balance").eq("phone", phoneNumber).single();
+  const { data: user } = await supabase.from("users").select("created_at").eq("phone", phoneNumber).single();
   if (!user) return true;
   const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
   if (new Date(user.created_at) > thirtyDaysAgo) return true;
-  if (Number(user.nx_balance) > 5000) return true;
-  const now = new Date(); const eatHour = now.getUTCHours() + 3;
+  
+  const { data: ledgerRes } = await supabase
+    .from("ledger_entries")
+    .select("amount")
+    .eq("account_phone", phoneNumber)
+    .gt("expires_at", new Date().toISOString());
+  const balance = ledgerRes?.reduce((s, x) => s + Number(x.amount || 0), 0) || 0;
+  if (balance > 5000) return true;
+
+  const now = new Date(); const eatHour = (now.getUTCHours() + 3) % 24;
   if (eatHour >= 1 && eatHour < 4) return true;
   const oneHourAgo = new Date(Date.now() - 60 * 60000).toISOString();
   const { count } = await supabase.from("nx_logs").select("*", { count: 'exact', head: true }).eq("phone", phoneNumber).eq("context", "PIN_RESET_FAILED").gte("created_at", oneHourAgo);

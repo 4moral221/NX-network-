@@ -4,6 +4,7 @@ import cors from "cors";
 import { apiLimiter } from "./src/server/core";
 import adminRouter from "./src/server/routes/admin";
 import authRouter from "./src/server/routes/auth";
+import devAuthRouter from "./src/server/routes/dev_auth";
 import familyAccountsRouter from "./src/server/routes/family_accounts";
 import fmcgRouter from "./src/server/routes/fmcg";
 import geminiRouter from "./src/server/routes/gemini";
@@ -32,6 +33,7 @@ app.use((req, res, next) => {
 
 app.use(adminRouter);
 app.use(authRouter);
+app.use(devAuthRouter);
 app.use(familyAccountsRouter);
 app.use(fmcgRouter);
 app.use(geminiRouter);

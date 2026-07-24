@@ -1,0 +1,20 @@
+[
+  {
+    "token": "dev_sess_2aa7a97f1b3015cc0e0e7fcb381cb23545b3749409ff2bd3",
+    "user_id": "dev_usr_1784895414822_4fe75276",
+    "email": "dev_test_user@example.com",
+    "expires_at": 1787487415083
+  },
+  {
+    "token": "dev_sess_835aa0162a97d3c90e42208b8f63d7c45139bd6134acca68",
+    "user_id": "dev_usr_1784895414822_4fe75276",
+    "email": "dev_test_user@example.com",
+    "expires_at": 1787487415264
+  },
+  {
+    "token": "dev_sess_eba941bed51aa87901a74a613a187256e8a7935f1a4f360d",
+    "user_id": "dev_usr_1784895709504_542e64c9",
+    "email": "dev_unified_test@example.com",
+    "expires_at": 1787487709869
+  }
+]

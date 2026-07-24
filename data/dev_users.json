@@ -1,0 +1,32 @@
+[
+  {
+    "id": "dev_usr_1784895414822_4fe75276",
+    "email": "dev_test_user@example.com",
+    "password_hash": "$2b$10$I24Y.hO.2/wYgieqB.c3/OT5KywJTtjf1.mN4zpb1oDEkahH/XeoC",
+    "verified": true,
+    "magic_token": null,
+    "magic_token_expires_at": null,
+    "created_at": "2026-07-24T12:16:54.822Z",
+    "updated_at": "2026-07-24T12:16:55.082Z"
+  },
+  {
+    "id": "dev_usr_1784895638952_845c1087",
+    "email": "formidablefoe254@gmail.com",
+    "password_hash": "$2b$10$LVxMP1GsjCZ3ZbEGWQu9uOsZnvvvHJ7XL8tJNl2Oi9P866RZDs4L.",
+    "verified": false,
+    "magic_token": "dev_ml_6324faa66108a2569394e006bcd67b2c0944439d0928c707",
+    "magic_token_expires_at": "2026-07-25T12:20:38.952Z",
+    "created_at": "2026-07-24T12:20:38.952Z",
+    "updated_at": "2026-07-24T12:20:38.952Z"
+  },
+  {
+    "id": "dev_usr_1784895709504_542e64c9",
+    "email": "dev_unified_test@example.com",
+    "password_hash": "$2b$10$H3P54J/Ed/rYTNimgQp0Ve9fLtV6VZg.mLOQ4LMWZkK7fz.fPOEI2",
+    "verified": true,
+    "magic_token": null,
+    "magic_token_expires_at": null,
+    "created_at": "2026-07-24T12:21:49.504Z",
+    "updated_at": "2026-07-24T12:21:49.869Z"
+  }
+]

@@ -1,0 +1,16 @@
+[
+  {
+    "email": "testuser@example.com",
+    "role": "subscriber",
+    "phone": "",
+    "name": "Test User",
+    "subscribedAt": "2026-07-24T12:07:32.306Z"
+  },
+  {
+    "email": "duka_merchant_test@example.com",
+    "role": "merchant_applicant",
+    "phone": "",
+    "name": "Mama Duka",
+    "subscribedAt": "2026-07-24T12:10:48.902Z"
+  }
+]

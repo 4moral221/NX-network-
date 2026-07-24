@@ -237,6 +237,45 @@ router.post('/api/predict_restock', requireAuth, async (req, res) => {
     }
   });
 
+router.get('/api/landing/waitlist', async (req, res) => {
+  try {
+    const waitlistPath = path.join(process.cwd(), "data", "waitlist.json");
+    let waitlist: any[] = [];
+    if (fs.existsSync(waitlistPath)) {
+      try {
+        waitlist = JSON.parse(fs.readFileSync(waitlistPath, 'utf8'));
+      } catch (err) {
+        console.error("Error reading waitlist.json:", err);
+      }
+    }
+    return res.json({ success: true, data: waitlist });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+router.delete('/api/landing/waitlist/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const waitlistPath = path.join(process.cwd(), "data", "waitlist.json");
+    if (fs.existsSync(waitlistPath)) {
+      let waitlist = JSON.parse(fs.readFileSync(waitlistPath, 'utf8'));
+      waitlist = waitlist.filter((item: any) => item.id !== id && item.email !== id);
+      fs.writeFileSync(waitlistPath, JSON.stringify(waitlist, null, 2), 'utf8');
+    }
+    if (supabase && typeof supabase.from === 'function') {
+      try {
+        await supabase.from('waitlist').delete().or(`id.eq.${id},email.eq.${id}`);
+      } catch (e) {
+        // Ignore if table missing
+      }
+    }
+    return res.json({ success: true });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 router.post('/api/landing/subscribe', async (req, res) => {
   try {
     const { email, role, phone, name } = req.body;
@@ -255,8 +294,8 @@ router.post('/api/landing/subscribe', async (req, res) => {
     const phoneStr = typeof phone === 'string' ? phone.trim() : '';
     const nameStr = typeof name === 'string' ? name.trim() : '';
     
+    // Save to local JSON storage
     const waitlistPath = path.join(process.cwd(), "data", "waitlist.json");
-    
     let waitlist: any[] = [];
     if (fs.existsSync(waitlistPath)) {
       try {
@@ -275,11 +314,13 @@ router.post('/api/landing/subscribe', async (req, res) => {
     }
     
     const newEntry = {
+      id: "sub_" + Date.now() + "_" + Math.random().toString(36).substring(2, 7),
       email: emailLower,
       role: roleStr,
       phone: phoneStr,
       name: nameStr,
-      subscribedAt: new Date().toISOString()
+      subscribedAt: new Date().toISOString(),
+      subscribed_at: new Date().toISOString()
     };
     
     waitlist.push(newEntry);
@@ -290,6 +331,20 @@ router.post('/api/landing/subscribe', async (req, res) => {
     }
     
     fs.writeFileSync(waitlistPath, JSON.stringify(waitlist, null, 2), 'utf8');
+
+    // Also attempt Supabase insert if waitlist table exists
+    if (supabase && typeof supabase.from === 'function') {
+      try {
+        await supabase.from('waitlist').insert({
+          email: emailLower,
+          name: nameStr,
+          role: roleStr,
+          subscribed_at: newEntry.subscribedAt
+        });
+      } catch (sbErr) {
+        // Silently catch if table doesn't exist in Supabase
+      }
+    }
     
     return res.json({ 
       success: true, 

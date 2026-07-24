@@ -1,7 +1,8 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { Menu, X, ArrowUpRight, Smartphone, ShoppingCart, Wallet, CheckCircle2, ArrowRight, BarChart3, ShieldCheck, Activity, Users, Phone, Cpu, Zap, Truck, Layers, MessageSquare, Send, Play, Pause, RefreshCw, FileText, ChevronDown, ChevronUp, Store } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import DeveloperAuthModal from '../../components/DeveloperAuthModal';
 import { cn } from '@/src/lib/utils';
 import { supabase } from '@/src/lib/supabase';
 import { getPortalLink, PORTAL_URLS } from '@/src/lib/constants';
@@ -54,6 +55,21 @@ export default function LandingPage() {
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
   const [openSpec, setOpenSpec] = useState<string | null>(null);
 
+  const navigate = useNavigate();
+  const [showDevAuthModal, setShowDevAuthModal] = useState(false);
+  const [targetDevPath, setTargetDevPath] = useState('/docs');
+
+  const handleDevLinkClick = (e: React.MouseEvent, path: string) => {
+    e.preventDefault();
+    const token = localStorage.getItem('nx_dev_auth_token');
+    if (token) {
+      navigate(path);
+    } else {
+      setTargetDevPath(path);
+      setShowDevAuthModal(true);
+    }
+  };
+
   // Waitlist/Newsletter Form States
   const [waitlistEmail, setWaitlistEmail] = useState('');
   const [waitlistStatus, setWaitlistStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
@@ -75,33 +91,34 @@ export default function LandingPage() {
         return;
       }
 
-      // First check if email already exists
-      const { data: existing } = await supabase
-        .from('waitlist')
-        .select('email')
-        .eq('email', emailLower)
-        .maybeSingle();
-
-      if (existing) {
-        setWaitlistStatus('error');
-        setWaitlistMessage('This email address is already subscribed to network updates!');
-        return;
-      }
-
-      const { error } = await supabase.from('waitlist').insert({
-        email: emailLower,
-        name: '',
-        role: 'subscriber',
-        subscribed_at: new Date().toISOString()
+      const res = await fetch('/api/landing/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailLower, name: '', role: 'subscriber' })
       });
+      const resData = await res.json();
 
-      if (!error) {
+      if (res.ok && resData.success) {
         setWaitlistStatus('success');
         setWaitlistMessage("Thank you for subscribing! You will receive network updates and market insights directly in your inbox.");
         setWaitlistEmail('');
       } else {
-        setWaitlistStatus('error');
-        setWaitlistMessage(error.message || 'Failed to register. Please check your email and try again.');
+        // Fallback to Supabase directly if endpoint fails
+        const { error } = await supabase.from('waitlist').insert({
+          email: emailLower,
+          name: '',
+          role: 'subscriber',
+          subscribed_at: new Date().toISOString()
+        });
+
+        if (!error) {
+          setWaitlistStatus('success');
+          setWaitlistMessage("Thank you for subscribing! You will receive network updates and market insights directly in your inbox.");
+          setWaitlistEmail('');
+        } else {
+          setWaitlistStatus('error');
+          setWaitlistMessage(resData.error || error.message || 'Failed to register. Please check your email and try again.');
+        }
       }
     } catch (err: any) {
       setWaitlistStatus('error');
@@ -2075,19 +2092,31 @@ export default function LandingPage() {
             <div className="text-[10px] uppercase tracking-[0.3em] text-nx-amber mb-6">Developers</div>
             <ul className="space-y-4">
               <li>
-                <Link to="/docs" className="flex items-center gap-2 text-sm text-nx-muted hover:text-nx-amber transition-colors group">
+                <a 
+                  href="/docs" 
+                  onClick={(e) => handleDevLinkClick(e, '/docs')}
+                  className="flex items-center gap-2 text-sm text-nx-muted hover:text-nx-amber transition-colors group cursor-pointer"
+                >
                   API Overview <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </Link>
+                </a>
               </li>
               <li>
-                <Link to="/docs/logistics" className="flex items-center gap-2 text-sm text-nx-muted hover:text-nx-amber transition-colors group">
+                <a 
+                  href="/docs/logistics" 
+                  onClick={(e) => handleDevLinkClick(e, '/docs/logistics')}
+                  className="flex items-center gap-2 text-sm text-nx-muted hover:text-nx-amber transition-colors group cursor-pointer"
+                >
                   Logistics API <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </Link>
+                </a>
               </li>
               <li>
-                <Link to="/docs/sales-analytics" className="flex items-center gap-2 text-sm text-nx-muted hover:text-nx-amber transition-colors group">
+                <a 
+                  href="/docs/sales-analytics" 
+                  onClick={(e) => handleDevLinkClick(e, '/docs/sales-analytics')}
+                  className="flex items-center gap-2 text-sm text-nx-muted hover:text-nx-amber transition-colors group cursor-pointer"
+                >
                   Sales Analytics API <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </Link>
+                </a>
               </li>
             </ul>
           </div>
@@ -2513,6 +2542,15 @@ export default function LandingPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <DeveloperAuthModal
+        isOpen={showDevAuthModal}
+        onClose={() => setShowDevAuthModal(false)}
+        onSuccess={() => {
+          setShowDevAuthModal(false);
+          navigate(targetDevPath);
+        }}
+      />
     </div>
   );
 }

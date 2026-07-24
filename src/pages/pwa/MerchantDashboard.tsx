@@ -80,9 +80,14 @@ export default function MerchantDashboard({ user, onLogout }: { user: any, onLog
       return;
     }
 
-    let normalized = enrollPhone.replace(/\D/g, '');
-    if (normalized.startsWith('0')) {
-      normalized = '254' + normalized.substring(1);
+    let clean = enrollPhone.trim().replace(/\s+/g, '').replace(/[-()]/g, '');
+    let normalized = clean;
+    if (clean.startsWith('0')) {
+      normalized = '+254' + clean.slice(1);
+    } else if (/^[17]\d{8}$/.test(clean)) {
+      normalized = '+254' + clean;
+    } else if (clean.startsWith('254') && !clean.startsWith('+')) {
+      normalized = '+' + clean;
     }
     if (normalized.length < 9) {
       toast.error('Phone number format is invalid.');

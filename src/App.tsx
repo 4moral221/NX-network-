@@ -6,6 +6,7 @@ import { Loader2 } from 'lucide-react';
 import ThemeSwitcher from './components/ThemeSwitcher';
 import NetworkStatus from './components/NetworkStatus';
 import OnboardingScreen from './components/OnboardingScreen';
+import DeveloperGuard from './components/DeveloperGuard';
 
 const LandingPage = lazy(() => import('./pages/landing/LandingPage'));
 const MerchantPortal = lazy(() => import('./pages/merchant/MerchantPortal'));
@@ -230,10 +231,10 @@ export default function App() {
           <Route path="/partners/*" element={<PartnersPortal />} />
           <Route path="/fmcgs/*" element={<FmcgsPortal />} />
           <Route path="/app/*" element={<PwaApp />} />
-          <Route path="/docs/logistics-partners" element={<LogisticsApiDocs />} />
-          <Route path="/docs" element={<ApiDocs />} />
-          <Route path="/docs/logistics" element={<LogisticsApiDocs />} />
-          <Route path="/docs/sales-analytics" element={<SalesAnalyticsApiDocs />} />
+          <Route path="/docs/logistics-partners" element={<DeveloperGuard><LogisticsApiDocs /></DeveloperGuard>} />
+          <Route path="/docs" element={<DeveloperGuard><ApiDocs /></DeveloperGuard>} />
+          <Route path="/docs/logistics" element={<DeveloperGuard><LogisticsApiDocs /></DeveloperGuard>} />
+          <Route path="/docs/sales-analytics" element={<DeveloperGuard><SalesAnalyticsApiDocs /></DeveloperGuard>} />
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/help" element={<HelpPage />} />
@@ -252,10 +253,10 @@ export default function App() {
         <Route path="/admin/*" element={<AdminPortal />} />
         <Route path="/app/*" element={<PwaApp />} />
         <Route path="/control" element={<ControlCenter />} />
-        <Route path="/docs/logistics-partners" element={<LogisticsApiDocs />} />
-          <Route path="/docs" element={<ApiDocs />} />
-        <Route path="/docs/logistics" element={<LogisticsApiDocs />} />
-        <Route path="/docs/sales-analytics" element={<SalesAnalyticsApiDocs />} />
+        <Route path="/docs/logistics-partners" element={<DeveloperGuard><LogisticsApiDocs /></DeveloperGuard>} />
+        <Route path="/docs" element={<DeveloperGuard><ApiDocs /></DeveloperGuard>} />
+        <Route path="/docs/logistics" element={<DeveloperGuard><LogisticsApiDocs /></DeveloperGuard>} />
+        <Route path="/docs/sales-analytics" element={<DeveloperGuard><SalesAnalyticsApiDocs /></DeveloperGuard>} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/help" element={<HelpPage />} />

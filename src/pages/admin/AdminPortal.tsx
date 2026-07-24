@@ -788,15 +788,20 @@ export default function AdminPortal() {
   const fetchWaitlistSubscribers = async () => {
     setLoadingWaitlist(true);
     try {
-      const { data, error } = await supabase
-        .from('waitlist')
-        .select('*')
-        .order('subscribed_at', { ascending: false });
-      if (error) {
-        console.error("Waitlist fetch error:", error);
-      } else if (data) {
-        setWaitlistSubscribers(data);
-        setStats((prev: any) => ({ ...prev, subscribers: data.length }));
+      const res = await fetch('/api/landing/waitlist');
+      const resData = await res.json();
+      if (res.ok && resData.success && Array.isArray(resData.data)) {
+        setWaitlistSubscribers(resData.data);
+        setStats((prev: any) => ({ ...prev, subscribers: resData.data.length }));
+      } else {
+        const { data, error } = await supabase
+          .from('waitlist')
+          .select('*')
+          .order('subscribed_at', { ascending: false });
+        if (!error && data) {
+          setWaitlistSubscribers(data);
+          setStats((prev: any) => ({ ...prev, subscribers: data.length }));
+        }
       }
     } catch (err) {
       console.error("Waitlist fetch exception:", err);
@@ -854,44 +859,44 @@ export default function AdminPortal() {
     }
 
     const emailLower = newSubEmail.trim().toLowerCase();
-    const { data: existing } = await supabase
-      .from('waitlist')
-      .select('id')
-      .eq('email', emailLower)
-      .maybeSingle();
-
-    if (existing) {
-      toast.error("This email address is already subscribed");
-      return;
-    }
-
-    const { error } = await supabase.from('waitlist').insert({
-      email: emailLower,
-      name: newSubName.trim(),
-      role: newSubRole,
-      subscribed_at: new Date().toISOString()
-    });
-
-    if (error) {
-      toast.error(error.message || "Failed to add subscriber");
-    } else {
-      toast.success("Subscriber added successfully!");
-      setNewSubEmail('');
-      setNewSubName('');
-      setShowAddSubModal(false);
-      await fetchWaitlistSubscribers();
+    try {
+      const res = await fetch('/api/landing/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: emailLower,
+          name: newSubName.trim(),
+          role: newSubRole
+        })
+      });
+      const resData = await res.json();
+      if (res.ok && resData.success) {
+        toast.success("Subscriber added successfully!");
+        setNewSubEmail('');
+        setNewSubName('');
+        setShowAddSubModal(false);
+        await fetchWaitlistSubscribers();
+      } else {
+        toast.error(resData.error || "Failed to add subscriber");
+      }
+    } catch (err: any) {
+      toast.error("Error adding subscriber: " + err.message);
     }
   };
 
   const handleDeleteSubscriber = async (id: string, email: string) => {
     if (!confirm(`Are you sure you want to remove ${email} from the waitlist?`)) return;
-    const { error } = await supabase.from('waitlist').delete().eq('id', id);
-    if (error) {
-      toast.error("Failed to delete subscriber: " + error.message);
-    } else {
-      toast.success("Subscriber removed");
-      setWaitlistSubscribers(prev => prev.filter(s => s.id !== id));
-      setStats((prev: any) => ({ ...prev, subscribers: Math.max(0, (prev.subscribers || 1) - 1) }));
+    try {
+      const res = await fetch(`/api/landing/waitlist/${id || email}`, { method: 'DELETE' });
+      if (res.ok) {
+        toast.success("Subscriber removed");
+        setWaitlistSubscribers(prev => prev.filter(s => s.id !== id && s.email !== email));
+        setStats((prev: any) => ({ ...prev, subscribers: Math.max(0, (prev.subscribers || 1) - 1) }));
+      } else {
+        toast.error("Failed to delete subscriber");
+      }
+    } catch (err: any) {
+      toast.error("Failed to delete subscriber: " + err.message);
     }
   };
 
@@ -955,9 +960,9 @@ export default function AdminPortal() {
       if (response.ok) {
         const userData = await response.json();
         setTierStats({
-          BASIC: userData?.filter((t: any) => t.franchise_tier === 'BASIC').length || 0,
-          CERTIFIED: userData?.filter((t: any) => t.franchise_tier === 'CERTIFIED').length || 0,
-          HUB: userData?.filter((t: any) => t.franchise_tier === 'HUB').length || 0,
+          BASIC: userData?.filter((t: any) => t.role === 'merchant' && t.franchise_tier === 'BASIC').length || 0,
+          CERTIFIED: userData?.filter((t: any) => t.role === 'merchant' && t.franchise_tier === 'CERTIFIED').length || 0,
+          HUB: userData?.filter((t: any) => t.role === 'merchant' && t.franchise_tier === 'HUB').length || 0,
         });
       }
 

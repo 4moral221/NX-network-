@@ -55,6 +55,8 @@ async function handleCustomerRegistration(phoneNumber: string, lang: string, par
       national_id: nid,
       recovery_pin: hashedPin,
       role: "customer",
+      franchise_tier: null,
+      acceptance_percent: null,
       status: "active",
       language: lang
     };
