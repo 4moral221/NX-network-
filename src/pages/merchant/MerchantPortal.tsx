@@ -391,8 +391,8 @@ export default function MerchantPortal() {
     }
 
     // Check if Supabase is configured
-    if (!import.meta.env.VITE_SUPABASE_ANON_KEY && !import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY) {
-      setError('Supabase configuration missing. Please ensure VITE_SUPABASE_SERVICE_ROLE_KEY or VITE_SUPABASE_ANON_KEY is set in your environment variables.');
+    if (!import.meta.env.VITE_SUPABASE_ANON_KEY && !import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY && !import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY) {
+      setError('Supabase configuration missing. Please ensure VITE_SUPABASE_PUBLISHABLE_KEY, VITE_SUPABASE_ANON_KEY, or VITE_SUPABASE_SERVICE_ROLE_KEY is set in your environment variables.');
       return;
     }
     

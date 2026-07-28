@@ -29,8 +29,8 @@ const getEnv = (key: string) => {
   return "";
 };
 
-let supabaseUrl = getEnv('VITE_SUPABASE_URL') || 'https://balrpczytusvzzquzqob.supabase.co';
-const supabaseAnonKey = getEnv('VITE_SUPABASE_ANON_KEY') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhbHJwY3p5dHVzdnp6cXV6cW9iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDcxNjY4MDAsImV4cCI6MjAyMjcyMjgwMH0.placeholder';
+let supabaseUrl = getEnv('VITE_SUPABASE_URL') || getEnv('SUPABASE_URL') || 'https://balrpczytusvzzquzqob.supabase.co';
+const supabaseAnonKey = getEnv('VITE_SUPABASE_PUBLISHABLE_KEY') || getEnv('VITE_SUPABASE_ANON_KEY') || getEnv('SUPABASE_PUBLISHABLE_KEY') || getEnv('SUPABASE_ANON_KEY') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhbHJwY3p5dHVzdnp6cXV6cW9iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDcxNjY4MDAsImV4cCI6MjAyMjcyMjgwMH0.placeholder';
 
 if (supabaseUrl.startsWith('eyJ')) {
   // Defensive: catches the case where URL and key env vars were swapped

@@ -13,7 +13,7 @@ router.post("/api/ussd", async (req, res) => {
         const baseSupabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || 'https://balrpczytusvzzquzqob.supabase.co';
         const url = `${baseSupabaseUrl.replace(/\/$/, '')}/functions/v1/nx-ussd`;
         
-        const serviceKey = process.env.VITE_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || "";
+        const serviceKey = process.env.VITE_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || "";
         const headers: Record<string, string> = {
           'Content-Type': 'application/x-www-form-urlencoded'
         };

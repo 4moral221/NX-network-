@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { KeyRound, Mail, Lock, ShieldCheck, ArrowRight, X, Loader2, CheckCircle2, AlertCircle, RefreshCw, ExternalLink } from 'lucide-react';
+import { KeyRound, Mail, Lock, ShieldCheck, ArrowRight, X, Loader2, CheckCircle2, AlertCircle, RefreshCw, ExternalLink, Eye, EyeOff } from 'lucide-react';
 
 interface DeveloperAuthModalProps {
   isOpen: boolean;
@@ -23,6 +23,8 @@ export default function DeveloperAuthModal({
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   // UI states
   const [loading, setLoading] = useState(false);
@@ -356,14 +358,22 @@ export default function DeveloperAuthModal({
                       <div className="relative">
                         <Lock className="absolute left-3 top-3 w-4 h-4 text-nx-muted" />
                         <input
-                          type="password"
+                          type={showPassword ? 'text' : 'password'}
                           required
                           minLength={6}
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           placeholder="••••••••"
-                          className="w-full bg-nx-ink border border-nx-border rounded-xl pl-9 pr-4 py-2.5 text-xs text-nx-paper placeholder:text-nx-muted/50 focus:outline-none focus:border-nx-amber focus:ring-1 focus:ring-nx-amber transition-all"
+                          className="w-full bg-nx-ink border border-nx-border rounded-xl pl-9 pr-10 py-2.5 text-xs text-nx-paper placeholder:text-nx-muted/50 focus:outline-none focus:border-nx-amber focus:ring-1 focus:ring-nx-amber transition-all"
                         />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-2.5 p-0.5 text-nx-muted hover:text-nx-paper transition-colors focus:outline-none cursor-pointer"
+                          title={showPassword ? 'Hide password' : 'Show password'}
+                        >
+                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
                       </div>
                     </div>
 
@@ -374,14 +384,22 @@ export default function DeveloperAuthModal({
                       <div className="relative">
                         <Lock className="absolute left-3 top-3 w-4 h-4 text-nx-muted" />
                         <input
-                          type="password"
+                          type={showConfirmPassword ? 'text' : 'password'}
                           required
                           minLength={6}
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
                           placeholder="••••••••"
-                          className="w-full bg-nx-ink border border-nx-border rounded-xl pl-9 pr-4 py-2.5 text-xs text-nx-paper placeholder:text-nx-muted/50 focus:outline-none focus:border-nx-amber focus:ring-1 focus:ring-nx-amber transition-all"
+                          className="w-full bg-nx-ink border border-nx-border rounded-xl pl-9 pr-10 py-2.5 text-xs text-nx-paper placeholder:text-nx-muted/50 focus:outline-none focus:border-nx-amber focus:ring-1 focus:ring-nx-amber transition-all"
                         />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute right-3 top-2.5 p-0.5 text-nx-muted hover:text-nx-paper transition-colors focus:outline-none cursor-pointer"
+                          title={showConfirmPassword ? 'Hide password' : 'Show password'}
+                        >
+                          {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
                       </div>
                     </div>
 
@@ -434,13 +452,21 @@ export default function DeveloperAuthModal({
                       <div className="relative">
                         <Lock className="absolute left-3 top-3 w-4 h-4 text-nx-muted" />
                         <input
-                          type="password"
+                          type={showPassword ? 'text' : 'password'}
                           required
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           placeholder="••••••••"
-                          className="w-full bg-nx-ink border border-nx-border rounded-xl pl-9 pr-4 py-2.5 text-xs text-nx-paper placeholder:text-nx-muted/50 focus:outline-none focus:border-nx-amber focus:ring-1 focus:ring-nx-amber transition-all"
+                          className="w-full bg-nx-ink border border-nx-border rounded-xl pl-9 pr-10 py-2.5 text-xs text-nx-paper placeholder:text-nx-muted/50 focus:outline-none focus:border-nx-amber focus:ring-1 focus:ring-nx-amber transition-all"
                         />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-2.5 p-0.5 text-nx-muted hover:text-nx-paper transition-colors focus:outline-none cursor-pointer"
+                          title={showPassword ? 'Hide password' : 'Show password'}
+                        >
+                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
                       </div>
                     </div>
 

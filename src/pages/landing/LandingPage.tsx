@@ -231,7 +231,8 @@ export default function LandingPage() {
             { label: 'Features', id: 'features' },
             { label: 'Tiers', id: 'merchant-tiers', spec: 'tiers' },
             { label: 'Mechanics', id: 'loyalty-mechanics', spec: 'mechanics' },
-            { label: 'Business Model', id: 'revenue-engine', spec: 'revenue' }
+            { label: 'Business Model', id: 'revenue-engine', spec: 'revenue' },
+            { label: 'Investors', id: 'investors' }
           ].map((item) => (
             <a key={item.label} href={`#${item.id}`} 
                onClick={() => { if (item.spec) setOpenSpec(item.spec); }}
@@ -1570,6 +1571,118 @@ export default function LandingPage() {
           </div>
         </div>
       </LazyLoadSection>
+
+      {/* Investors Section — Network Flywheel & Multi-Stream Value */}
+      <LazyLoadSection id="investors" className="py-24 px-6 md:px-10 max-w-6xl mx-auto border-t border-nx-border scroll-mt-20">
+        <div className="flex items-center gap-4 text-[9px] uppercase tracking-[0.4em] text-nx-amber mb-6">
+          <div className="w-8 h-[1px] bg-nx-amber" /> Investor Vision &amp; Network Scale
+        </div>
+
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+          <div>
+            <h2 className="font-display text-[clamp(36px,5.5vw,72px)] leading-none tracking-tight text-nx-paper uppercase">
+              Network Flywheel <br />
+              <span className="text-nx-amber">&amp; Scale Potential.</span>
+            </h2>
+          </div>
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-nx-amber/10 border border-nx-amber/25 text-[10px] font-mono uppercase tracking-wider text-nx-amber shrink-0">
+            <span className="w-2 h-2 rounded-full bg-nx-amber animate-pulse shadow-[0_0_8px_#ffb547]" />
+            <span>Investor Opportunities</span>
+          </div>
+        </div>
+
+        {/* Main Investor Quote Card */}
+        <motion.div 
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="relative rounded-3xl bg-linear-to-br from-nx-card via-nx-card2 to-nx-card border border-nx-amber/30 p-8 md:p-12 shadow-xl shadow-nx-amber/5 overflow-hidden group mb-12"
+        >
+          {/* Animated background glow and subtle grid */}
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,var(--nx-bg-grid)_1px,transparent_1px),linear-gradient(to_bottom,var(--nx-bg-grid)_1px,transparent_1px)] bg-[size:36px_36px] opacity-40 pointer-events-none" />
+          <motion.div 
+            animate={{ opacity: [0.15, 0.35, 0.15], scale: [1, 1.05, 1] }}
+            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute -top-24 -right-24 w-96 h-96 bg-nx-amber/10 rounded-full blur-3xl pointer-events-none"
+          />
+
+          <div className="relative z-10">
+            <div className="flex items-center gap-3 mb-6">
+              <span className="text-3xl font-serif text-nx-amber select-none">“</span>
+              <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-nx-amber">
+                Platform Architecture &amp; Network Effects
+              </span>
+            </div>
+
+            <blockquote className="font-serif text-[clamp(20px,2.8vw,34px)] leading-[1.35] text-nx-paper font-normal tracking-wide mb-8">
+              "NX compounds in value as merchants and customers join the network, creating strong network effects and unlocking multiple scalable revenue streams over time, including <span className="text-nx-amber font-semibold underline decoration-nx-amber/40 underline-offset-8">AI-driven automation</span>, <span className="text-nx-amber font-semibold underline decoration-nx-amber/40 underline-offset-8">merchant services</span>, <span className="text-nx-amber font-semibold underline decoration-nx-amber/40 underline-offset-8">data products</span>, and <span className="text-nx-amber font-semibold underline decoration-nx-amber/40 underline-offset-8">financial services</span>."
+            </blockquote>
+
+            <div className="pt-6 border-t border-nx-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-nx-amber/10 border border-nx-amber/20 flex items-center justify-center text-nx-amber font-display font-bold text-xs">
+                  NX
+                </div>
+                <div>
+                  <div className="text-xs font-mono font-bold text-nx-paper">NX Network Core Thesis</div>
+                  <div className="text-[10px] text-nx-muted">Designed for scale across East Africa's informal retail sector</div>
+                </div>
+              </div>
+
+              <a 
+                href="mailto:nxnetwork618@gmail.com?subject=NX%20Network%20Investor%20Enquiry"
+                className="nx-btn-primary text-xs px-6 py-3 inline-flex items-center gap-2 font-bold tracking-wider hover:scale-[1.02] transition-all shadow-lg"
+              >
+                <span>Investor Enquiries &amp; Deck</span>
+                <ArrowUpRight className="w-4 h-4" />
+              </a>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* 4 Revenue Streams Grid corresponding to quote */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            {
+              icon: <Cpu className="w-5 h-5 text-nx-amber" />,
+              title: "AI & Automation",
+              desc: "USSD natural language order resolution, predictive duka restock triggers, and automated liquidity pool throttling."
+            },
+            {
+              icon: <Store className="w-5 h-5 text-nx-green" />,
+              title: "Merchant Services",
+              desc: "SaaS inventory management, certified duka subscriptions, point-of-sale intelligence, and tier franchise model."
+            },
+            {
+              icon: <BarChart3 className="w-5 h-5 text-nx-amber" />,
+              title: "Data Products",
+              desc: "Kiosk-level sell-through velocity, competitive SKU switching analytics, and weekly last-mile intelligence for FMCGs."
+            },
+            {
+              icon: <Wallet className="w-5 h-5 text-nx-green" />,
+              title: "Financial Services",
+              desc: "Instant trade settlement pools, working capital liquidity cycles, and merchant settlement acceleration."
+            }
+          ].map((pillar, idx) => (
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: idx * 0.1 }}
+              className="bg-nx-card p-6 border border-nx-border rounded-2xl hover:border-nx-amber/40 hover:bg-nx-card2 transition-all group"
+            >
+              <div className="p-2.5 bg-nx-ink border border-nx-border rounded-xl w-fit mb-4 group-hover:border-nx-amber/30 transition-colors">
+                {pillar.icon}
+              </div>
+              <h4 className="font-display text-sm uppercase tracking-wider text-nx-paper mb-2">{pillar.title}</h4>
+              <p className="text-xs text-nx-muted leading-relaxed">{pillar.desc}</p>
+            </motion.div>
+          ))}
+        </div>
+      </LazyLoadSection>
+
       {/* Partners */}
       <LazyLoadSection id="partners" className="py-24 px-6 md:px-10 max-w-6xl mx-auto border-t border-nx-border">
         <div className="flex items-center gap-4 text-[9px] uppercase tracking-[0.4em] text-nx-amber mb-6">

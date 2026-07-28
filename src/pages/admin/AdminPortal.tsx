@@ -1160,7 +1160,7 @@ export default function AdminPortal() {
 
   const logOpsAction = async (action: string, targetId: string, details: any = {}) => {
     try {
-      if (!import.meta.env.VITE_SUPABASE_ANON_KEY && !import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY) return;
+      if (!import.meta.env.VITE_SUPABASE_ANON_KEY && !import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY && !import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY) return;
       await supabase.from('ops_audit_logs').insert({
         agent_email: adminEmail,
         action,
@@ -1860,7 +1860,7 @@ export default function AdminPortal() {
       };
       
       if (baseUrl && (baseUrl.includes('supabase.co') || baseUrl.includes('supabase.com'))) {
-        const anonKey = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY;
+        const anonKey = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY;
         if (anonKey) headers['Authorization'] = `Bearer ${anonKey}`;
       }
 
@@ -1999,8 +1999,8 @@ export default function AdminPortal() {
     setAuthError(null);
 
     // Check if Supabase is configured
-    if (!import.meta.env.VITE_SUPABASE_ANON_KEY && !import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY) {
-      setAuthError('Supabase configuration missing. Please ensure VITE_SUPABASE_SERVICE_ROLE_KEY or VITE_SUPABASE_ANON_KEY is set in your environment variables.');
+    if (!import.meta.env.VITE_SUPABASE_ANON_KEY && !import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY && !import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY) {
+      setAuthError('Supabase configuration missing. Please ensure VITE_SUPABASE_PUBLISHABLE_KEY, VITE_SUPABASE_ANON_KEY, or VITE_SUPABASE_SERVICE_ROLE_KEY is set in your environment variables.');
       setAuthLoading(false);
       return;
     }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/src/lib/supabase';
-import { Loader2, Copy, CheckCircle2, AlertCircle, RefreshCw, LogOut, Key, Shield, ShieldAlert, Zap } from 'lucide-react';
+import { Loader2, Copy, CheckCircle2, AlertCircle, RefreshCw, LogOut, Key, Shield, ShieldAlert, Zap, Eye, EyeOff } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import NXLogo from '@/src/components/NXLogo';
@@ -26,6 +26,7 @@ export default function FmcgOnboarding() {
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('signup');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [companyName, setCompanyName] = useState('');
   const [authError, setAuthError] = useState('');
   const [message, setMessage] = useState('');
@@ -251,12 +252,22 @@ export default function FmcgOnboarding() {
                  </div>
                  <div>
                    <label className="block text-[10px] font-bold uppercase tracking-widest text-[#00d4ff] mb-2">Password</label>
-                   <input 
-                     required type="password" minLength={8}
-                     className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-[#00d4ff] outline-none transition-all" 
-                     placeholder="••••••••" 
-                     value={password} onChange={e => setPassword(e.target.value)} 
-                   />
+                   <div className="relative">
+                     <input 
+                       required type={showPassword ? 'text' : 'password'} minLength={8}
+                       className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl pl-4 pr-10 py-3 text-sm focus:border-[#00d4ff] outline-none transition-all" 
+                       placeholder="••••••••" 
+                       value={password} onChange={e => setPassword(e.target.value)} 
+                     />
+                     <button
+                       type="button"
+                       onClick={() => setShowPassword(!showPassword)}
+                       className="absolute right-3 top-3.5 text-nx-muted hover:text-white transition-colors focus:outline-none cursor-pointer"
+                       title={showPassword ? 'Hide password' : 'Show password'}
+                     >
+                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                     </button>
+                   </div>
                  </div>
 
                  {authError && <div className="text-[#ff4757] text-[10px] uppercase font-bold flex items-center gap-2 mt-4"><AlertCircle className="w-3 h-3" /> {authError}</div>}

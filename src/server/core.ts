@@ -385,7 +385,7 @@ export const writeFamilyAccounts = (data: any[]) => {
       }
     };
 export let supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "";
-export let supabaseKey = process.env.VITE_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || "";
+export let supabaseKey = process.env.VITE_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || "";
 export let supabase: any;
 export const createBackendMockSupabase = (reason: string) => {
       console.warn(`[System] Supabase falling back to local backend mock: ${reason}`);
