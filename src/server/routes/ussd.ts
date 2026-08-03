@@ -6,10 +6,10 @@ const router = express.Router();
 router.post("/api/ussd", async (req, res) => {
     try {
       const { sessionId, phoneNumber, text, ussdMode, mode } = req.body;
-      const isLive = ussdMode === 'edge' || mode === 'edge' || req.query.mode === 'edge';
+      const isLive = ussdMode === 'edge' || mode === 'edge';
 
       if (isLive) {
-        console.log(`[Proxy] Proxying USSD call to live Edge function nx-ussd for: ${phoneNumber}`);
+        console.log(`[Proxy] Forwarding USSD call for: ${phoneNumber}`);
         const baseSupabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || 'https://balrpczytusvzzquzqob.supabase.co';
         const url = `${baseSupabaseUrl.replace(/\/$/, '')}/functions/v1/nx-ussd`;
         

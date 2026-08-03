@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { LayoutDashboard, Store, Package, Truck, Trophy, Zap, Clock, BarChart3, LogOut, AlertCircle, CheckCircle2, Activity, Key, Copy, Shield, Eye, EyeOff, Plus, ChevronRight, Check, ShieldAlert, RefreshCw, Loader2, Sparkles, Cpu, ChevronDown, Award, HelpCircle, MapPin, User, X, ArrowRight, Info } from 'lucide-react';
+import { LayoutDashboard, Store, Package, Truck, Trophy, Zap, Clock, BarChart3, LogOut, AlertCircle, CheckCircle2, Activity, Key, Copy, Shield, Eye, EyeOff, Plus, ChevronRight, Check, ShieldAlert, RefreshCw, Loader2, Sparkles, Cpu, ChevronDown, Award, HelpCircle, MapPin, User, X, ArrowRight, Info, FileText } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
 import { supabase } from '@/src/lib/supabase';
 import NXLogo from '../../components/NXLogo';
 import NotificationIcon from '../../components/NotificationIcon';
+import LegalTermsModal from '../../components/LegalTermsModal';
 
 // Map Imports for Custom Leaflet Implementation
 import { MapContainer, TileLayer, Marker, Popup, useMap, CircleMarker } from 'react-leaflet';
@@ -438,7 +439,7 @@ export default function FmcgsPortal() {
     }
   }, [isLoggedIn, brand]);
   const [error, setError] = useState('');
-  const [authMode, setAuthMode] = useState<'login' | 'register' | 'setup' | 'whitelist_signup'>('login');
+  const [authMode, setAuthMode] = useState<'login' | 'register' | 'setup'>('login');
   const [loginData, setLoginData] = useState({ brand: '', password: '' });
   const [signupData, setSignupData] = useState({ companyName: '', email: '', password: '' });
   const [setupData, setSetupData] = useState({ brand: '', apiKey: '', newPassword: '', confirmPassword: '' });
@@ -447,13 +448,12 @@ export default function FmcgsPortal() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
-  
-  // Whitelist Retrieve Key States
-  const [whitelistEmail, setWhitelistEmail] = useState('');
-  const [whitelistLoading, setWhitelistLoading] = useState(false);
-  const [whitelistResult, setWhitelistResult] = useState<{ brand_name: string; email: string; magic_link: string } | null>(null);
-  const [whitelistError, setWhitelistError] = useState('');
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Legal & Compliance Agreement States
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
+  const [legalModalType, setLegalModalType] = useState<'terms' | 'privacy' | null>(null);
 
   // API Key Management States
   const [apiKeys, setApiKeys] = useState<any[]>([]);
@@ -537,41 +537,6 @@ export default function FmcgsPortal() {
       }
     };
     recoverSession();
-  }, []);
-
-  useEffect(() => {
-    const handleSignupToken = async () => {
-      const params = new URLSearchParams(window.location.search);
-      const token = params.get('signup_token');
-      if (token) {
-        try {
-          const res = await fetch(`/api/auth/claim-signup-key?token=${token}`);
-          const data = await res.json();
-          if (res.ok && data.success) {
-            setAuthMode('setup');
-            setSetupData({
-              brand: data.brand_name,
-              apiKey: data.apiKey,
-              newPassword: '',
-              confirmPassword: ''
-            });
-            
-            // Trigger raw alert fallback if toast is not ready, or a standard visual modal
-            alert(`Claim successfully executed!\n\nBrand: ${data.brand_name}\nIdentity Key: ${data.apiKey}\n\nYou have been fast-tracked. Please define your Access PIN below to lock your portal workspace.`);
-
-            // Strip from URL
-            const url = new URL(window.location.href);
-            url.searchParams.delete('signup_token');
-            window.history.replaceState({}, '', url.pathname + url.search);
-          } else {
-            alert(data.error || 'Failed to claim secure setup key.');
-          }
-        } catch (err: any) {
-          console.error('[Token claim exception]', err);
-        }
-      }
-    };
-    handleSignupToken();
   }, []);
 
   useEffect(() => {
@@ -966,6 +931,9 @@ export default function FmcgsPortal() {
         if (!signupData.email || !signupData.password || !signupData.companyName) {
            throw new Error('All fields required');
         }
+        if (!acceptedTerms || !acceptedPrivacy) {
+          throw new Error('You must accept both the Terms & Conditions and Privacy Policy before registering.');
+        }
         const res = await fetch('/api/auth/send-otp', {
            method: 'POST',
            headers: { 'Content-Type': 'application/json' },
@@ -1182,7 +1150,7 @@ export default function FmcgsPortal() {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-1 bg-black/40 p-1 rounded-xl mb-8 border border-white/5">
+          <div className="grid grid-cols-2 gap-1 bg-black/40 p-1 rounded-xl mb-8 border border-white/5">
             <button 
               onClick={() => { setAuthMode('login'); setError(''); }}
               className={cn("py-2 text-[9px] font-bold uppercase tracking-widest rounded-lg transition-all text-center", authMode === 'login' ? "bg-nx-amber text-nx-ink" : "text-nx-muted hover:text-white")}
@@ -1194,12 +1162,6 @@ export default function FmcgsPortal() {
               className={cn("py-2 text-[9px] font-bold uppercase tracking-widest rounded-lg transition-all text-center", authMode === 'register' ? "bg-nx-amber text-nx-ink" : "text-nx-muted hover:text-white")}
             >
               Register
-            </button>
-            <button 
-              onClick={() => { setAuthMode('whitelist_signup'); setError(''); setWhitelistError(''); setWhitelistResult(null); }}
-              className={cn("py-2 text-[9px] font-bold uppercase tracking-widest rounded-lg transition-all text-center", authMode === 'whitelist_signup' ? "bg-nx-amber text-nx-ink" : "text-nx-muted hover:text-white")}
-            >
-              Get API Key
             </button>
           </div>
 
@@ -1246,104 +1208,68 @@ export default function FmcgsPortal() {
                   </button>
                 </div>
               </div>
-              {error && <div className="flex items-center gap-2 text-red-500 text-xs"><AlertCircle className="w-3 h-3" /> {error}</div>}
-              <button disabled={loading} onClick={handleAuth} className="w-full bg-nx-amber text-nx-ink font-display font-bold py-3.5 rounded-xl hover:bg-nx-amber/90 transition-all mt-4 tracking-widest disabled:opacity-50">
+
+              {/* LEGAL & COMPLIANCE AGREEMENT SECTION */}
+              <div className="p-3.5 bg-black/60 border border-nx-border rounded-xl space-y-3">
+                <div className="flex items-center justify-between border-b border-nx-border pb-2">
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-white flex items-center gap-1.5">
+                    <Shield className="w-3.5 h-3.5 text-nx-amber" /> Legal Compliance
+                  </span>
+                  <span className="text-[9px] font-mono font-semibold text-nx-amber uppercase">Required</span>
+                </div>
+
+                {/* TERMS & CONDITIONS CHECKBOX */}
+                <div className="flex items-start gap-2.5">
+                  <input
+                    type="checkbox"
+                    id="fmcg_terms_check"
+                    checked={acceptedTerms}
+                    onChange={(e) => setAcceptedTerms(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 rounded border-nx-border bg-black text-nx-amber focus:ring-nx-amber cursor-pointer"
+                  />
+                  <label htmlFor="fmcg_terms_check" className="text-[11px] text-nx-muted leading-tight select-none cursor-pointer">
+                    I have read and agree to the{' '}
+                    <button
+                      type="button"
+                      onClick={() => setLegalModalType('terms')}
+                      className="font-bold text-nx-amber hover:underline cursor-pointer inline-flex items-center gap-0.5"
+                    >
+                      <span>Terms &amp; Conditions</span>
+                      <FileText className="w-3 h-3 inline" />
+                    </button>
+                  </label>
+                </div>
+
+                {/* PRIVACY POLICY CHECKBOX */}
+                <div className="flex items-start gap-2.5">
+                  <input
+                    type="checkbox"
+                    id="fmcg_privacy_check"
+                    checked={acceptedPrivacy}
+                    onChange={(e) => setAcceptedPrivacy(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 rounded border-nx-border bg-black text-nx-amber focus:ring-nx-amber cursor-pointer"
+                  />
+                  <label htmlFor="fmcg_privacy_check" className="text-[11px] text-nx-muted leading-tight select-none cursor-pointer">
+                    I accept the{' '}
+                    <button
+                      type="button"
+                      onClick={() => setLegalModalType('privacy')}
+                      className="font-bold text-emerald-400 hover:underline cursor-pointer inline-flex items-center gap-0.5"
+                    >
+                      <span>Privacy Policy</span>
+                      <Shield className="w-3 h-3 inline text-emerald-400" />
+                    </button>
+                  </label>
+                </div>
+              </div>
+
+              {error && <div className="flex items-center gap-2 text-red-500 text-xs"><AlertCircle className="w-3 h-3 shrink-0" /> {error}</div>}
+              <button disabled={loading || !acceptedTerms || !acceptedPrivacy} onClick={handleAuth} className="w-full bg-nx-amber text-nx-ink font-display font-bold py-3.5 rounded-xl hover:bg-nx-amber/90 transition-all mt-2 tracking-widest disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
                 {loading ? 'CREATING ACCOUNT...' : 'CREATE PARTNER ACCOUNT'}
               </button>
               <p className="text-[9px] text-nx-muted text-center uppercase tracking-widest leading-relaxed mt-4">
                 By registering, you agree to the NX Network Data Integrity Protocols.
               </p>
-            </div>
-          ) : authMode === 'whitelist_signup' ? (
-            <div className="space-y-4">
-              <div className="text-[10px] text-nx-muted mb-4 p-4 bg-white/5 border-l border-nx-amber uppercase tracking-widest leading-relaxed">
-                Retrieve your designated portal API key using your whitelisted professional domain or representative email.
-              </div>
-
-              {!whitelistResult ? (
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-[11px] font-bold uppercase tracking-widest text-nx-muted mb-2">Representative Work Email</label>
-                    <input 
-                      type="email" 
-                      value={whitelistEmail} 
-                      onChange={e => setWhitelistEmail(e.target.value)} 
-                      className="w-full bg-black border border-nx-border focus:border-nx-amber rounded-xl px-4 py-3 text-sm outline-none transition-all text-white placeholder-white/20" 
-                      placeholder="e.g. representative@unilever.com" 
-                      required
-                    />
-                  </div>
-
-                  {whitelistError && (
-                    <div className="flex items-center gap-2 text-red-500 text-xs">
-                      <AlertCircle className="w-3 h-3 shrink-0" />
-                      <span>{whitelistError}</span>
-                    </div>
-                  )}
-
-                  <button 
-                    disabled={whitelistLoading} 
-                    onClick={async () => {
-                      if (!whitelistEmail) {
-                        setWhitelistError('Please enter your work email.');
-                        return;
-                      }
-                      setWhitelistLoading(true);
-                      setWhitelistError('');
-                      try {
-                        const res = await fetch('/api/auth/request-signup-link', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ email: whitelistEmail, portal: 'fmcgs' })
-                        });
-                        const data = await res.json();
-                        if (!res.ok || !data.success) {
-                          throw new Error(data.error || 'Failed to dispatch magic link.');
-                        }
-                        setWhitelistResult(data);
-                      } catch (err: any) {
-                        setWhitelistError(err.message);
-                      } finally {
-                        setWhitelistLoading(false);
-                      }
-                    }} 
-                    className="w-full bg-nx-amber text-nx-ink font-display font-bold py-3.5 rounded-xl hover:bg-nx-amber/90 transition-all mt-4 tracking-widest disabled:opacity-50"
-                  >
-                    {whitelistLoading ? 'VERIFYING WHITELIST...' : 'DISPATCH SETUP LINK'}
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-4 p-4 bg-[#10b981]/10 rounded-xl border border-[#10b981]/30">
-                  <h4 className="text-xs uppercase font-bold text-[#10b981] flex items-center gap-2">
-                    <Check className="w-4 h-4" /> LINK DISPATCHED SUCCESSFULLY
-                  </h4>
-                  <p className="text-[10px] text-nx-muted leading-relaxed uppercase tracking-wider">
-                    A secure authentication payload has been generated for <b>{whitelistResult.brand_name}</b> ({whitelistResult.email}).
-                  </p>
-                  
-                  <div className="p-3 bg-black rounded-lg border border-nx-border font-mono text-[9px] text-[#10b981] break-all">
-                    Link: {window.location.origin + window.location.pathname + whitelistResult.magic_link}
-                  </div>
-
-                  <p className="text-[8px] text-nx-muted leading-relaxed uppercase">
-                    In actual production setup, representatives click this link inside their email. For developer preview verification, click the fast-track button below to instantly load the claimed API key credentials.
-                  </p>
-
-                  <a 
-                    href={whitelistResult.magic_link}
-                    className="w-full bg-[#10b981] text-black text-center block font-display font-bold py-3.5 rounded-xl hover:bg-[#10b981]/90 transition-all tracking-widest text-[10px]"
-                  >
-                    FAST-TRACK MAGIC SETUP LINK
-                  </a>
-
-                  <button 
-                    onClick={() => setWhitelistResult(null)} 
-                    className="w-full text-center text-[10px] text-nx-muted hover:text-white uppercase tracking-widest mt-2"
-                  >
-                    Retrieve for another email
-                  </button>
-                </div>
-              )}
             </div>
           ) : authMode === 'login' ? (
             <>
@@ -2522,6 +2448,17 @@ export default function FmcgsPortal() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        <LegalTermsModal
+          isOpen={legalModalType !== null}
+          type={legalModalType || 'terms'}
+          onClose={() => setLegalModalType(null)}
+          onAccept={(type) => {
+            if (type === 'terms') setAcceptedTerms(true);
+            if (type === 'privacy') setAcceptedPrivacy(true);
+          }}
+          isAccepted={legalModalType === 'terms' ? acceptedTerms : acceptedPrivacy}
+        />
       </div>
     </div>
   );

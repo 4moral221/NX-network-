@@ -1,0 +1,8 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /merchant
+Disallow: /fmcg
+
+Sitemap: https://nxnetwork.co/sitemap.xml

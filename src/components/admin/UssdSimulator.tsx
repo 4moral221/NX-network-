@@ -18,7 +18,7 @@ export default function UssdSimulator() {
   const [status, setStatus] = useState<'idle' | 'active' | 'ended' | 'error'>('idle');
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [loading, setLoading] = useState(false);
-  const [ussdMode, setUssdMode] = useState<'local' | 'edge'>('local');
+  const ussdMode = 'local_only';
   const [textParts, setTextParts] = useState<string[]>([]);
   
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -92,11 +92,7 @@ export default function UssdSimulator() {
         'Content-Type': 'application/x-www-form-urlencoded'
       };
 
-      if (ussdMode === 'edge') {
-        addLog('DIAL', `Calling Live Edge Function (through secure server proxy): ${url}`, `text="${text}"`);
-      } else {
-        addLog('DIAL', `Calling Local Server: ${url}`, `text="${text}"`);
-      }
+      addLog('DIAL', `Initiating USSD session (*384*6180#)`, `text="${text}"`);
 
       const response = await fetch(url, {
         method: 'POST',
@@ -162,26 +158,19 @@ export default function UssdSimulator() {
     <div className="grid grid-cols-1 lg:grid-cols-[650px_1fr] gap-12 items-start">
       {/* Phone Mockup */}
       <div className="flex flex-col items-center">
-        {/* Server Toggle */}
-        <div className="mb-6 w-full max-w-[600px] bg-[#1a1a2e] border-2 border-[#2a2a3e] rounded-2xl p-2 flex gap-2 shadow-xl">
-          <button 
-            onClick={() => setUssdMode('local')}
-            className={cn(
-              "flex-1 py-4 rounded-xl text-[11px] font-black uppercase tracking-[0.15em] transition-all flex items-center justify-center gap-3",
-              ussdMode === 'local' ? "bg-[#00ff88] text-black shadow-[0_0_20px_rgba(0,255,136,0.4)]" : "text-[#666] hover:text-[#999]"
-            )}
-          >
-            <Terminal className="w-5 h-5" /> Local Server
-          </button>
-          <button 
-            onClick={() => setUssdMode('edge')}
-            className={cn(
-              "flex-1 py-4 rounded-xl text-[11px] font-black uppercase tracking-[0.15em] transition-all flex items-center justify-center gap-3",
-              ussdMode === 'edge' ? "bg-[#00ff88] text-black shadow-[0_0_20px_rgba(0,255,136,0.4)]" : "text-[#666] hover:text-[#999]"
-            )}
-          >
-            <Zap className="w-5 h-5" /> Live Server
-          </button>
+        {/* Gateway Status Banner */}
+        <div className="mb-6 w-full max-w-[600px] bg-[#1a1a2e] border-2 border-[#00ff88]/40 rounded-2xl p-4 flex items-center justify-between shadow-xl">
+          <div className="flex items-center gap-3">
+            <Zap className="w-5 h-5 text-[#00ff88]" />
+            <div>
+              <div className="text-[11px] font-black uppercase tracking-[0.15em] text-[#00ff88]">USSD Gateway</div>
+              <div className="text-[10px] font-mono text-[#888]">Dial *384*6180#</div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 px-3 py-1 bg-[#00ff88]/10 border border-[#00ff88]/30 rounded-full">
+            <div className="w-2 h-2 rounded-full bg-[#00ff88] animate-pulse" />
+            <span className="text-[10px] font-mono text-[#00ff88] font-bold">READY</span>
+          </div>
         </div>
 
         <div className="relative w-[600px] h-[1100px] bg-[#080810] rounded-[4rem] border-[12px] border-[#1a1a2e] shadow-[0_0_80px_rgba(0,255,136,0.1),inset_0_0_40px_rgba(0,0,0,0.6)] p-10 flex flex-col overflow-hidden">

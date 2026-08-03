@@ -1,11 +1,9 @@
-import { useState, useEffect, Component, ReactNode, Suspense, lazy } from 'react';
+import { Component, ReactNode, Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
 
 // Lazy loading to ensure the main chunk is small and app doesn't hang on 'INITIALIZING' screen for slow connections
 import ThemeSwitcher from './components/ThemeSwitcher';
 import NetworkStatus from './components/NetworkStatus';
-import OnboardingScreen from './components/OnboardingScreen';
 import DeveloperGuard from './components/DeveloperGuard';
 
 const LandingPage = lazy(() => import('./pages/landing/LandingPage'));
@@ -92,20 +90,7 @@ class ErrorBoundary extends Component<{children: ReactNode}, {hasError: boolean,
   }
 }
 
-function PageLoader() {
-  return (
-    <div className="min-h-[100dvh] bg-nx-ink flex flex-col items-center justify-center gap-4">
-      <Loader2 className="w-10 h-10 text-nx-amber animate-spin" />
-      <div className="font-display text-sm tracking-[0.2em] text-nx-amber/50 animate-pulse">
-        NX NETWORK LOADING...
-      </div>
-    </div>
-  );
-}
-
 export default function App() {
-  const [isLoaded, setIsLoaded] = useState(false);
-  
   // Resolve target prioritizing the browser's hostname to bypass any environmental/cache propagation quirks on Vercel.
   // Falls back to build-time VITE_APP_TARGET when hostname is non-specific (like localhost or AI Studio Cloud Run preview).
   const getTarget = () => {
@@ -169,14 +154,6 @@ export default function App() {
   };
 
   const target = getTarget();
-
-  useEffect(() => {
-    // Artificial delay to allow fonts and styles to settle
-    const timer = setTimeout(() => setIsLoaded(true), 100);
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (!isLoaded) return <PageLoader />;
 
   // Portals filtering logic
   const getRoutes = () => {
@@ -269,14 +246,12 @@ export default function App() {
       <Router>
         <NetworkStatus />
         <ThemeSwitcher />
-        <OnboardingScreen>
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
-              {getRoutes()}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </Suspense>
-        </OnboardingScreen>
+        <Suspense fallback={null}>
+          <Routes>
+            {getRoutes()}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
       </Router>
     </ErrorBoundary>
   );

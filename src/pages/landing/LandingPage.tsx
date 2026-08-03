@@ -221,58 +221,11 @@ export default function LandingPage() {
         "fixed top-0 left-0 right-0 z-[200] flex items-center justify-between px-6 md:px-10 h-16 transition-all duration-300",
         scrolled ? "bg-nx-ink/92 backdrop-blur-xl border-b border-nx-amber/12" : "bg-transparent"
       )}>
-          <Link to="/" className="flex items-center gap-3 group">
+        <Link to="/" className="flex items-center gap-3 group">
           <NXLogo size="sm" />
         </Link>
 
-        <div className="hidden lg:flex items-center gap-6">
-          {[
-            { label: 'How It Works', id: 'how-it-works' },
-            { label: 'Features', id: 'features' },
-            { label: 'Tiers', id: 'merchant-tiers', spec: 'tiers' },
-            { label: 'Mechanics', id: 'loyalty-mechanics', spec: 'mechanics' },
-            { label: 'Business Model', id: 'revenue-engine', spec: 'revenue' },
-            { label: 'Investors', id: 'investors' }
-          ].map((item) => (
-            <a key={item.label} href={`#${item.id}`} 
-               onClick={() => { if (item.spec) setOpenSpec(item.spec); }}
-               className="text-[10px] uppercase tracking-[0.15em] text-nx-muted hover:text-nx-paper transition-colors">
-              {item.label}
-            </a>
-          ))}
-          <div className="h-4 w-[1px] bg-nx-border" />
-          <div className="flex items-center gap-3">
-            {[
-              { label: 'Customer/Duka PWA', url: getPortalLink('pwa') },
-              { label: 'Merchant Hub', url: getPortalLink('hub') },
-              { label: 'Partners Portal', onClick: () => setShowBrandPortalChoice(true) },
-            ].map((portal) => {
-              if ('url' in portal) {
-                return (
-                  <a 
-                    key={portal.label}
-                    href={portal.url}
-                    className="px-3 py-1.5 border border-nx-amber/30 text-nx-amber text-[9px] uppercase tracking-widest hover:bg-nx-amber hover:text-nx-ink transition-all hover:border-nx-amber"
-                  >
-                    {portal.label}
-                  </a>
-                );
-              } else {
-                return (
-                  <button 
-                    key={portal.label}
-                    onClick={portal.onClick}
-                    className="px-3 py-1.5 border border-nx-amber/30 text-nx-amber text-[9px] uppercase tracking-widest hover:bg-nx-amber hover:text-nx-ink transition-all hover:border-nx-amber cursor-pointer bg-transparent"
-                  >
-                    {portal.label}
-                  </button>
-                );
-              }
-            })}
-          </div>
-        </div>
-
-        <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-2 border border-nx-border hover:border-nx-amber transition-colors">
+        <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-2 border border-nx-border hover:border-nx-amber transition-colors cursor-pointer bg-transparent" aria-label="Toggle Menu">
           {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
       </nav>
@@ -306,7 +259,9 @@ export default function LandingPage() {
                   { label: 'Merchant Tiers', id: 'merchant-tiers', spec: 'tiers' },
                   { label: '5 Core SKUs', id: '5-core-skus', spec: 'skus' },
                   { label: 'Loyalty Mechanics', id: 'loyalty-mechanics', spec: 'mechanics' },
-                  { label: 'Pool Mechanics', id: 'pool-mechanics', spec: 'solvency' }
+                  { label: 'Pool Mechanics', id: 'pool-mechanics', spec: 'solvency' },
+                  { label: 'Business Model', id: 'revenue-engine', spec: 'revenue' },
+                  { label: 'Investors', id: 'investors' }
                 ].map((item) => (
                   <a key={item.label} href={`#${item.id}`} onClick={() => { setIsMenuOpen(false); if (item.spec) setOpenSpec(item.spec as any); }}
                      className="flex items-center justify-between px-6 py-3 text-sm text-nx-paper/70 hover:text-nx-paper hover:bg-nx-amber/5 border-l-2 border-transparent hover:border-nx-amber transition-all">
@@ -1631,7 +1586,7 @@ export default function LandingPage() {
               </div>
 
               <a 
-                href="mailto:nxnetwork618@gmail.com?subject=NX%20Network%20Investor%20Enquiry"
+                href="mailto:info@nxnetwork.company?subject=NX%20Network%20Investor%20Enquiry"
                 className="nx-btn-primary text-xs px-6 py-3 inline-flex items-center gap-2 font-bold tracking-wider hover:scale-[1.02] transition-all shadow-lg"
               >
                 <span>Investor Enquiries &amp; Deck</span>
@@ -1716,11 +1671,11 @@ export default function LandingPage() {
             Want weekly SKU-level sell-through velocity mapping from dukas and kiosks in Mombasa?
           </p>
           <a 
-            href="mailto:nxnetwork618@gmail.com?subject=FMCG%20Partnership%20Inquiry" 
+            href="mailto:info@nxnetwork.company?subject=FMCG%20Partnership%20Inquiry" 
             className="nx-btn-primary bg-[#3b82f6] hover:bg-blue-600 text-white text-sm px-8 py-4 inline-flex items-center gap-3 font-bold tracking-wider"
           >
             <Send className="w-5 h-5 text-white shrink-0" />
-            Email partners@nxnetwork.company to see kiosk‑level data from Mombasa
+            Email info@nxnetwork.company to see kiosk‑level data from Mombasa
           </a>
         </div>
       </LazyLoadSection>
@@ -1815,7 +1770,7 @@ export default function LandingPage() {
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4 mb-8">
             <button onClick={() => setShowUssd(true)} className="nx-btn-primary text-sm px-9 py-4">↗ JOIN AS CUSTOMER</button>
-            <a href="#contact" className="nx-btn-outline text-sm px-7 py-4">Apply as Merchant</a>
+            <button type="button" onClick={(e) => e.preventDefault()} className="nx-btn-outline text-sm px-7 py-4 cursor-default">Apply as Merchant</button>
           </div>
           <div className="inline-flex items-center gap-4 px-6 py-4 bg-nx-green/10 border border-nx-green/30">
             <div>
@@ -1976,7 +1931,7 @@ export default function LandingPage() {
         <div className="grid md:grid-cols-2 gap-0.5 bg-nx-border">
           <div className="bg-nx-card p-10">
             <div className="text-[9px] uppercase tracking-widest text-nx-muted mb-4">Email</div>
-            <a href="mailto:nxnetwork618@gmail.com" className="text-lg text-nx-amber border-b border-nx-amber/30 pb-1 hover:border-nx-amber transition-colors">nxnetwork618@gmail.com</a>
+            <a href="mailto:info@nxnetwork.company" className="text-lg text-nx-amber border-b border-nx-amber/30 pb-1 hover:border-nx-amber transition-colors">info@nxnetwork.company</a>
             <p className="text-xs text-nx-muted leading-relaxed mt-4">For FMCG partnerships, merchant tier upgrades, or investor enquiries.</p>
           </div>
           <div className="bg-nx-card p-10">

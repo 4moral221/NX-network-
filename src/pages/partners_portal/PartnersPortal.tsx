@@ -12,6 +12,7 @@ import { cn } from '@/src/lib/utils';
 import { supabase } from '@/src/lib/supabase';
 import NXLogo from '../../components/NXLogo';
 import NotificationIcon from '../../components/NotificationIcon';
+import LegalTermsModal from '../../components/LegalTermsModal';
 
 // Map Imports for Partners Portal Leaflet Map
 import { MapContainer, TileLayer, Marker, Popup, useMap, CircleMarker } from 'react-leaflet';
@@ -806,40 +807,6 @@ export default function PartnersPortal() {
     recoverSession();
   }, []);
 
-  useEffect(() => {
-    const handleSignupToken = async () => {
-      const params = new URLSearchParams(window.location.search);
-      const token = params.get('signup_token');
-      if (token) {
-        try {
-          const res = await fetch(`/api/auth/claim-signup-key?token=${token}`);
-          const data = await res.json();
-          if (res.ok && data.success) {
-            setAuthMode('setup');
-            setSetupData({
-              brand: data.brand_name,
-              apiKey: data.apiKey,
-              newPassword: '',
-              confirmPassword: ''
-            });
-            
-            alert(`Claim successfully executed!\n\nPartner Name: ${data.brand_name}\nIdentity Key: ${data.apiKey}\n\nYou have been fast-tracked. Please define your Access PIN below to lock your portal workspace.`);
-
-            // Strip from URL
-            const url = new URL(window.location.href);
-            url.searchParams.delete('signup_token');
-            window.history.replaceState({}, '', url.pathname + url.search);
-          } else {
-            alert(data.error || 'Failed to claim secure setup key.');
-          }
-        } catch (err: any) {
-          console.error('[Token claim exception in partners]', err);
-        }
-      }
-    };
-    handleSignupToken();
-  }, []);
-
   const checkEmailStatus = async () => {
     // Removed email verification to simplify access as requested
   };
@@ -862,7 +829,7 @@ export default function PartnersPortal() {
     }
   }, [isLoggedIn, brand]);
   const [error, setError] = useState('');
-  const [authMode, setAuthMode] = useState<'login' | 'register' | 'setup' | 'whitelist_signup'>('login');
+  const [authMode, setAuthMode] = useState<'login' | 'register' | 'setup'>('login');
   const [loginData, setLoginData] = useState({ brand: '', password: '' });
   const [signupData, setSignupData] = useState({ companyName: '', email: '', password: '' });
   const [setupData, setSetupData] = useState({ brand: '', apiKey: '', newPassword: '', confirmPassword: '' });
@@ -872,12 +839,6 @@ export default function PartnersPortal() {
   const [showPassword, setShowPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-  // Whitelist Retrieve Key States
-  const [whitelistEmail, setWhitelistEmail] = useState('');
-  const [whitelistLoading, setWhitelistLoading] = useState(false);
-  const [whitelistResult, setWhitelistResult] = useState<{ brand_name: string; email: string; magic_link: string } | null>(null);
-  const [whitelistError, setWhitelistError] = useState('');
 
   // Intelligence Map States
   const [intelMapCenter, setIntelMapCenter] = useState<{ lat: number, lng: number }>({ lat: -1.2864, lng: 36.8172 });
@@ -896,6 +857,11 @@ export default function PartnersPortal() {
     { type: 'shop', lat: -4.0812, lng: 39.6543, name: "Likoni Micro-Duka", role: "Franchise Tier: CERTIFIED (65% Pool Rate)\nUtilization: 68% (Throttled 0.5x)", tier: "CERTIFIED" },
     { type: 'shop', lat: -4.0215, lng: 39.6312, name: "Changamwe Super Duka", role: "Franchise Tier: CERTIFIED (65% Pool Rate)\nUtilization: 22% (Active)", tier: "CERTIFIED" }
   ];
+
+  // Legal & Compliance Agreement States
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
+  const [legalModalType, setLegalModalType] = useState<'terms' | 'privacy' | null>(null);
 
   // API Key Management States
   const [apiKeys, setApiKeys] = useState<any[]>([]);
@@ -1220,6 +1186,9 @@ export default function PartnersPortal() {
       if (authMode === 'register') {
         if (!signupData.email || !signupData.password || !signupData.companyName) {
           throw new Error('All fields are required.');
+        }
+        if (!acceptedTerms || !acceptedPrivacy) {
+          throw new Error('You must accept both the Terms & Conditions and Privacy Policy before registering.');
         }
 
         const signupResponse = await fetch('/api/auth/logistics/signup', {
@@ -1571,7 +1540,7 @@ MERCHANT_CODE: M-104 | PHONE: +254766666666 | ORDER_SPEC: Pembe 2kg*22 | ORDER_Q
             </div>
           </div>
 
-          {authMode !== 'setup' && authMode !== 'whitelist_signup' && (
+          {authMode !== 'setup' && (
             <div className="grid grid-cols-2 gap-1 bg-[#f4f5f7] p-1 rounded-xl mb-8 border border-[#e4e6ea]">
               <button 
                 onClick={() => { setAuthMode('login'); setError(''); }}
@@ -1616,100 +1585,63 @@ MERCHANT_CODE: M-104 | PHONE: +254766666666 | ORDER_SPEC: Pembe 2kg*22 | ORDER_Q
                   </button>
                 </div>
               </div>
-              {error && <div className="flex items-center gap-2 text-red-500 text-xs"><AlertCircle className="w-3 h-3" /> {error}</div>}
-              <button disabled={loading} onClick={handleAuth} className="w-full bg-[#1a1d23] text-white font-bold py-3 rounded-xl hover:bg-[#2a2d35] transition-colors mt-4">{loading ? 'Creating Account...' : 'Register & Log In'}</button>
-            </div>
-          ) : authMode === 'whitelist_signup' ? (
-            <div className="space-y-4">
-              <div className="text-[10px] text-[#6b7280] mb-4 p-4 bg-[#f4f5f7] border-l border-[#1a1d23] uppercase tracking-widest leading-relaxed">
-                Retrieve your designated portal API key using your whitelisted professional domain or representative email.
+
+              {/* LEGAL & COMPLIANCE AGREEMENT SECTION */}
+              <div className="p-3.5 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl space-y-3">
+                <div className="flex items-center justify-between border-b border-[#e2e8f0] pb-2">
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#0f172a] flex items-center gap-1.5">
+                    <Shield className="w-3.5 h-3.5 text-[#0284c7]" /> Legal Compliance
+                  </span>
+                  <span className="text-[9px] font-mono font-semibold text-[#0284c7] uppercase">Required</span>
+                </div>
+
+                {/* TERMS & CONDITIONS CHECKBOX */}
+                <div className="flex items-start gap-2.5">
+                  <input
+                    type="checkbox"
+                    id="partners_terms_check"
+                    checked={acceptedTerms}
+                    onChange={(e) => setAcceptedTerms(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 rounded border-[#cbd5e1] text-[#0f172a] focus:ring-[#0f172a] cursor-pointer"
+                  />
+                  <label htmlFor="partners_terms_check" className="text-[11px] text-[#475569] leading-tight select-none cursor-pointer">
+                    I have read and agree to the{' '}
+                    <button
+                      type="button"
+                      onClick={() => setLegalModalType('terms')}
+                      className="font-bold text-[#0284c7] hover:underline cursor-pointer inline-flex items-center gap-0.5"
+                    >
+                      <span>Terms &amp; Conditions</span>
+                      <FileText className="w-3 h-3 inline" />
+                    </button>
+                  </label>
+                </div>
+
+                {/* PRIVACY POLICY CHECKBOX */}
+                <div className="flex items-start gap-2.5">
+                  <input
+                    type="checkbox"
+                    id="partners_privacy_check"
+                    checked={acceptedPrivacy}
+                    onChange={(e) => setAcceptedPrivacy(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 rounded border-[#cbd5e1] text-[#0f172a] focus:ring-[#0f172a] cursor-pointer"
+                  />
+                  <label htmlFor="partners_privacy_check" className="text-[11px] text-[#475569] leading-tight select-none cursor-pointer">
+                    I accept the{' '}
+                    <button
+                      type="button"
+                      onClick={() => setLegalModalType('privacy')}
+                      className="font-bold text-[#0284c7] hover:underline cursor-pointer inline-flex items-center gap-0.5"
+                    >
+                      <span>Privacy Policy</span>
+                      <Shield className="w-3 h-3 inline text-emerald-600" />
+                    </button>
+                  </label>
+                </div>
               </div>
 
-              {!whitelistResult ? (
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-[11px] font-bold uppercase tracking-widest text-[#6b7280] mb-2">Representative Work Email</label>
-                    <input 
-                      type="email" 
-                      value={whitelistEmail} 
-                      onChange={e => setWhitelistEmail(e.target.value)} 
-                      className="w-full border-2 border-[#e4e6ea] focus:border-[#1a1d23] rounded-xl px-4 py-2.5 text-sm outline-none transition-colors text-[#1a1d23] bg-white" 
-                      placeholder="e.g. representative@partner.com" 
-                      required
-                    />
-                  </div>
-
-                  {whitelistError && (
-                    <div className="flex items-center gap-2 text-red-500 text-xs">
-                      <AlertCircle className="w-3 h-3 shrink-0" />
-                      <span>{whitelistError}</span>
-                    </div>
-                  )}
-
-                  <button 
-                    disabled={whitelistLoading} 
-                    onClick={async () => {
-                      if (!whitelistEmail) {
-                        setWhitelistError('Please enter your work email.');
-                        return;
-                      }
-                      setWhitelistLoading(true);
-                      setWhitelistError('');
-                      try {
-                        const res = await fetch('/api/auth/request-signup-link', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ email: whitelistEmail, portal: 'partners' })
-                        });
-                        const data = await res.json();
-                        if (!res.ok || !data.success) {
-                          throw new Error(data.error || 'Failed to dispatch magic link.');
-                        }
-                        setWhitelistResult(data);
-                      } catch (err: any) {
-                        setWhitelistError(err.message);
-                      } finally {
-                        setWhitelistLoading(false);
-                      }
-                    }} 
-                    className="w-full bg-[#1a1d23] text-white font-bold py-3.5 rounded-xl hover:bg-[#2a2d35] transition-all mt-4 tracking-widest disabled:opacity-50"
-                  >
-                    {whitelistLoading ? 'VERIFYING WHITELIST...' : 'DISPATCH SETUP LINK'}
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-4 p-4 bg-[#10b981]/10 rounded-xl border border-[#10b981]/30">
-                  <h4 className="text-xs uppercase font-bold text-[#10b981] flex items-center gap-2">
-                    <Check className="w-4 h-4" /> LINK DISPATCHED SUCCESSFULLY
-                  </h4>
-                  <p className="text-[10px] text-[#6b7280] leading-relaxed uppercase tracking-wider">
-                    A secure authentication payload has been generated for <b>{whitelistResult.brand_name}</b> ({whitelistResult.email}).
-                  </p>
-                  
-                  <div className="p-3 bg-black rounded-lg border border-[#e4e6ea] font-mono text-[9px] text-[#10b981] break-all">
-                    Link: {window.location.origin + window.location.pathname + whitelistResult.magic_link}
-                  </div>
-
-                  <p className="text-[8px] text-[#6b7280] leading-relaxed uppercase">
-                    In actual production setup, representatives click this link inside their email. For developer preview verification, click the fast-track button below to instantly load the claimed API key credentials.
-                  </p>
-
-                  <a 
-                    href={whitelistResult.magic_link}
-                    className="w-full bg-[#10b981] text-black text-center block font-bold py-3.5 rounded-xl hover:bg-[#10b981]/90 transition-all tracking-widest text-[10px]"
-                  >
-                    FAST-TRACK MAGIC SETUP LINK
-                  </a>
-
-                  <button 
-                    onClick={() => setWhitelistResult(null)} 
-                    className="w-full text-center text-[10px] text-[#6b7280] hover:text-[#1a1d23] uppercase tracking-widest mt-2"
-                  >
-                    Retrieve for another email
-                  </button>
-                </div>
-              )}
-              <button onClick={() => setAuthMode('login')} className="w-full text-center text-[10px] text-[#6b7280] mt-6 hover:text-[#1a1d23] transition-colors uppercase tracking-widest">← Back to access</button>
+              {error && <div className="flex items-center gap-2 text-red-500 text-xs"><AlertCircle className="w-3 h-3 shrink-0" /> {error}</div>}
+              <button disabled={loading || !acceptedTerms || !acceptedPrivacy} onClick={handleAuth} className="w-full bg-[#1a1d23] text-white font-bold py-3 rounded-xl hover:bg-[#2a2d35] transition-colors mt-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">{loading ? 'Creating Account...' : 'Register & Log In'}</button>
             </div>
           ) : authMode === 'setup' ? (
             <div className="space-y-4">
@@ -2790,6 +2722,17 @@ MERCHANT_CODE: M-104 | PHONE: +254766666666 | ORDER_SPEC: Pembe 2kg*22 | ORDER_Q
         <a href="tel:0781550151" className="text-lg text-[#1a1d23] font-bold block">0781550151</a>
         <p className="text-[11px] text-[#6b7280] mt-1">Contact NX Support for any portal issues or account queries.</p>
       </footer>
+
+      <LegalTermsModal
+        isOpen={legalModalType !== null}
+        type={legalModalType || 'terms'}
+        onClose={() => setLegalModalType(null)}
+        onAccept={(type) => {
+          if (type === 'terms') setAcceptedTerms(true);
+          if (type === 'privacy') setAcceptedPrivacy(true);
+        }}
+        isAccepted={legalModalType === 'terms' ? acceptedTerms : acceptedPrivacy}
+      />
     </div>
   );
 }

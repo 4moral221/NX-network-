@@ -84,8 +84,8 @@ export default function UssdSimulator() {
 
   const simCall = async (text: string) => {
     if (!fnUrl) {
-      addLog('ERR', 'No Edge Function URL set.');
-      setErrorBanner('Configuration Fail: No endpoint function URL has been provided.');
+      addLog('ERR', 'No USSD Endpoint URL set.');
+      setErrorBanner('Configuration Fail: No USSD endpoint URL has been provided.');
       return null;
     }
 
@@ -96,7 +96,7 @@ export default function UssdSimulator() {
       sessionId,
       phoneNumber: phone,
       text: text,
-      ussdMode: 'local'
+      ussdMode: 'local_only'
     };
 
     // Auto-proxy any direct Supabase calls to avoid browser CORS errors and handle nx-ussd mapping
@@ -284,7 +284,7 @@ export default function UssdSimulator() {
               </div>
               <div className="space-y-5">
                 <div>
-                  <label htmlFor="fnUrl" className="block text-[9px] text-[#666] uppercase tracking-widest mb-2">Edge Function URL</label>
+                  <label htmlFor="fnUrl" className="block text-[9px] text-[#666] uppercase tracking-widest mb-2">USSD Endpoint URL</label>
                   <div className="relative">
                     <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#333]" />
                     <input 

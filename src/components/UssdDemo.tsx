@@ -25,7 +25,7 @@ export default function UssdDemo() {
           sessionId: activeSessionId,
           phoneNumber: phoneNumber,
           text: text,
-          ussdMode: 'local'
+          ussdMode: 'local_only'
         })
       });
 
@@ -248,7 +248,7 @@ export default function UssdDemo() {
             MOCKUP ACCOUNT NOTICE
           </div>
           <p className="text-[11px] text-[#b5b3aa] leading-relaxed">
-            The registration flow and accounts created inside this simulator are **fully virtual mockups**. No real user records, national IDs, or cellular accounts are affected.
+            The registration flow and accounts created inside this simulator are <strong className="text-nx-paper font-semibold">fully virtual mockups</strong>. No real user records, national IDs, or cellular accounts are affected.
           </p>
         </motion.div>
       </div>

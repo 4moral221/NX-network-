@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   ArrowLeft, Copy, Check, Terminal, Shield, Key, 
   Layers, ChevronRight, Activity, AlertCircle, Play, 
-  HelpCircle, Server, FileText, Webhook, RefreshCw
+  HelpCircle, Server, FileText, Webhook, RefreshCw,
+  Sliders, Lock, CheckCircle2, XCircle, ShieldCheck
 } from 'lucide-react';
 import NXLogo from '../../components/NXLogo';
 
@@ -16,9 +17,15 @@ interface CodeExample {
 }
 
 export default function LogisticsApiDocs() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'auth' | 'jobs' | 'deliveries' | 'earnings' | 'webhooks' | 'sandbox' | 'economics'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'economics' | 'auth' | 'scopes' | 'jobs' | 'deliveries' | 'earnings' | 'webhooks' | 'sandbox'>('overview');
   const [langTab, setLangTab] = useState<'curl' | 'javascript' | 'python'>('curl');
   const [copiedText, setCopiedText] = useState<string | null>(null);
+
+  // API Scope Switcher States
+  const [activeScopeProfile, setActiveScopeProfile] = useState<'logistics' | 'wholesaler' | 'fmcg' | 'custom'>('logistics');
+  const [selectedScopes, setSelectedScopes] = useState<string[]>(["demand:read", "restock:read", "delivery:write"]);
+  const [scopeTestEndpoint, setScopeTestEndpoint] = useState<string>("delivery:write");
+  const [scopeTestResult, setScopeTestResult] = useState<{ status: number; message: string; scope: string } | null>(null);
   
   // Interactive simulator states
   const [simEndpoint, setSimEndpoint] = useState<string>('auth');
@@ -28,6 +35,64 @@ export default function LogisticsApiDocs() {
   );
   const [simResponse, setSimResponse] = useState<any>(null);
   const [simLoading, setSimLoading] = useState<boolean>(false);
+
+  const handleScopeProfileChange = (profile: 'logistics' | 'wholesaler' | 'fmcg' | 'custom') => {
+    setActiveScopeProfile(profile);
+    let newScopes = selectedScopes;
+    if (profile === 'logistics') {
+      newScopes = ["demand:read", "restock:read", "delivery:write"];
+    } else if (profile === 'wholesaler') {
+      newScopes = ["demand:read", "batch:read", "fulfil:write", "invoice:write"];
+    } else if (profile === 'fmcg') {
+      newScopes = ["demand:read", "margin:write", "batch:read", "campaign:write"];
+    }
+    setSelectedScopes(newScopes);
+    if (scopeTestResult) {
+      const isAuth = newScopes.includes(scopeTestEndpoint);
+      setScopeTestResult({
+        status: isAuth ? 200 : 403,
+        message: isAuth 
+          ? `Authorized! Access granted for scope '${scopeTestEndpoint}'.`
+          : `Forbidden! Insufficient scope. Your active token lacks required scope '${scopeTestEndpoint}'.`,
+        scope: scopeTestEndpoint
+      });
+    }
+  };
+
+  const toggleScope = (scopeName: string) => {
+    setActiveScopeProfile('custom');
+    const newScopes = selectedScopes.includes(scopeName)
+      ? selectedScopes.filter(s => s !== scopeName)
+      : [...selectedScopes, scopeName];
+    setSelectedScopes(newScopes);
+    if (scopeTestResult) {
+      const isAuth = newScopes.includes(scopeTestEndpoint);
+      setScopeTestResult({
+        status: isAuth ? 200 : 403,
+        message: isAuth 
+          ? `Authorized! Access granted for scope '${scopeTestEndpoint}'.`
+          : `Forbidden! Insufficient scope. Your active token lacks required scope '${scopeTestEndpoint}'.`,
+        scope: scopeTestEndpoint
+      });
+    }
+  };
+
+  const testScopeAuthorization = (requiredScope: string) => {
+    const isAuthorized = selectedScopes.includes(requiredScope);
+    if (isAuthorized) {
+      setScopeTestResult({
+        status: 200,
+        message: `Authorized! Access granted for scope '${requiredScope}'.`,
+        scope: requiredScope
+      });
+    } else {
+      setScopeTestResult({
+        status: 403,
+        message: `Forbidden! Insufficient scope. Your active token lacks required scope '${requiredScope}'.`,
+        scope: requiredScope
+      });
+    }
+  };
 
   const handleCopy = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -102,6 +167,17 @@ export default function LogisticsApiDocs() {
             "nx_balance_after_kes": 200,
             "settlement_cap_applied": 0.6
           }
+        });
+      } else if (simEndpoint === 'accept') {
+        setSimResponse({
+          "job_id": "JOB-2026-00123",
+          "status": "accepted",
+          "fleet_id": "FLEET-01",
+          "driver_id": "DRV-552",
+          "vehicle_plate": "KDA 123A",
+          "accepted_at": new Date().toISOString(),
+          "estimated_pickup": new Date(Date.now() + 1800000).toISOString(),
+          "dispatch_token": "DSP-88912-CONFIRMED"
         });
       } else {
         setSimResponse({
@@ -362,11 +438,12 @@ print(response.json())`
                 { id: 'overview', label: '1. Overview', icon: FileText },
                 { id: 'economics', label: '2. Market & Economics', icon: Layers },
                 { id: 'auth', label: '3. Authentication', icon: Key },
-                { id: 'jobs', label: '4. Delivery Jobs', icon: Terminal },
-                { id: 'deliveries', label: '5. Dropoff Confirmation', icon: Shield },
-                { id: 'earnings', label: '6. Earnings & Metrics', icon: Activity },
-                { id: 'webhooks', label: '7. Webhooks', icon: Webhook },
-                { id: 'sandbox', label: '8. Interactive Sandbox', icon: RefreshCw },
+                { id: 'scopes', label: '4. API Scopes & Access', icon: Sliders },
+                { id: 'jobs', label: '5. Delivery Jobs', icon: Terminal },
+                { id: 'deliveries', label: '6. Dropoff Confirmation', icon: Shield },
+                { id: 'earnings', label: '7. Earnings & Metrics', icon: Activity },
+                { id: 'webhooks', label: '8. Webhooks', icon: Webhook },
+                { id: 'sandbox', label: '9. Interactive Sandbox', icon: RefreshCw },
               ].map((item) => {
                 const Icon = item.icon;
                 return (
@@ -414,7 +491,7 @@ print(response.json())`
               className="space-y-6"
             >
               {/* LANGUAGE SWITCHER FOR CODE EXAMPLES (ONLY IF APPLICABLE) */}
-              {['auth', 'jobs', 'deliveries'].includes(activeTab) && (
+              {['auth', 'scopes', 'jobs', 'deliveries', 'earnings', 'webhooks'].includes(activeTab) && (
                 <div className="flex items-center justify-between border-b border-nx-border pb-4 mb-4">
                   <div className="text-xs font-mono font-bold text-nx-amber tracking-wider uppercase flex items-center gap-2">
                     <Terminal className="w-4 h-4 text-nx-amber" />
@@ -667,6 +744,237 @@ print(response.json())`
   "expires_in": 3600
 }`}
                       </pre>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* API SCOPES & PERMISSIONS SECTION */}
+              {activeTab === 'scopes' && (
+                <div className="space-y-8">
+                  <div>
+                    <div className="flex items-center gap-2 text-xs font-mono text-nx-amber font-bold uppercase mb-1">
+                      <Sliders className="w-4 h-4 text-nx-amber" />
+                      <span>Granular Access Control</span>
+                    </div>
+                    <h2 className="font-mono text-2xl text-nx-paper uppercase font-bold">API Scopes &amp; Permission Matrix</h2>
+                    <p className="text-xs text-[#b5b3aa] leading-relaxed mt-1">
+                      Every API key issued on the NX platform is cryptographically bound to an array of explicit API scopes. Use the switcher below to test scope permissions, check route access, and generate headers.
+                    </p>
+                  </div>
+
+                  {/* INTERACTIVE SCOPE PROFILE SWITCHER */}
+                  <div className="p-6 bg-[#060810] border border-nx-border rounded-2xl space-y-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-nx-border pb-4">
+                      <div>
+                        <span className="text-[10px] font-mono text-nx-amber uppercase font-bold tracking-wider">Step 1: Select Partner Profile Preset</span>
+                        <h3 className="text-sm font-extrabold text-nx-paper uppercase tracking-tight">Scope Profile Presets</h3>
+                      </div>
+
+                      {/* Profile Preset Switcher Buttons */}
+                      <div className="flex flex-wrap gap-2 bg-[#0a0d1a] border border-nx-border p-1.5 rounded-xl">
+                        {[
+                          { id: 'logistics', label: 'Logistics Partner' },
+                          { id: 'wholesaler', label: 'Wholesaler / Hub' },
+                          { id: 'fmcg', label: 'FMCG Brand' },
+                          { id: 'custom', label: 'Custom Scopes' },
+                        ].map(p => (
+                          <button
+                            key={p.id}
+                            onClick={() => handleScopeProfileChange(p.id as any)}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer ${
+                              activeScopeProfile === p.id 
+                                ? 'bg-nx-amber text-black shadow-md' 
+                                : 'text-nx-muted hover:text-nx-paper'
+                            }`}
+                          >
+                            {p.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Step 2: Interactive Scope Pills Toggle */}
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-mono text-nx-muted uppercase font-bold tracking-wider">Step 2: Active API Scopes (Click to Toggle)</span>
+                        <span className="text-[10px] font-mono text-nx-green font-bold uppercase">{selectedScopes.length} Scopes Active</span>
+                      </div>
+
+                      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                        {[
+                          { name: "demand:read", desc: "Inspect aggregated duka order trends" },
+                          { name: "restock:read", desc: "Access open & assigned delivery jobs" },
+                          { name: "delivery:write", desc: "Confirm duka dropoffs & settlement" },
+                          { name: "fulfil:write", desc: "Accept & route wholesale restock orders" },
+                          { name: "batch:read", desc: "View regional SKU batch allocations" },
+                          { name: "invoice:write", desc: "Settle wholesale & duka invoices" },
+                          { name: "margin:write", desc: "Update SKU margins & brand spreads" },
+                          { name: "campaign:write", desc: "Launch duka cashback promotions" },
+                        ].map(s => {
+                          const isActive = selectedScopes.includes(s.name);
+                          return (
+                            <button
+                              key={s.name}
+                              onClick={() => toggleScope(s.name)}
+                              className={`p-3 rounded-xl border text-left font-mono transition-all cursor-pointer flex flex-col justify-between h-22 ${
+                                isActive 
+                                  ? 'bg-nx-green/10 border-nx-green/40 text-nx-paper shadow-sm' 
+                                  : 'bg-[#0a0d1a]/50 border-nx-border/50 text-nx-muted hover:border-nx-border'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between w-full">
+                                <span className={`text-xs font-bold ${isActive ? 'text-nx-green' : 'text-nx-muted'}`}>{s.name}</span>
+                                {isActive ? <CheckCircle2 className="w-3.5 h-3.5 text-nx-green" /> : <Lock className="w-3.5 h-3.5 text-nx-muted/40" />}
+                              </div>
+                              <p className="text-[10px] text-[#888] leading-tight line-clamp-2 mt-1">{s.desc}</p>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Step 3: Authorization Matrix Table */}
+                    <div className="space-y-3 pt-2">
+                      <span className="text-[10px] font-mono text-nx-muted uppercase font-bold tracking-wider">Step 3: Endpoint Access Matrix for Selected Scopes</span>
+                      <div className="border border-nx-border rounded-xl overflow-hidden font-mono text-xs">
+                        <table className="w-full text-left">
+                          <thead className="bg-[#0a0d1a] border-b border-nx-border text-nx-amber text-[11px]">
+                            <tr>
+                              <th className="p-3">Endpoint Route</th>
+                              <th className="p-3">Required Scope</th>
+                              <th className="p-3">Method</th>
+                              <th className="p-3 text-right">Access Status</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-nx-border/40 text-[11px]">
+                            {[
+                              { route: "/v1/logistics/demand-board", scope: "demand:read", method: "GET" },
+                              { route: "/v1/jobs", scope: "restock:read", method: "GET" },
+                              { route: "/v1/jobs/{id}/accept", scope: "fulfil:write", method: "POST" },
+                              { route: "/v1/deliveries/confirm", scope: "delivery:write", method: "POST" },
+                              { route: "/v1/invoices/settle", scope: "invoice:write", method: "POST" },
+                              { route: "/v1/campaigns/promotion", scope: "campaign:write", method: "POST" },
+                            ].map(ep => {
+                              const isAuthorized = selectedScopes.includes(ep.scope);
+                              return (
+                                <tr key={ep.route} className="hover:bg-[#0a0d1a]/50">
+                                  <td className="p-3 text-nx-paper font-bold">{ep.route}</td>
+                                  <td className="p-3 text-nx-amber">{ep.scope}</td>
+                                  <td className="p-3">
+                                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                                      ep.method === 'GET' ? 'bg-blue-500/10 text-blue-400' : 'bg-nx-green/10 text-nx-green'
+                                    }`}>
+                                      {ep.method}
+                                    </span>
+                                  </td>
+                                  <td className="p-3 text-right">
+                                    {isAuthorized ? (
+                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-nx-green/10 text-nx-green text-[10px] font-bold border border-nx-green/20">
+                                        <CheckCircle2 className="w-3 h-3" />
+                                        Authorized
+                                      </span>
+                                    ) : (
+                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-red-500/10 text-red-400 text-[10px] font-bold border border-red-500/20">
+                                        <XCircle className="w-3 h-3" />
+                                        Forbidden (403)
+                                      </span>
+                                    )}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    {/* Step 4: Interactive Scope Simulator & Live Code Generator */}
+                    <div className="pt-2 grid md:grid-cols-2 gap-4">
+                      {/* Simulator Box */}
+                      <div className="p-4 bg-[#0a0d1a] border border-nx-border rounded-xl space-y-3">
+                        <div className="flex items-center gap-2 text-xs font-bold text-nx-paper">
+                          <ShieldCheck className="w-4 h-4 text-nx-amber" />
+                          <span>Scope Test Harness</span>
+                        </div>
+                        <p className="text-[11px] text-nx-muted">Select an endpoint scope requirement to simulate authorization check against your active scope set:</p>
+                        
+                        <div className="flex gap-2">
+                          <select
+                            value={scopeTestEndpoint}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setScopeTestEndpoint(val);
+                              testScopeAuthorization(val);
+                            }}
+                            className="flex-1 bg-[#060810] border border-nx-border rounded-lg p-2 text-xs font-mono text-nx-paper outline-none focus:border-nx-amber"
+                          >
+                            <option value="demand:read">demand:read (/demand-board)</option>
+                            <option value="restock:read">restock:read (/jobs)</option>
+                            <option value="delivery:write">delivery:write (/deliveries/confirm)</option>
+                            <option value="fulfil:write">fulfil:write (/jobs/accept)</option>
+                            <option value="invoice:write">invoice:write (/invoices/settle)</option>
+                            <option value="campaign:write">campaign:write (/campaigns/promotion)</option>
+                          </select>
+                          <button
+                            onClick={() => testScopeAuthorization(scopeTestEndpoint)}
+                            className="px-4 py-2 bg-nx-amber text-black font-mono font-bold text-xs rounded-lg hover:bg-nx-amber/90 transition-all cursor-pointer"
+                          >
+                            Test Scope
+                          </button>
+                        </div>
+
+                        {scopeTestResult && (
+                          <motion.div 
+                            initial={{ opacity: 0, y: 5 }} 
+                            animate={{ opacity: 1, y: 0 }} 
+                            className={`p-3 rounded-lg border text-xs font-mono leading-relaxed ${
+                              scopeTestResult.status === 200 
+                                ? 'bg-nx-green/10 border-nx-green/30 text-nx-green' 
+                                : 'bg-red-500/10 border-red-500/30 text-red-400'
+                            }`}
+                          >
+                            <div className="font-bold flex items-center justify-between mb-1">
+                              <span>HTTP Status {scopeTestResult.status}</span>
+                              <span className="uppercase text-[9px] px-1.5 py-0.5 rounded bg-black/40">Header Validation</span>
+                            </div>
+                            {scopeTestResult.message}
+                          </motion.div>
+                        )}
+                      </div>
+
+                      {/* Live Scope Header Code Generator */}
+                      <div className="p-4 bg-[#0a0d1a] border border-nx-border rounded-xl space-y-3">
+                        <div className="flex items-center justify-between text-xs font-bold text-nx-paper">
+                          <div className="flex items-center gap-2">
+                            <Terminal className="w-4 h-4 text-nx-green" />
+                            <span>Header Code Generator</span>
+                          </div>
+                          <span className="text-[10px] font-mono text-nx-amber">x-required-scope</span>
+                        </div>
+                        <p className="text-[11px] text-nx-muted">Pass the required scope in request headers for exact edge-level authentication:</p>
+                        
+                        <pre className="p-3 bg-[#060810] border border-nx-border rounded-lg text-[11px] font-mono text-[#00ff88] overflow-x-auto leading-relaxed">
+                          <code>
+{langTab === 'curl' ? `curl -X GET https://api.nxnetwork.company/v1/jobs \\
+  -H "Authorization: Bearer <token>" \\
+  -H "x-required-scope: ${selectedScopes[0] || 'delivery:write'}"` :
+langTab === 'javascript' ? `fetch('https://api.nxnetwork.company/v1/jobs', {
+  headers: {
+    'Authorization': 'Bearer ' + token,
+    'x-required-scope': '${selectedScopes[0] || 'delivery:write'}'
+  }
+});` :
+`import requests
+
+headers = {
+    'Authorization': 'Bearer ' + token,
+    'x-required-scope': '${selectedScopes[0] || 'delivery:write'}'
+}
+response = requests.get('https://api.nxnetwork.company/v1/jobs', headers=headers)`}
+                          </code>
+                        </pre>
+                      </div>
                     </div>
                   </div>
                 </div>
