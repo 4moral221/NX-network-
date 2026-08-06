@@ -57,29 +57,41 @@ export default function LegalTermsModal({
             </div>
 
             {/* DOCUMENT TYPE SWITCHER TABS */}
-            <div className="flex gap-2 mt-4 pt-4 border-t border-white/10 font-mono text-xs">
-              <button
-                onClick={() => setActiveTab('terms')}
-                className={`px-4 py-2 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-2 ${
-                  activeTab === 'terms'
-                    ? 'bg-white text-slate-900 shadow-md'
-                    : 'bg-white/10 text-white hover:bg-white/20'
-                }`}
+            <div className="flex flex-wrap items-center justify-between gap-2 mt-4 pt-4 border-t border-white/10 font-mono text-xs">
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setActiveTab('terms')}
+                  className={`px-4 py-2 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-2 ${
+                    activeTab === 'terms'
+                      ? 'bg-white text-slate-900 shadow-md'
+                      : 'bg-white/10 text-white hover:bg-white/20'
+                  }`}
+                >
+                  <FileCheck className="w-4 h-4" />
+                  <span>Terms & Conditions</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('privacy')}
+                  className={`px-4 py-2 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-2 ${
+                    activeTab === 'privacy'
+                      ? 'bg-white text-slate-900 shadow-md'
+                      : 'bg-white/10 text-white hover:bg-white/20'
+                  }`}
+                >
+                  <Lock className="w-4 h-4" />
+                  <span>Privacy Policy</span>
+                </button>
+              </div>
+
+              <a
+                href={activeTab === 'terms' ? "/terms" : "/privacy"}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3.5 py-2 bg-white/10 hover:bg-white/20 text-sky-100 hover:text-white rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1.5 text-xs border border-white/20"
               >
-                <FileCheck className="w-4 h-4" />
-                <span>Terms & Conditions</span>
-              </button>
-              <button
-                onClick={() => setActiveTab('privacy')}
-                className={`px-4 py-2 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-2 ${
-                  activeTab === 'privacy'
-                    ? 'bg-white text-slate-900 shadow-md'
-                    : 'bg-white/10 text-white hover:bg-white/20'
-                }`}
-              >
-                <Lock className="w-4 h-4" />
-                <span>Privacy Policy</span>
-              </button>
+                <span>View Page</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </a>
             </div>
           </div>
 

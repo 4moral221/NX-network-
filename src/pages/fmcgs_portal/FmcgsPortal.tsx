@@ -931,9 +931,6 @@ export default function FmcgsPortal() {
         if (!signupData.email || !signupData.password || !signupData.companyName) {
            throw new Error('All fields required');
         }
-        if (!acceptedTerms || !acceptedPrivacy) {
-          throw new Error('You must accept both the Terms & Conditions and Privacy Policy before registering.');
-        }
         const res = await fetch('/api/auth/send-otp', {
            method: 'POST',
            headers: { 'Content-Type': 'application/json' },
@@ -1209,66 +1206,31 @@ export default function FmcgsPortal() {
                 </div>
               </div>
 
-              {/* LEGAL & COMPLIANCE AGREEMENT SECTION */}
-              <div className="p-3.5 bg-black/60 border border-nx-border rounded-xl space-y-3">
-                <div className="flex items-center justify-between border-b border-nx-border pb-2">
-                  <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-white flex items-center gap-1.5">
-                    <Shield className="w-3.5 h-3.5 text-nx-amber" /> Legal Compliance
-                  </span>
-                  <span className="text-[9px] font-mono font-semibold text-nx-amber uppercase">Required</span>
-                </div>
-
-                {/* TERMS & CONDITIONS CHECKBOX */}
-                <div className="flex items-start gap-2.5">
-                  <input
-                    type="checkbox"
-                    id="fmcg_terms_check"
-                    checked={acceptedTerms}
-                    onChange={(e) => setAcceptedTerms(e.target.checked)}
-                    className="mt-0.5 w-4 h-4 rounded border-nx-border bg-black text-nx-amber focus:ring-nx-amber cursor-pointer"
-                  />
-                  <label htmlFor="fmcg_terms_check" className="text-[11px] text-nx-muted leading-tight select-none cursor-pointer">
-                    I have read and agree to the{' '}
-                    <button
-                      type="button"
-                      onClick={() => setLegalModalType('terms')}
-                      className="font-bold text-nx-amber hover:underline cursor-pointer inline-flex items-center gap-0.5"
-                    >
-                      <span>Terms &amp; Conditions</span>
-                      <FileText className="w-3 h-3 inline" />
-                    </button>
-                  </label>
-                </div>
-
-                {/* PRIVACY POLICY CHECKBOX */}
-                <div className="flex items-start gap-2.5">
-                  <input
-                    type="checkbox"
-                    id="fmcg_privacy_check"
-                    checked={acceptedPrivacy}
-                    onChange={(e) => setAcceptedPrivacy(e.target.checked)}
-                    className="mt-0.5 w-4 h-4 rounded border-nx-border bg-black text-nx-amber focus:ring-nx-amber cursor-pointer"
-                  />
-                  <label htmlFor="fmcg_privacy_check" className="text-[11px] text-nx-muted leading-tight select-none cursor-pointer">
-                    I accept the{' '}
-                    <button
-                      type="button"
-                      onClick={() => setLegalModalType('privacy')}
-                      className="font-bold text-emerald-400 hover:underline cursor-pointer inline-flex items-center gap-0.5"
-                    >
-                      <span>Privacy Policy</span>
-                      <Shield className="w-3 h-3 inline text-emerald-400" />
-                    </button>
-                  </label>
-                </div>
-              </div>
-
               {error && <div className="flex items-center gap-2 text-red-500 text-xs"><AlertCircle className="w-3 h-3 shrink-0" /> {error}</div>}
-              <button disabled={loading || !acceptedTerms || !acceptedPrivacy} onClick={handleAuth} className="w-full bg-nx-amber text-nx-ink font-display font-bold py-3.5 rounded-xl hover:bg-nx-amber/90 transition-all mt-2 tracking-widest disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
+              <button disabled={loading} onClick={handleAuth} className="w-full bg-nx-amber text-nx-ink font-display font-bold py-3.5 rounded-xl hover:bg-nx-amber/90 transition-all mt-2 tracking-widest disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
                 {loading ? 'CREATING ACCOUNT...' : 'CREATE PARTNER ACCOUNT'}
               </button>
-              <p className="text-[9px] text-nx-muted text-center uppercase tracking-widest leading-relaxed mt-4">
-                By registering, you agree to the NX Network Data Integrity Protocols.
+              <p className="text-[11px] text-nx-muted text-center leading-relaxed mt-3">
+                By registering, you agree to our{' '}
+                <a
+                  href="/terms"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-bold text-nx-amber hover:underline cursor-pointer inline-flex items-center gap-0.5"
+                >
+                  <span>Terms &amp; Conditions</span>
+                  <FileText className="w-3 h-3 inline" />
+                </a>{' '}
+                and{' '}
+                <a
+                  href="/privacy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-bold text-emerald-400 hover:underline cursor-pointer inline-flex items-center gap-0.5"
+                >
+                  <span>Privacy Policy</span>
+                  <Shield className="w-3 h-3 inline text-emerald-400" />
+                </a>.
               </p>
             </div>
           ) : authMode === 'login' ? (

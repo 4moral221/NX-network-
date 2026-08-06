@@ -1187,9 +1187,6 @@ export default function PartnersPortal() {
         if (!signupData.email || !signupData.password || !signupData.companyName) {
           throw new Error('All fields are required.');
         }
-        if (!acceptedTerms || !acceptedPrivacy) {
-          throw new Error('You must accept both the Terms & Conditions and Privacy Policy before registering.');
-        }
 
         const signupResponse = await fetch('/api/auth/logistics/signup', {
           method: 'POST',
@@ -1586,62 +1583,31 @@ MERCHANT_CODE: M-104 | PHONE: +254766666666 | ORDER_SPEC: Pembe 2kg*22 | ORDER_Q
                 </div>
               </div>
 
-              {/* LEGAL & COMPLIANCE AGREEMENT SECTION */}
-              <div className="p-3.5 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl space-y-3">
-                <div className="flex items-center justify-between border-b border-[#e2e8f0] pb-2">
-                  <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#0f172a] flex items-center gap-1.5">
-                    <Shield className="w-3.5 h-3.5 text-[#0284c7]" /> Legal Compliance
-                  </span>
-                  <span className="text-[9px] font-mono font-semibold text-[#0284c7] uppercase">Required</span>
-                </div>
-
-                {/* TERMS & CONDITIONS CHECKBOX */}
-                <div className="flex items-start gap-2.5">
-                  <input
-                    type="checkbox"
-                    id="partners_terms_check"
-                    checked={acceptedTerms}
-                    onChange={(e) => setAcceptedTerms(e.target.checked)}
-                    className="mt-0.5 w-4 h-4 rounded border-[#cbd5e1] text-[#0f172a] focus:ring-[#0f172a] cursor-pointer"
-                  />
-                  <label htmlFor="partners_terms_check" className="text-[11px] text-[#475569] leading-tight select-none cursor-pointer">
-                    I have read and agree to the{' '}
-                    <button
-                      type="button"
-                      onClick={() => setLegalModalType('terms')}
-                      className="font-bold text-[#0284c7] hover:underline cursor-pointer inline-flex items-center gap-0.5"
-                    >
-                      <span>Terms &amp; Conditions</span>
-                      <FileText className="w-3 h-3 inline" />
-                    </button>
-                  </label>
-                </div>
-
-                {/* PRIVACY POLICY CHECKBOX */}
-                <div className="flex items-start gap-2.5">
-                  <input
-                    type="checkbox"
-                    id="partners_privacy_check"
-                    checked={acceptedPrivacy}
-                    onChange={(e) => setAcceptedPrivacy(e.target.checked)}
-                    className="mt-0.5 w-4 h-4 rounded border-[#cbd5e1] text-[#0f172a] focus:ring-[#0f172a] cursor-pointer"
-                  />
-                  <label htmlFor="partners_privacy_check" className="text-[11px] text-[#475569] leading-tight select-none cursor-pointer">
-                    I accept the{' '}
-                    <button
-                      type="button"
-                      onClick={() => setLegalModalType('privacy')}
-                      className="font-bold text-[#0284c7] hover:underline cursor-pointer inline-flex items-center gap-0.5"
-                    >
-                      <span>Privacy Policy</span>
-                      <Shield className="w-3 h-3 inline text-emerald-600" />
-                    </button>
-                  </label>
-                </div>
-              </div>
-
               {error && <div className="flex items-center gap-2 text-red-500 text-xs"><AlertCircle className="w-3 h-3 shrink-0" /> {error}</div>}
-              <button disabled={loading || !acceptedTerms || !acceptedPrivacy} onClick={handleAuth} className="w-full bg-[#1a1d23] text-white font-bold py-3 rounded-xl hover:bg-[#2a2d35] transition-colors mt-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">{loading ? 'Creating Account...' : 'Register & Log In'}</button>
+              <button disabled={loading} onClick={handleAuth} className="w-full bg-[#1a1d23] text-white font-bold py-3 rounded-xl hover:bg-[#2a2d35] transition-colors mt-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">{loading ? 'Creating Account...' : 'Register & Log In'}</button>
+
+              <p className="text-[11px] text-[#6b7280] text-center leading-relaxed mt-3">
+                By registering, you agree to our{' '}
+                <a
+                  href="/terms"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-bold text-[#0284c7] hover:underline cursor-pointer inline-flex items-center gap-0.5"
+                >
+                  <span>Terms &amp; Conditions</span>
+                  <FileText className="w-3 h-3 inline" />
+                </a>{' '}
+                and{' '}
+                <a
+                  href="/privacy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-bold text-[#0284c7] hover:underline cursor-pointer inline-flex items-center gap-0.5"
+                >
+                  <span>Privacy Policy</span>
+                  <Shield className="w-3 h-3 inline text-emerald-600" />
+                </a>.
+              </p>
             </div>
           ) : authMode === 'setup' ? (
             <div className="space-y-4">
