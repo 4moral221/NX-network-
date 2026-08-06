@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { LayoutDashboard, Store, Package, Truck, Trophy, Zap, Clock, BarChart3, LogOut, AlertCircle, CheckCircle2, Activity, Key, Copy, Shield, Eye, EyeOff, Plus, ChevronRight, Check, ShieldAlert, RefreshCw, Loader2, Sparkles, Cpu, ChevronDown, Award, HelpCircle, MapPin, User, X, ArrowRight, Info, FileText } from 'lucide-react';
+import { LayoutDashboard, Store, Package, Truck, Trophy, Zap, Clock, BarChart3, LogOut, AlertCircle, CheckCircle2, Activity, Key, Copy, Shield, Eye, EyeOff, Plus, ChevronRight, Check, ShieldAlert, RefreshCw, Loader2, Sparkles, Cpu, ChevronDown, Award, HelpCircle, MapPin, User, X, ArrowRight, Info, FileText, MoreVertical, Home } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
 import { supabase } from '@/src/lib/supabase';
 import NXLogo from '../../components/NXLogo';
@@ -439,7 +439,7 @@ export default function FmcgsPortal() {
     }
   }, [isLoggedIn, brand]);
   const [error, setError] = useState('');
-  const [authMode, setAuthMode] = useState<'login' | 'register' | 'setup'>('login');
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const [loginData, setLoginData] = useState({ brand: '', password: '' });
   const [signupData, setSignupData] = useState({ companyName: '', email: '', password: '' });
   const [setupData, setSetupData] = useState({ brand: '', apiKey: '', newPassword: '', confirmPassword: '' });
@@ -1139,6 +1139,13 @@ export default function FmcgsPortal() {
     return (
       <div className="min-h-[100dvh] bg-[#0a0a0a] flex flex-col justify-center p-6 font-sans text-white relative overflow-y-auto">
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="relative z-10 w-full max-w-sm mx-auto">
+          {/* Window Decorative Traffic Light Dots */}
+          <div className="flex items-center gap-1.5 mb-5 pl-0.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56] inline-block shadow-sm opacity-80" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e] inline-block shadow-sm opacity-80" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f] inline-block shadow-sm opacity-80" />
+          </div>
+
           <div className="flex items-center justify-between gap-3 mb-8">
             <NXLogo title="FMCG Portal" />
             <div className="text-right border-l border-white/10 pl-4">
@@ -1150,13 +1157,13 @@ export default function FmcgsPortal() {
           <div className="grid grid-cols-2 gap-1 bg-black/40 p-1 rounded-xl mb-8 border border-white/5">
             <button 
               onClick={() => { setAuthMode('login'); setError(''); }}
-              className={cn("py-2 text-[9px] font-bold uppercase tracking-widest rounded-lg transition-all text-center", authMode === 'login' ? "bg-nx-amber text-nx-ink" : "text-nx-muted hover:text-white")}
+              className={cn("py-2 text-[9px] font-bold uppercase tracking-widest rounded-lg transition-all text-center cursor-pointer", authMode === 'login' ? "bg-nx-amber text-nx-ink" : "text-nx-muted hover:text-white")}
             >
               Sign In
             </button>
             <button 
               onClick={() => { setAuthMode('register'); setError(''); }}
-              className={cn("py-2 text-[9px] font-bold uppercase tracking-widest rounded-lg transition-all text-center", authMode === 'register' ? "bg-nx-amber text-nx-ink" : "text-nx-muted hover:text-white")}
+              className={cn("py-2 text-[9px] font-bold uppercase tracking-widest rounded-lg transition-all text-center cursor-pointer", authMode === 'register' ? "bg-nx-amber text-nx-ink" : "text-nx-muted hover:text-white")}
             >
               Register
             </button>
@@ -1194,7 +1201,7 @@ export default function FmcgsPortal() {
                     type={showPassword ? "text" : "password"} 
                     value={signupData.password} 
                     onChange={e => setSignupData({ ...signupData, password: e.target.value })} 
-                    className="w-full bg-black border border-nx-border focus:border-nx-amber rounded-xl pl-4 pr-10 py-3 text-sm outline-none transition-all text-white" 
+                    className="w-full bg-black border border-nx border focus:border-nx-amber rounded-xl pl-4 pr-10 py-3 text-sm outline-none transition-all text-white" 
                   />
                   <button
                     type="button"
@@ -1233,97 +1240,36 @@ export default function FmcgsPortal() {
                 </a>.
               </p>
             </div>
-          ) : authMode === 'login' ? (
-            <>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-[11px] font-bold uppercase tracking-widest text-nx-muted mb-2">Brand Account</label>
-                  <input type="text" value={loginData.brand} onChange={e => setLoginData({ ...loginData, brand: e.target.value })} onKeyDown={e => e.key === 'Enter' && handleAuth()} className="w-full bg-black border border-nx-border focus:border-nx-amber rounded-xl px-4 py-3 text-sm outline-none transition-all text-white" placeholder="e.g. Brookside Dairy" />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold uppercase tracking-widest text-nx-muted mb-2">Access PIN</label>
-                  <div className="relative">
-                    <input 
-                      type={showPassword ? "text" : "password"} 
-                      value={loginData.password} 
-                      onChange={e => setLoginData({ ...loginData, password: e.target.value })} 
-                      onKeyDown={e => e.key === 'Enter' && handleAuth()} 
-                      className="w-full bg-black border border-nx-border focus:border-nx-amber rounded-xl pl-4 pr-10 py-3 text-sm outline-none transition-all text-white" 
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-nx-muted hover:text-white transition-colors cursor-pointer bg-transparent"
-                    >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-                {error && <div className="flex items-center gap-2 text-red-500 text-xs"><AlertCircle className="w-3 h-3" /> {error}</div>}
-                <button disabled={loading} onClick={handleAuth} className="w-full bg-nx-amber text-nx-ink font-display font-bold py-3.5 rounded-xl hover:bg-nx-amber/90 transition-all mt-4 tracking-widest disabled:opacity-50">
-                  {loading ? 'AUTHENTICATING...' : 'ENTER PORTAL'}
-                </button>
-              </div>
-              <div className="mt-8 space-y-4">
-                <button onClick={() => setAuthMode('setup')} className="w-full text-center text-[10px] text-nx-muted hover:text-nx-amber transition-colors uppercase tracking-widest">Already have a key? Set up PIN →</button>
-              </div>
-            </>
           ) : (
-            <>
-              <div className="text-[10px] text-nx-muted mb-8 p-4 bg-white/5 border-l border-nx-amber uppercase tracking-widest leading-relaxed">Verification required. Use your assigned FMCG API Key to establish a new Access PIN.</div>
-              <div className="space-y-5">
-                {[
-                  { label: 'Brand Name', key: 'brand', type: 'text', ph: 'e.g. Brookside Dairy' },
-                  { label: 'Portal API Key', key: 'apiKey', type: 'text', ph: 'nx_live_...' },
-                  { label: 'New Access PIN', key: 'newPassword', type: 'password', ph: '' },
-                  { label: 'Confirm PIN', key: 'confirmPassword', type: 'password', ph: '' },
-                ].map(f => (
-                  <div key={f.key}>
-                    <label className="block text-[11px] font-bold uppercase tracking-widest text-nx-muted mb-2">{f.label}</label>
-                    <div className="relative">
-                      <input 
-                        type={f.type === 'password' ? (f.key === 'newPassword' ? (showNewPassword ? 'text' : 'password') : (showConfirmPassword ? 'text' : 'password')) : f.type} 
-                        value={(setupData as any)[f.key]} 
-                        onChange={e => {
-                          let val = e.target.value;
-                          if (f.key === 'apiKey' || f.key === 'brand') val = val.trim();
-                          setSetupData({ ...setupData, [f.key]: val });
-                        }} 
-                        placeholder={f.ph} 
-                        className={cn("w-full bg-black border border-nx-border focus:border-nx-amber rounded-xl py-3 text-sm outline-none transition-all text-white", f.type === 'password' ? "pl-4 pr-10" : "px-4")} 
-                      />
-                      {f.type === 'password' && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (f.key === 'newPassword') {
-                              setShowNewPassword(!showNewPassword);
-                            } else {
-                              setShowConfirmPassword(!showConfirmPassword);
-                            }
-                          }}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-nx-muted hover:text-white transition-colors cursor-pointer bg-transparent"
-                        >
-                          {f.key === 'newPassword' ? (
-                            showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />
-                          ) : (
-                            showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />
-                          )}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-                {setupError && <div className="flex items-center gap-2 text-red-500 text-xs"><AlertCircle className="w-3 h-3" /> {setupError}</div>}
-                <AnimatePresence>
-                  {setupSuccess && (
-                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="flex items-center gap-2 text-nx-green text-xs font-bold"><CheckCircle2 className="w-3 h-3" /> SECURITY PIN ESTABLISHED. RETURNING TO LOGIN...</motion.div>
-                  )}
-                </AnimatePresence>
-                <button onClick={handleSetupPassword} className="w-full bg-nx-amber text-nx-ink font-display font-bold py-3.5 rounded-xl hover:bg-nx-amber/90 transition-all mt-2 tracking-widest">SAVE SECURITY PIN</button>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-widest text-nx-muted mb-2">Brand Account</label>
+                <input type="text" value={loginData.brand} onChange={e => setLoginData({ ...loginData, brand: e.target.value })} onKeyDown={e => e.key === 'Enter' && handleAuth()} className="w-full bg-black border border-nx-border focus:border-nx-amber rounded-xl px-4 py-3 text-sm outline-none transition-all text-white" placeholder="e.g. Brookside Dairy" />
               </div>
-              <button onClick={() => setAuthMode('login')} className="w-full text-center text-[10px] text-nx-muted mt-6 hover:text-nx-amber transition-colors uppercase tracking-widest">← Back to access</button>
-            </>
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-widest text-nx-muted mb-2">Access PIN</label>
+                <div className="relative">
+                  <input 
+                    type={showPassword ? "text" : "password"} 
+                    value={loginData.password} 
+                    onChange={e => setLoginData({ ...loginData, password: e.target.value })} 
+                    onKeyDown={e => e.key === 'Enter' && handleAuth()} 
+                    className="w-full bg-black border border-nx-border focus:border-nx-amber rounded-xl pl-4 pr-10 py-3 text-sm outline-none transition-all text-white" 
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-nx-muted hover:text-white transition-colors cursor-pointer bg-transparent"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+              {error && <div className="flex items-center gap-2 text-red-500 text-xs"><AlertCircle className="w-3 h-3" /> {error}</div>}
+              <button disabled={loading} onClick={handleAuth} className="w-full bg-nx-amber text-nx-ink font-display font-bold py-3.5 rounded-xl hover:bg-nx-amber/90 transition-all mt-4 tracking-widest disabled:opacity-50 cursor-pointer">
+                {loading ? 'AUTHENTICATING...' : 'ENTER PORTAL'}
+              </button>
+            </div>
           )}
         </motion.div>
       </div>

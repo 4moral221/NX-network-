@@ -6,7 +6,7 @@ import {
   Info, CheckCircle2, AlertCircle, Flame, RefreshCw, Send,
   ShoppingCart, ChevronRight, Tag, Zap, Sparkles, Truck,
   Terminal, Search, Key, Shield, Copy, Plus, Check, ShieldAlert, Loader2, Eye, EyeOff,
-  Cpu, FileText, Upload, Download, ArrowRight, MapPin, User, Navigation, ChevronDown, Award, HelpCircle, Activity, X
+  Cpu, FileText, Upload, Download, ArrowRight, MapPin, User, Navigation, ChevronDown, Award, HelpCircle, Activity, X, MoreVertical, Home
 } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
 import { supabase } from '@/src/lib/supabase';
@@ -829,7 +829,7 @@ export default function PartnersPortal() {
     }
   }, [isLoggedIn, brand]);
   const [error, setError] = useState('');
-  const [authMode, setAuthMode] = useState<'login' | 'register' | 'setup'>('login');
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const [loginData, setLoginData] = useState({ brand: '', password: '' });
   const [signupData, setSignupData] = useState({ companyName: '', email: '', password: '' });
   const [setupData, setSetupData] = useState({ brand: '', apiKey: '', newPassword: '', confirmPassword: '' });
@@ -1527,6 +1527,13 @@ MERCHANT_CODE: M-104 | PHONE: +254766666666 | ORDER_SPEC: Pembe 2kg*22 | ORDER_Q
     return (
       <div className="min-h-[100dvh] flex flex-col bg-[#f4f5f7] justify-center p-6 font-sans relative overflow-y-auto">
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="relative z-10 w-full max-w-sm mx-auto">
+          {/* Window Decorative Traffic Light Dots */}
+          <div className="flex items-center gap-1.5 mb-5 pl-0.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56] inline-block shadow-sm" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e] inline-block shadow-sm" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f] inline-block shadow-sm" />
+          </div>
+
           <div className="flex items-center justify-between gap-3 mb-8">
             <div className="scale-[0.8] origin-left">
               <NXLogo title="Partners" />
@@ -1537,22 +1544,20 @@ MERCHANT_CODE: M-104 | PHONE: +254766666666 | ORDER_SPEC: Pembe 2kg*22 | ORDER_Q
             </div>
           </div>
 
-          {authMode !== 'setup' && (
-            <div className="grid grid-cols-2 gap-1 bg-[#f4f5f7] p-1 rounded-xl mb-8 border border-[#e4e6ea]">
-              <button 
-                onClick={() => { setAuthMode('login'); setError(''); }}
-                className={cn("py-2 text-[9px] font-bold uppercase tracking-widest rounded-lg transition-all text-center", authMode === 'login' ? "bg-[#1a1d23] text-white" : "text-[#6b7280] hover:text-[#1a1d23]")}
-              >
-                Sign In
-              </button>
-              <button 
-                onClick={() => { setAuthMode('register'); setError(''); }}
-                className={cn("py-2 text-[9px] font-bold uppercase tracking-widest rounded-lg transition-all text-center", authMode === 'register' ? "bg-[#1a1d23] text-white" : "text-[#6b7280] hover:text-[#1a1d23]")}
-              >
-                Register
-              </button>
-            </div>
-          )}
+          <div className="grid grid-cols-2 gap-1 bg-[#f4f5f7] p-1 rounded-xl mb-8 border border-[#e4e6ea]">
+            <button 
+              onClick={() => { setAuthMode('login'); setError(''); }}
+              className={cn("py-2 text-[9px] font-bold uppercase tracking-widest rounded-lg transition-all text-center cursor-pointer", authMode === 'login' ? "bg-[#1a1d23] text-white" : "text-[#6b7280] hover:text-[#1a1d23]")}
+            >
+              Sign In
+            </button>
+            <button 
+              onClick={() => { setAuthMode('register'); setError(''); }}
+              className={cn("py-2 text-[9px] font-bold uppercase tracking-widest rounded-lg transition-all text-center cursor-pointer", authMode === 'register' ? "bg-[#1a1d23] text-white" : "text-[#6b7280] hover:text-[#1a1d23]")}
+            >
+              Register
+            </button>
+          </div>
 
           {authMode === 'register' ? (
             <div className="space-y-4">
@@ -1609,62 +1614,6 @@ MERCHANT_CODE: M-104 | PHONE: +254766666666 | ORDER_SPEC: Pembe 2kg*22 | ORDER_Q
                 </a>.
               </p>
             </div>
-          ) : authMode === 'setup' ? (
-            <div className="space-y-4">
-              <div className="text-[10px] text-[#6b7280] mb-8 p-4 bg-[#f4f5f7] border-l border-[#1a1d23] uppercase tracking-widest leading-relaxed">Verification required. Use your assigned Partner API Key to establish a new Access PIN.</div>
-              <div className="space-y-5">
-                {[
-                  { label: 'Company Name', key: 'brand', type: 'text', ph: 'e.g. Mombasa Hub' },
-                  { label: 'Portal API Key', key: 'apiKey', type: 'text', ph: 'nx_live_...' },
-                  { label: 'New Access PIN', key: 'newPassword', type: 'password', ph: '' },
-                  { label: 'Confirm PIN', key: 'confirmPassword', type: 'password', ph: '' },
-                ].map(f => (
-                  <div key={f.key}>
-                    <label className="block text-[11px] font-bold uppercase tracking-widest text-[#6b7280] mb-2">{f.label}</label>
-                    <div className="relative">
-                      <input 
-                        type={f.type === 'password' ? (f.key === 'newPassword' ? (showNewPassword ? 'text' : 'password') : (showConfirmPassword ? 'text' : 'password')) : f.type} 
-                        value={(setupData as any)[f.key]} 
-                        onChange={e => {
-                          let val = e.target.value;
-                          if (f.key === 'apiKey' || f.key === 'brand') val = val.trim();
-                          setSetupData({ ...setupData, [f.key]: val });
-                        }} 
-                        placeholder={f.ph} 
-                        className={cn("w-full border-2 border-[#e4e6ea] focus:border-[#1a1d23] rounded-xl py-3 text-sm outline-none transition-all text-[#1a1d23] bg-white", f.type === 'password' ? "pl-4 pr-10" : "px-4")} 
-                      />
-                      {f.type === 'password' && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (f.key === 'newPassword') {
-                              setShowNewPassword(!showNewPassword);
-                            } else {
-                              setShowConfirmPassword(!showConfirmPassword);
-                            }
-                          }}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b7280] hover:text-[#1a1d23] transition-colors cursor-pointer bg-transparent"
-                        >
-                          {f.key === 'newPassword' ? (
-                            showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />
-                          ) : (
-                            showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />
-                          )}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-                {setupError && <div className="flex items-center gap-2 text-red-500 text-xs"><AlertCircle className="w-3 h-3" /> {setupError}</div>}
-                <AnimatePresence>
-                  {setupSuccess && (
-                    <div className="flex items-center gap-2 text-[#10b981] text-xs font-bold"><CheckCircle2 className="w-3 h-3" /> SECURITY PIN ESTABLISHED. RETURNING TO LOGIN...</div>
-                  )}
-                </AnimatePresence>
-                <button onClick={handleSetupPassword} className="w-full bg-[#1a1d23] text-white font-bold py-3.5 rounded-xl hover:bg-[#2a2d35] transition-all mt-2 tracking-widest">SAVE SECURITY PIN</button>
-              </div>
-              <button onClick={() => setAuthMode('login')} className="w-full text-center text-[10px] text-[#6b7280] mt-6 hover:text-[#1a1d23] transition-colors uppercase tracking-widest">← Back to access</button>
-            </div>
           ) : (
             <div className="space-y-4">
               <div>
@@ -1691,11 +1640,7 @@ MERCHANT_CODE: M-104 | PHONE: +254766666666 | ORDER_SPEC: Pembe 2kg*22 | ORDER_Q
                 </div>
               </div>
               {error && <div className="flex items-center gap-2 text-red-500 text-xs"><AlertCircle className="w-3 h-3" /> {error}</div>}
-              <button disabled={loading} onClick={handleAuth} className="w-full bg-[#1a1d23] text-white font-bold py-3 rounded-xl hover:bg-[#2a2d35] transition-colors mt-2">{loading ? 'Authenticating...' : 'Sign In'}</button>
-              
-              <div className="mt-8 space-y-4">
-                <button onClick={() => setAuthMode('setup')} className="w-full text-center text-[10px] text-[#6b7280] hover:text-[#1a1d23] transition-colors uppercase tracking-widest">Already have a key? Set up PIN →</button>
-              </div>
+              <button disabled={loading} onClick={handleAuth} className="w-full bg-[#1a1d23] text-white font-bold py-3 rounded-xl hover:bg-[#2a2d35] transition-colors mt-2 cursor-pointer">{loading ? 'Authenticating...' : 'Sign In'}</button>
             </div>
           )}
         </motion.div>

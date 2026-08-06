@@ -26,8 +26,20 @@ export default function Login({ onLogin }: { onLogin: (user: any) => void }) {
   const phoneInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    // Focus phone input on initial mount
-    if (phoneInputRef.current) {
+    // Restore saved phone number if rememberMe was active
+    const savedPhone = localStorage.getItem('nx_pwa_saved_phone') || localStorage.getItem('nx_pwa_phone');
+    const remembered = localStorage.getItem('nx_pwa_remember_me');
+    if (remembered === 'false') {
+      setRememberMe(false);
+    } else {
+      setRememberMe(true);
+      if (savedPhone) {
+        setPhone(savedPhone);
+      }
+    }
+
+    // Focus phone input on initial mount if empty, else focus pin
+    if (phoneInputRef.current && !savedPhone) {
       phoneInputRef.current.focus();
     }
   }, []);
@@ -210,10 +222,14 @@ export default function Login({ onLogin }: { onLogin: (user: any) => void }) {
 
       if (rememberMe) {
         localStorage.setItem('nx_pwa_phone', safeUser.phone);
+        localStorage.setItem('nx_pwa_saved_phone', safeUser.phone);
+        localStorage.setItem('nx_pwa_remember_me', 'true');
         // Set timestamp for 14 Days extended validity
         localStorage.setItem('nx_pwa_session_expiry', String(Date.now() + 14 * 24 * 60 * 60 * 1000));
       } else {
         localStorage.setItem('nx_pwa_phone', safeUser.phone);
+        localStorage.removeItem('nx_pwa_saved_phone');
+        localStorage.setItem('nx_pwa_remember_me', 'false');
         localStorage.setItem('nx_pwa_session_expiry', String(Date.now() + 1 * 24 * 60 * 60 * 1000)); // 1 day
       }
       
@@ -260,6 +276,13 @@ export default function Login({ onLogin }: { onLogin: (user: any) => void }) {
       <div className="absolute inset-0 bg-[linear-gradient(rgba(232,160,32,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(232,160,32,0.03)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none"></div>
       
       <div className="relative z-10 w-full max-w-sm mx-auto">
+        {/* Window Decorative Traffic Light Dots */}
+        <div className="flex items-center gap-1.5 mb-5 pl-0.5">
+          <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56] inline-block shadow-sm opacity-80" />
+          <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e] inline-block shadow-sm opacity-80" />
+          <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f] inline-block shadow-sm opacity-80" />
+        </div>
+
         <div className="flex justify-center mb-8">
           <NXLogo />
         </div>
@@ -326,8 +349,15 @@ export default function Login({ onLogin }: { onLogin: (user: any) => void }) {
               <input 
                 type="checkbox" 
                 checked={rememberMe} 
-                onChange={(e) => setRememberMe(e.target.checked)}
-                className="rounded border-nx-border bg-nx-ink text-nx-amber focus:ring-0 focus:ring-offset-0"
+                onChange={(e) => {
+                  const val = e.target.checked;
+                  setRememberMe(val);
+                  localStorage.setItem('nx_pwa_remember_me', val ? 'true' : 'false');
+                  if (!val) {
+                    localStorage.removeItem('nx_pwa_saved_phone');
+                  }
+                }}
+                className="rounded border-nx-border bg-nx-ink text-nx-amber focus:ring-0 focus:ring-offset-0 cursor-pointer"
               />
               <span className="text-[10px] uppercase tracking-widest text-nx-muted">Remember Me</span>
             </label>

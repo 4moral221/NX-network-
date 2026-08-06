@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Moon, Sun } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { triggerHaptic } from '@/src/lib/haptics';
 
 export default function ThemeSwitcher() {
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
@@ -16,6 +17,7 @@ export default function ThemeSwitcher() {
   }, []);
 
   const toggleTheme = () => {
+    triggerHaptic('medium');
     if (theme === 'dark') {
       setTheme('light');
       document.documentElement.classList.add('light');

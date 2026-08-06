@@ -419,12 +419,11 @@ export default function LandingPage() {
       </section>
 
       {/* Stats Bar */}
-      <div className="grid grid-cols-2 md:grid-cols-4 border-y border-nx-border">
+      <div className="grid grid-cols-1 sm:grid-cols-3 border-y border-nx-border">
         {[
           { label: 'Core SKUs', val: '5' },
           { label: 'First Purchase Earn', val: '10%' },
           { label: 'Franchise Tiers', val: '3' },
-          { label: 'Network Uptime', val: '99.9%' },
         ].map((stat, i) => (
           <div key={i} className="p-8 md:p-10 border-r border-nx-border last:border-r-0 relative group overflow-hidden">
             <div className="absolute bottom-0 left-0 w-0 h-[1px] bg-nx-amber transition-all duration-500 group-hover:w-full" />

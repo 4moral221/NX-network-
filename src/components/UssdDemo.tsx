@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Smartphone, Wifi, Signal, AlertCircle } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
 import { motion } from 'motion/react';
+import { triggerHaptic } from '@/src/lib/haptics';
 
 export default function UssdDemo() {
   const [phoneNumber, setPhoneNumber] = useState('254712345678');
@@ -49,17 +50,21 @@ export default function UssdDemo() {
       const msg = cleanRaw.slice(3).replace(/^\s+/, '');
       setScreen(msg);
       setIsEnd(false);
+      triggerHaptic('light');
     } else if (cleanRaw.toUpperCase().startsWith('END')) {
       const msg = cleanRaw.slice(3).replace(/^\s+/, '');
       setScreen(msg);
       setIsEnd(true);
+      triggerHaptic('success');
     } else {
       setScreen(cleanRaw);
       setIsEnd(true);
+      triggerHaptic('heavy');
     }
   };
 
   const handleDial = () => {
+    triggerHaptic('medium');
     const newSessionId = 'DEMO-' + Math.random().toString(36).slice(2, 10).toUpperCase();
     setSessionId(newSessionId);
     setTextParts([]);
@@ -69,6 +74,7 @@ export default function UssdDemo() {
 
   const handleSend = () => {
     if (!input || isEnd) return;
+    triggerHaptic('selection');
     const newParts = [...textParts, input];
     setTextParts(newParts);
     setInput('');

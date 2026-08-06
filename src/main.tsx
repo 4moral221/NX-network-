@@ -3,6 +3,10 @@ import {createRoot} from 'react-dom/client';
 import App from './App';
 import './index.css';
 import { SafeFallback } from './components/SafeFallback';
+import { initGlobalHaptics } from './lib/haptics';
+
+// Initialize tactile haptic feedback for buttons, links and touch targets
+initGlobalHaptics();
 
 // Recover dynamically from Vite code-splitting chunk load failures caused by code redeployments
 window.addEventListener('vite:preloadError', (event) => {
