@@ -410,18 +410,18 @@ print(response.json())`
           {/* Overview Tab */}
           {activeTab === 'overview' && (
             <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <h1 className="font-display text-3xl font-bold tracking-tight text-nx-paper uppercase">Sales &amp; Demand Analytics</h1>
                 <p className="text-sm text-nx-muted max-w-3xl leading-relaxed">
-                  The NX Sales &amp; Demand Analytics API enables leading FMCG brands to directly hook into high-velocity last-mile demand telemetry. By monitoring real-time orders aggregated across thousands of dukas, you gain uncompromised transparency into consumer velocity before it passes through traditional distributor channels.
+                  We operate Kenya's only merchant-validated last-mile data network. Every SKU log is confirmed by the duka owner and cross-checked against physical stock. This isn't scraped data — it's ground truth from the counter.
                 </p>
               </div>
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="bg-nx-card p-6 border border-nx-border rounded-xl">
-                  <div className="text-nx-amber font-mono text-xs mb-2">◇ REAL-TIME TELEMETRY</div>
+                  <div className="text-nx-amber font-mono text-xs mb-2">◇ MERCHANT-VALIDATED DATA</div>
                   <p className="text-xs text-nx-muted leading-relaxed">
-                    Track weekly sell-through rates, average customer cart sizes, and out-of-stock trends on localized shop levels in real time.
+                    Track weekly sell-through rates, average customer cart sizes, and out-of-stock trends on localized shop levels with duka-confirmed counter verification.
                   </p>
                 </div>
                 <div className="bg-nx-card p-6 border border-nx-border rounded-xl">

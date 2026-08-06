@@ -113,7 +113,7 @@ router.post('/api/admin/approve-merchant', requireAdmin, async (req, res) => {
         ML: ["250ml", "500ml", "1L", "2L"],
         SG: ["500g", "1kg", "2kg", "5kg"],
         CO: ["500ml", "1L", "2L", "5L", "10L", "20L"],
-        MF: ["1kg", "2kg", "5kg", "10kg", "25kg"],
+        F: ["1kg", "2kg", "5kg", "10kg", "25kg"],
       };
 
       const seedRows: any[] = [];

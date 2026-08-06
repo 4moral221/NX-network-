@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { FileText, Shield, CheckCircle2, X, Lock, FileCheck, ArrowRight, BookOpen, Sparkles } from 'lucide-react';
+import { FileText, Shield, CheckCircle2, X, Lock, FileCheck, ArrowRight, BookOpen } from 'lucide-react';
 
 interface LegalTermsModalProps {
   isOpen: boolean;
@@ -87,28 +87,6 @@ export default function LegalTermsModal({
           <div className="p-6 md:p-8 overflow-y-auto flex-1 space-y-6 text-slate-300 text-xs md:text-sm leading-relaxed bg-[#060810]">
             {activeTab === 'terms' ? (
               <div className="space-y-6 font-sans">
-                {/* 30-SECOND QUICK HIGHLIGHTS SUMMARY */}
-                <div className="p-4 bg-nx-amber/10 border border-nx-amber/30 rounded-xl space-y-2">
-                  <div className="flex items-center gap-2 text-nx-amber font-mono text-xs font-bold uppercase tracking-wider">
-                    <Sparkles className="w-4 h-4" />
-                    <span>⚡ Quick Highlights (30-Sec Summary)</span>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1 text-[11px] text-slate-200">
-                    <div className="bg-black/40 p-2.5 rounded-lg border border-white/5">
-                      <strong className="text-white block font-mono text-[10px] uppercase">24h Restock SLA</strong>
-                      Dispatched orders must be dropped off within 24 hours to receive wallet releases.
-                    </div>
-                    <div className="bg-black/40 p-2.5 rounded-lg border border-white/5">
-                      <strong className="text-white block font-mono text-[10px] uppercase">Token Confidentiality</strong>
-                      API keys are private credentials. Rate limit abuse triggers automated suspension.
-                    </div>
-                    <div className="bg-black/40 p-2.5 rounded-lg border border-white/5">
-                      <strong className="text-white block font-mono text-[10px] uppercase">Transparent Settlement</strong>
-                      Margin contributions remain held in escrow until duka receipt verification.
-                    </div>
-                  </div>
-                </div>
-
                 <div className="border-b border-nx-border pb-4">
                   <span className="text-[10px] font-mono uppercase tracking-widest text-nx-amber font-bold">Effective Date: July 2026 | Version 2.4-NX</span>
                   <h3 className="text-lg font-mono font-bold text-white uppercase mt-1">USER AGREEMENT FOR PARTNERS & FMCGs</h3>
@@ -171,28 +149,6 @@ export default function LegalTermsModal({
               </div>
             ) : (
               <div className="space-y-6 font-sans">
-                {/* 30-SECOND QUICK HIGHLIGHTS SUMMARY */}
-                <div className="p-4 bg-emerald-950/40 border border-emerald-500/30 rounded-xl space-y-2">
-                  <div className="flex items-center gap-2 text-emerald-400 font-mono text-xs font-bold uppercase tracking-wider">
-                    <Sparkles className="w-4 h-4 text-emerald-400" />
-                    <span>⚡ Privacy Highlights (30-Sec Summary)</span>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1 text-[11px] text-slate-200">
-                    <div className="bg-black/40 p-2.5 rounded-lg border border-white/5">
-                      <strong className="text-white block font-mono text-[10px] uppercase">No Data Monetization</strong>
-                      Partner trade volumes and operational metrics are never sold to external third parties.
-                    </div>
-                    <div className="bg-black/40 p-2.5 rounded-lg border border-white/5">
-                      <strong className="text-white block font-mono text-[10px] uppercase">Row-Level Security</strong>
-                      All database records are protected by cryptographic isolation policies per tenant.
-                    </div>
-                    <div className="bg-black/40 p-2.5 rounded-lg border border-white/5">
-                      <strong className="text-white block font-mono text-[10px] uppercase">Anonymized Macro Data</strong>
-                      Public demand board signals aggregate retailer data to shield specific shop locations.
-                    </div>
-                  </div>
-                </div>
-
                 <div className="border-b border-nx-border pb-4">
                   <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-400 font-bold">Data Governance Standard | Version 2.4-NX</span>
                   <h3 className="text-lg font-mono font-bold text-white uppercase mt-1">PRIVACY & DATA PROTECTION POLICY</h3>

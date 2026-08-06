@@ -688,7 +688,7 @@ export default function FmcgsPortal() {
         health: totalInvCount > 1000 ? 'Optimal' : 'Checking',
         fillRate: Math.min(100, Math.round((totalInvCount / 5000) * 100)) + '%',
         reorders: String(lowInv?.length || 0),
-        turnover: 'Real-time'
+        turnover: 'Weekly Batched'
       });
 
       // 6. Warehouse Allocation Table
@@ -1507,7 +1507,7 @@ export default function FmcgsPortal() {
               >
                 <div className="absolute top-0 right-0 w-64 h-64 bg-nx-amber/5 rounded-full blur-3xl -mr-32 -mt-32" />
                 <h1 className="text-3xl font-display text-nx-paper mb-4 uppercase tracking-tighter">Market Pulse: {brand?.name}</h1>
-                <p className="text-sm text-nx-muted mb-8 max-w-2xl leading-relaxed">Advanced analytics dashboard for {brand?.name} field operations. Monitor real-time SKU movement, merchant pool health, and delivery velocities across the informal network.</p>
+                <p className="text-sm text-nx-muted mb-8 max-w-2xl leading-relaxed">We operate Kenya's only merchant-validated last-mile data network. Every SKU log is confirmed by the duka owner and cross-checked against physical stock — ground truth from the counter for {brand?.name} field operations.</p>
 
                 {/* Contribution Form */}
                 <div className="bg-[#111111] p-6 border border-nx-border rounded-2xl mt-4 max-w-2xl relative z-10">
@@ -1729,7 +1729,7 @@ export default function FmcgsPortal() {
                 <div>
                   <h1 className="text-3xl font-display text-nx-paper mb-2 uppercase tracking-tighter">Network map feed</h1>
                   <p className="text-xs text-nx-muted uppercase tracking-widest leading-relaxed">
-                     Real-time geocoded telemetry of high-density wholesale clusters and micro-retail duka nodes in Kenya.
+                     Merchant-validated geocoded telemetry of high-density wholesale clusters and micro-retail duka nodes in Kenya.
                   </p>
                 </div>
 
@@ -1855,7 +1855,7 @@ export default function FmcgsPortal() {
                     <div className="bg-[#111] border border-nx-border p-5 rounded-2xl relative overflow-hidden">
                       <div className="text-[9px] font-bold uppercase tracking-widest text-[#6b7280] mb-2">Total Live Telemetry</div>
                       <div className="text-2xl font-extrabold text-[#f4f5f7]">{Math.max(transactions.length, 5)} Nodes</div>
-                      <div className="text-[10px] text-nx-green mt-1">✦ Real-time synchronized stream</div>
+                      <div className="text-[10px] text-nx-green mt-1">✦ Merchant-validated synchronized stream</div>
                     </div>
                     <div className="bg-[#111] border border-nx-border p-5 rounded-2xl relative overflow-hidden">
                       <div className="text-[9px] font-bold uppercase tracking-widest text-[#6b7280] mb-2">Total Traded GMV Volume</div>
@@ -2222,7 +2222,7 @@ export default function FmcgsPortal() {
                       <div className="text-[10px] uppercase tracking-widest text-nx-muted mb-4 opacity-50">Critical Stock Nodes</div>
                       <div className="text-4xl font-display text-nx-amber uppercase tracking-tighter">{hubStats.reorders} Nodes</div>
                       <div className="mt-4 flex items-center gap-2 text-nx-muted text-[10px] uppercase tracking-widest font-bold">
-                         <Clock className="w-3 h-3" /> Real-time Radar Active
+                         <Clock className="w-3 h-3" /> Ground-Truth Radar Active
                       </div>
                    </div>
                    <div className="p-6 bg-nx-ink border border-nx-border rounded-2xl">
